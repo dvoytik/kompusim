@@ -1,0 +1,6 @@
+binop_separator = "Back"
+num_discrim_align_threshold = 30
+format_strings = true
+indent_style = "Visual"
+
+empty_item_single_line = false
