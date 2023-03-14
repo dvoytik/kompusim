@@ -1,33 +1,27 @@
 use core::fmt;
 
+use crate::csr::{self, *};
 use crate::pmem::Pmem;
 
 //
 #[derive(Debug, Default)]
 pub struct RV64IUnprivRegs {
     //x0: is always zero
-    x1: u64,
-    x2: u64,
-    x3: u64,
-    x4: u64,
-    x5: u64,
-    x6: u64,
-    x7: u64,
-    x8: u64,
+    x: [u64; 32],
     pub pc: u64,
 }
 
 impl fmt::Display for RV64IUnprivRegs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         //let (x1, x2) = self;
-        writeln!(f, "x1: 0x{0:16X} | b'{0:064b}", self.x1)?;
-        writeln!(f, "x2: 0x{0:16X} | b'{0:064b}", self.x2)?;
-        writeln!(f, "x3: 0x{0:16X} | b'{0:064b}", self.x3)?;
-        writeln!(f, "x4: 0x{0:16X} | b'{0:064b}", self.x4)?;
-        writeln!(f, "x5: 0x{0:16X} | b'{0:064b}", self.x5)?;
-        writeln!(f, "x6: 0x{0:16X} | b'{0:064b}", self.x6)?;
-        writeln!(f, "x7: 0x{0:16X} | b'{0:064b}", self.x7)?;
-        writeln!(f, "x8: 0x{0:16X} | b'{0:064b}", self.x8)?;
+        writeln!(f, "x1: 0x{0:16X} | b'{0:064b}", self.x[1])?;
+        writeln!(f, "x2: 0x{0:16X} | b'{0:064b}", self.x[2])?;
+        writeln!(f, "x3: 0x{0:16X} | b'{0:064b}", self.x[3])?;
+        writeln!(f, "x4: 0x{0:16X} | b'{0:064b}", self.x[4])?;
+        writeln!(f, "x5: 0x{0:16X} | b'{0:064b}", self.x[5])?;
+        writeln!(f, "x6: 0x{0:16X} | b'{0:064b}", self.x[6])?;
+        writeln!(f, "x7: 0x{0:16X} | b'{0:064b}", self.x[7])?;
+        writeln!(f, "x8: 0x{0:16X} | b'{0:064b}", self.x[8])?;
         writeln!(f, "pc: 0x{0:16X} | b'{0:064b}", self.pc)
     }
 }
@@ -74,34 +68,62 @@ impl RV64ICpu {
         }
     }
 
-    fn execute_instr(&mut self, ins: u32) {
-        // TODO: macro with bits matching
-        println!("DBG: instr: {:x}", ins);
-        let opcode = i_opcode(ins);
-        match opcode {
-            OP_ZICSR => {
-                let funct3 = i_funct3(ins);
-                let rd = i_rd(ins);
-                let rs1 = i_rs1(ins);
-                let csr = i_csr(ins);
-                match (csr, rs1, funct3, rd) {
-                    (_, _, F3_CSRRS, _) => {
-                        println!("got CSRRS")
-                    }
-                    (_, _, _, _) => {
-                        panic!("wrong Zicsr instr")
-                    }
-                }
+    fn reg_w64(&mut self, reg_i: u8, val: u64) {
+        if reg_i == 0 {
+            return; // writes to x0 are ignored
+        }
+        self.regs.x[reg_i as usize] = val;
+    }
+
+    fn reg_r64(&self, reg_i: u8) -> u64 {
+        self.regs.x[reg_i as usize]
+    }
+
+    fn pc_inc(&mut self) {
+        self.regs.pc += 4;
+    }
+
+    // SYSTEM opcodes Zicsr: CSRRS
+    fn opc_zicsr(&mut self, ins: u32) {
+        // I-type instruction
+        let funct3 = i_funct3(ins);
+        let rd = i_rd(ins);
+        let rs1 = i_rs1(ins);
+        let csr = i_csr(ins);
+        println!(
+            "DBG: Zicsr: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
+            csr, rs1, funct3, rd
+        );
+        match funct3 {
+            F3_CSRRS => {
+                println!("DBG: CSRRS");
+                let mut csr_v = csr::read_csr(csr);
+                self.reg_w64(rd, csr_v);
+                csr_v |= self.reg_r64(rs1);
+                csr::write_csr(csr, csr_v);
             }
             _ => {
-                panic!("not implemented")
+                panic!("wrong Zicsr instr")
+            }
+        }
+        self.pc_inc();
+    }
+
+    fn execute_instr(&mut self, ins: u32) {
+        // TODO: macro with bits matching
+        println!("DBG: instr: 0x{:08x}", ins);
+        let opcode = i_opcode(ins);
+        match opcode {
+            OP_ZICSR => self.opc_zicsr(ins),
+            _ => {
+                panic!("not implemented opcode: {:x}", opcode)
             }
         }
     }
 
     pub fn run_until(&mut self, break_point: u64) {
         while self.regs.pc != break_point {
-            println!("DBG: {:x}", self.regs.pc);
+            println!("DBG: 0x{:08x}", self.regs.pc);
             let instr = self.mem.read32(self.regs.pc);
             self.execute_instr(instr);
         }

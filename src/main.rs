@@ -1,5 +1,6 @@
 use rv64i_cpu::RV64ICpu;
 
+mod csr;
 mod pmem;
 mod rv64i_cpu;
 
