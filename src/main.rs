@@ -19,6 +19,6 @@ fn main() {
 
     let mut cpu0 = RV64ICpu::new(pmem);
     cpu0.regs.pc = LOAD_ADDRESS;
-    cpu0.run_until(0x0000000080000008);
+    cpu0.run_until(0x000000008000000c);
     //cpu0.run_until(0x0000000080000014);
 }

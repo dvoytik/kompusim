@@ -1,6 +1,6 @@
 # Kompusim
 
-A simple CPU / SoC software simulator. Currently, only RISC-V ISA is supported.
+Kompusim is a simple CPU / SoC ISA level simulator. It only supports `RISC-V` ISA currently.
 It is still heavily under construction.
 
 ## How to run
