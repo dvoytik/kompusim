@@ -1,5 +1,6 @@
 use core::fmt;
 
+use crate::bits::Bit;
 use crate::csr;
 use crate::pmem::Pmem;
 
@@ -37,48 +38,50 @@ pub struct RV64ICpu {
 const OP_SYSTEM: u8 = 0b11_100_11;
 const OP_BRANCH: u8 = 0b11_000_11;
 const OP_AUIPC: u8 = 0b00_101_11;
+const OP_OP_IMM: u8 = 0b00_100_11;
 
 const F3_BRANCH_BNE: u8 = 0b001;
 const F3_SYSTEM_CSRRS: u8 = 0b010;
 
-// TODO: use macros to bit!(ins, 24, 20)
+const F3_OP_IMM_ADDI: u8 = 0b000;
+
 #[inline(always)]
 fn i_opcode(ins: u32) -> u8 {
-    ins as u8 & 0b111_1111
+    ins.bits(6, 0) as u8
 }
 
 #[inline(always)]
 fn i_funct3(ins: u32) -> u8 {
-    (ins >> 12) as u8 & 0x7
+    ins.bits(14, 12) as u8
 }
 
 #[inline(always)]
 fn i_rd(ins: u32) -> u8 {
-    (ins >> 7) as u8 & 0x1f
+    ins.bits(11, 7) as u8
 }
 
 #[inline(always)]
 fn i_rs1(ins: u32) -> u8 {
-    (ins >> 15) as u8 & 0x1f // [19:15]
+    ins.bits(19, 15) as u8
 }
 
 #[inline(always)]
 fn i_rs2(ins: u32) -> u8 {
-    (ins >> 20) as u8 & 0x1f // [24:20]
+    ins.bits(24, 20) as u8
 }
 
 #[inline(always)]
 fn i_csr(ins: u32) -> u16 {
-    (ins >> 20) as u16 & 0xfff
+    ins.bits(31, 20) as u16
 }
 
 // Decode 12-bit signed offset from a B-type instruction
 #[inline(always)]
 fn i_b_off12(ins: u32) -> i16 {
-    let off_4_1 = (ins >> 8) as u16 & 0xf; // [11:8]
-    let off_11 = (ins >> 7) as u16 & 1; // [7]
-    let off_10_5 = (ins >> 25) as u16 & 0x3f; // [30:25]
-    let off_12 = (ins >> 31) as u16 & 1; // [31]
+    let off_4_1 = ins.bits(11, 8) as u16;
+    let off_11 = ins.bits(7, 7) as u16;
+    let off_10_5 = ins.bits(30, 25) as u16;
+    let off_12 = ins.bits(31, 31) as u16;
     let off12 = off_11 << 11 | off_10_5 << 5 | off_4_1 << 1;
     if off_12 == 1 {
         -(off12 as i16)
