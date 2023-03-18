@@ -1,6 +1,7 @@
 use core::fmt;
 
-use crate::bits::Bit;
+use crate::alu::{Imm12, I12};
+use crate::bits::BitOps;
 use crate::csr;
 use crate::pmem::Pmem;
 
@@ -90,9 +91,17 @@ fn i_b_off12(ins: u32) -> i16 {
     }
 }
 
+// TODO: is it used only in one place?
 fn i_u_uimm20(ins: u32) -> u32 {
     ins & 0xffff_f000
 }
+
+// Decode signed 12-bit immidiate from I-type instruction
+#[inline(always)]
+fn i_i_imm12(ins: u32) -> u16 {
+    ins.bits(31, 20) as u16
+}
+
 impl RV64ICpu {
     pub fn new(mem: Pmem) -> RV64ICpu {
         RV64ICpu {
@@ -157,7 +166,6 @@ impl RV64ICpu {
     fn opc_branch(&mut self, ins: u32) {
         // B-type instructions
         let funct3 = i_funct3(ins);
-        //let rd = i_rd(ins);
         let rs1 = i_rs1(ins);
         let rs2 = i_rs2(ins);
         let off12 = i_b_off12(ins);
@@ -176,18 +184,36 @@ impl RV64ICpu {
                 }
             }
             _ => {
-                panic!("wrong Zicsr instr")
+                panic!("unsupported SYSTEM instr")
             }
         }
     }
 
-    //
+    // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn opc_auipc(&mut self, ins: u32) {
         let rd = i_rd(ins);
         let uimm20 = i_u_uimm20(ins);
         println!("DBG: AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
         self.regs_w64(rd, self.regs.pc + uimm20 as u64);
-        //println!("{}", self.regs);
+        self.pc_inc()
+    }
+
+    fn opc_op_imm(&mut self, ins: u32) {
+        // I-type instructions
+        let imm12 = i_i_imm12(ins);
+        let rs1 = i_rs1(ins);
+        let funct3 = i_funct3(ins);
+        let rd = i_rd(ins);
+        match funct3 {
+            // arithmetic overflow is ignored
+            F3_OP_IMM_ADDI => {
+                println!("DBG: addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})");
+                self.regs_w64(rd, self.regs_r64(rs1).add_i12(I12::from_u16(imm12)));
+            }
+            _ => {
+                panic!("unsupported OP-IMM instr")
+            }
+        }
         self.pc_inc()
     }
 
@@ -199,6 +225,7 @@ impl RV64ICpu {
             OP_SYSTEM => self.opc_system(ins),
             OP_BRANCH => self.opc_branch(ins),
             OP_AUIPC => self.opc_auipc(ins),
+            OP_OP_IMM => self.opc_op_imm(ins),
             _ => {
                 panic!("not implemented opcode: 0x{:x}", opcode)
             }
@@ -234,4 +261,25 @@ fn test_opcode_auipc() {
     // auipc x10, 0x0
     cpu.execute_instr(0x00000517);
     assert!(cpu.regs.x[10] == 0x100);
+}
+
+#[test]
+fn test_instr_decode_immidiates() {
+    let imm12 = i_i_imm12(0xffff_ffff);
+    assert!(I12::from_u16(imm12).0 == -1);
+
+    let imm12 = i_i_imm12(0x800f_ffff);
+    assert!(I12::from_u16(imm12).0 == -2048);
+
+    let imm12 = i_i_imm12(0x0fff_ffff);
+    assert!(imm12 == 255);
+}
+
+#[test]
+fn test_opcode_addi() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[10] = 0x123;
+    // addi x10, x10, 52
+    cpu.execute_instr(0x03450513);
+    assert!(cpu.regs.x[10] == 0x123 + 52);
 }

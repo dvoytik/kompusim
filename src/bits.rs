@@ -1,4 +1,4 @@
-pub trait Bit {
+pub trait BitOps {
     // return true if bit self[idx] is 1
     fn bit(self, idx: u32) -> bool;
     // return bits self[end:start] shifted to LSB
@@ -7,11 +7,11 @@ pub trait Bit {
     fn xor(self, end: u32, start: u32) -> Self;
 }
 
-impl Bit for u16 {
+impl BitOps for u16 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1_u16 << idx) == 0 {
+        if self & (1 << idx) == 0 {
             false
         } else {
             true
@@ -20,7 +20,7 @@ impl Bit for u16 {
 
     fn bits(self, end: u32, start: u32) -> Self {
         assert!(end < Self::BITS && start < Self::BITS && end >= start);
-        (self >> start) & (0xffff >> (15 - (end - start)))
+        (self >> start) & (Self::MAX >> (15 - (end - start)))
     }
 
     fn xor(self, end: u32, start: u32) -> Self {
@@ -30,11 +30,11 @@ impl Bit for u16 {
     }
 }
 
-impl Bit for u32 {
+impl BitOps for i16 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1_u32 << idx) == 0 {
+        if self & (1 << idx) == 0 {
             false
         } else {
             true
@@ -43,7 +43,52 @@ impl Bit for u32 {
 
     fn bits(self, end: u32, start: u32) -> Self {
         assert!(end < Self::BITS && start < Self::BITS && end >= start);
-        (self >> start) & (0xffff_ffff >> (31 - (end - start)))
+        (self >> start) & (Self::MAX >> (15 - (end - start)))
+    }
+
+    fn xor(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        let m = Self::MAX >> start << start << (Self::BITS - end - 1) >> (Self::BITS - end - 1);
+        self ^ m
+    }
+}
+
+impl BitOps for u32 {
+    #[inline(always)]
+    fn bit(self, idx: u32) -> bool {
+        assert!(idx < Self::BITS);
+        if self & (1 << idx) == 0 {
+            false
+        } else {
+            true
+        }
+    }
+
+    fn bits(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        (self >> start) & (Self::MAX >> (Self::BITS - 1 - (end - start)))
+    }
+    fn xor(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        let m = Self::MAX >> start << start << (Self::BITS - end - 1) >> (Self::BITS - end - 1);
+        self ^ m
+    }
+}
+
+impl BitOps for u64 {
+    #[inline(always)]
+    fn bit(self, idx: u32) -> bool {
+        assert!(idx < Self::BITS);
+        if self & (1 << idx) == 0 {
+            false
+        } else {
+            true
+        }
+    }
+
+    fn bits(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        (self >> start) & (Self::MAX >> (Self::BITS - 1 - (end - start)))
     }
     fn xor(self, end: u32, start: u32) -> Self {
         assert!(end < Self::BITS && start < Self::BITS && end >= start);
@@ -53,7 +98,7 @@ impl Bit for u32 {
 }
 
 #[test]
-fn test_u16_bit() {
+fn test_bit_ops() {
     assert!(0b_0001_u16.bit(0) == true);
     assert!(0b_0001_u16.bit(1) == false);
     assert!(0b_0001_u16.bit(15) == false);
@@ -83,4 +128,8 @@ fn test_u16_bit() {
     assert!(0x0000_8000_u32.xor(15, 15) == 0);
     assert!(0xaaaa_5555_u32.xor(15, 0) == 0xaaaa_aaaa_u32);
     assert!(0xaaaa_5555_u32.xor(31, 0) == 0x5555_aaaa_u32);
+
+    // u64
+    println!("{:x}", u64::MAX.bits(11, 0));
+    assert!(u64::MAX.bits(11, 0) == 0xfff_u64);
 }

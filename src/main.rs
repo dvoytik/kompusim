@@ -1,5 +1,6 @@
 use rv64i_cpu::RV64ICpu;
 
+mod alu;
 mod bits;
 mod csr;
 mod pmem;
