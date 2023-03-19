@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::alu::{Imm, I12};
+use crate::alu::{Imm, I12, I13, I21};
 use crate::bits::BitOps;
 use crate::csr;
 use crate::pmem::Pmem;
@@ -76,19 +76,14 @@ fn i_csr(ins: u32) -> u16 {
     ins.bits(31, 20) as u16
 }
 
-// Decode 12-bit signed offset from a B-type instruction
+// Decode 13-bit signed offset from a B-type instruction
 #[inline(always)]
-fn i_b_off12(ins: u32) -> i16 {
+fn i_b_off13(ins: u32) -> u16 {
     let off_4_1 = ins.bits(11, 8) as u16;
     let off_11 = ins.bits(7, 7) as u16;
     let off_10_5 = ins.bits(30, 25) as u16;
     let off_12 = ins.bits(31, 31) as u16;
-    let off12 = off_11 << 11 | off_10_5 << 5 | off_4_1 << 1;
-    if off_12 == 1 {
-        -(off12 as i16)
-    } else {
-        off12 as i16
-    }
+    off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1
 }
 
 // TODO: is it used only in one place?
@@ -110,6 +105,7 @@ impl RV64ICpu {
         }
     }
 
+    // reg_i - register index (0 - 31)
     fn regs_w64(&mut self, reg_i: u8, val: u64) {
         if reg_i == 0 {
             return; // writes to x0 are ignored
@@ -124,16 +120,6 @@ impl RV64ICpu {
     fn pc_inc(&mut self) {
         self.regs.pc += 4;
         println!("DBG: pc: 0x{:x} -> 0x{:x}", self.regs.pc - 4, self.regs.pc)
-    }
-
-    // pc = pc + signed_offset[12:0]
-    fn pc_add_soff12(&mut self, s_off12: i16) {
-        // TODO: exceptions?
-        if s_off12 < 0 {
-            self.regs.pc -= s_off12.abs() as u64
-        } else {
-            self.regs.pc += s_off12 as u64
-        }
     }
 
     // Zics SYSTEM opcodes: CSRRS, ...
@@ -168,17 +154,17 @@ impl RV64ICpu {
         let funct3 = i_funct3(ins);
         let rs1 = i_rs1(ins);
         let rs2 = i_rs2(ins);
-        let off12 = i_b_off12(ins);
+        let off13 = i_b_off13(ins);
         println!(
-            "DBG: BRANCH: imm[12:0]: 0x{off12:x}, rs2: {rs2}, \
+            "DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, \
              rs1: {rs1}, f3: 0x{funct3:x}"
         );
         match funct3 {
             F3_BRANCH_BNE => {
-                println!("DBG: bne x{}, x{}, 0x{:x}", rs1, rs2, off12);
+                println!("DBG: bne x{}, x{}, 0x{:x}", rs1, rs2, off13);
                 // Branch Not Equal
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
-                    self.pc_add_soff12(off12);
+                    self.regs.pc = self.regs.pc.add_i13(I13::from_u16(off13));
                 } else {
                     self.pc_inc()
                 }
