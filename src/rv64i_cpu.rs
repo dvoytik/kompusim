@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::alu::{Imm12, I12};
+use crate::alu::{Imm, I12};
 use crate::bits::BitOps;
 use crate::csr;
 use crate::pmem::Pmem;
