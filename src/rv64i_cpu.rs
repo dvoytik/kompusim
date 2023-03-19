@@ -36,10 +36,11 @@ pub struct RV64ICpu {
     pub mem: Pmem,
 }
 
-const OP_SYSTEM: u8 = 0b11_100_11;
-const OP_BRANCH: u8 = 0b11_000_11;
-const OP_AUIPC: u8 = 0b00_101_11;
-const OP_OP_IMM: u8 = 0b00_100_11;
+const OPC_SYSTEM: u8 = 0b11_100_11;
+const OPC_BRANCH: u8 = 0b11_000_11;
+const OPC_AUIPC: u8 = 0b00_101_11;
+const OPC_OP_IMM: u8 = 0b00_100_11;
+const OPC_JAL: u8 = 0b11_011_11;
 
 const F3_BRANCH_BNE: u8 = 0b001;
 const F3_SYSTEM_CSRRS: u8 = 0b010;
@@ -203,15 +204,29 @@ impl RV64ICpu {
         self.pc_inc()
     }
 
+    // Only one instrucitn JAL - Jump and Link
+    fn opc_jal(&mut self, ins: u32) {
+        //
+        let rd = i_rd(ins);
+        let imm21 = ins.bits(31, 31) << 20
+            | ins.bits(19, 12) << 12
+            | ins.bits(20, 20) << 11
+            | ins.bits(30, 21) << 1;
+        println!("DBG: jal x{rd}, 0x{imm21:x} # {imm21}");
+        self.regs_w64(rd, self.regs.pc + 4);
+        self.regs.pc = self.regs.pc.add_i21(I21::from_u32(imm21));
+    }
+
     fn execute_instr(&mut self, ins: u32) {
         // TODO: macro with bits matching
         println!("\nDBG: instr: 0x{:08x}", ins);
         let opcode = i_opcode(ins);
         match opcode {
-            OP_SYSTEM => self.opc_system(ins),
-            OP_BRANCH => self.opc_branch(ins),
-            OP_AUIPC => self.opc_auipc(ins),
-            OP_OP_IMM => self.opc_op_imm(ins),
+            OPC_SYSTEM => self.opc_system(ins),
+            OPC_BRANCH => self.opc_branch(ins),
+            OPC_AUIPC => self.opc_auipc(ins),
+            OPC_OP_IMM => self.opc_op_imm(ins),
+            OPC_JAL => self.opc_jal(ins),
             _ => {
                 panic!("not implemented opcode: 0x{:x}", opcode)
             }
@@ -262,10 +277,20 @@ fn test_instr_decode_immidiates() {
 }
 
 #[test]
+// addi x10, x10, 52
 fn test_opcode_addi() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.x[10] = 0x123;
-    // addi x10, x10, 52
     cpu.execute_instr(0x03450513);
     assert!(cpu.regs.x[10] == 0x123 + 52);
+}
+
+#[test]
+// jal ra, 80000018
+fn test_opcode_jal() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[5] = 1;
+    cpu.regs.pc = 0x80000010;
+    cpu.execute_instr(0x008000ef);
+    assert!(cpu.regs.pc == 0x80000018);
 }

@@ -64,6 +64,7 @@ impl Pmem {
         return 0;
     }
 
+    #[allow(dead_code)]
     pub fn write8(&mut self, addr: u64, val: u8) {
         if let Some(mr) = self.find_mem_region_mut(addr, 1) {
             mr.m[addr as usize] = val;
