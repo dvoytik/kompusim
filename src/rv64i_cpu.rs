@@ -41,6 +41,7 @@ const OPC_BRANCH: u8 = 0b11_000_11;
 const OPC_AUIPC: u8 = 0b00_101_11;
 const OPC_OP_IMM: u8 = 0b00_100_11;
 const OPC_JAL: u8 = 0b11_011_11;
+const OPC_LUI: u8 = 0b01_101_11;
 
 const F3_BRANCH_BNE: u8 = 0b001;
 const F3_SYSTEM_CSRRS: u8 = 0b010;
@@ -87,9 +88,9 @@ fn i_b_off13(ins: u32) -> u16 {
     off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1
 }
 
-// TODO: is it used only in one place?
-fn i_u_uimm20(ins: u32) -> u32 {
-    ins & 0xffff_f000
+// extract upper 20-bit for LUI, AUIPC instructions
+fn i_u_uimm20(ins: u32) -> u64 {
+    (ins & 0xffff_f000) as u64
 }
 
 // Decode signed 12-bit immidiate from I-type instruction
@@ -194,12 +195,22 @@ impl RV64ICpu {
         }
     }
 
+    // LUI - Load Upper Immidiate
+    fn opc_lui(&mut self, ins: u32) {
+        let rd = i_rd(ins);
+        let uimm20 = i_u_uimm20(ins);
+        println!("DBG: LUI: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
+        println!("DBG: lui x{rd}, 0x{:x}", uimm20 >> 12);
+        self.regs_w64(rd, uimm20);
+        self.pc_inc()
+    }
+
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn opc_auipc(&mut self, ins: u32) {
         let rd = i_rd(ins);
         let uimm20 = i_u_uimm20(ins);
         println!("DBG: AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
-        self.regs_w64(rd, self.regs.pc + uimm20 as u64);
+        self.regs_w64(rd, self.regs.pc + uimm20);
         self.pc_inc()
     }
 
@@ -244,6 +255,7 @@ impl RV64ICpu {
             OPC_AUIPC => self.opc_auipc(ins),
             OPC_OP_IMM => self.opc_op_imm(ins),
             OPC_JAL => self.opc_jal(ins),
+            OPC_LUI => self.opc_lui(ins),
             _ => {
                 panic!("not implemented opcode: 0x{:x}", opcode)
             }
@@ -272,6 +284,15 @@ fn test_opcode_bne() {
     // BNE t0, x0, 0x10
     cpu.execute_instr(0x00029863);
     assert!(cpu.regs.pc == 0x10);
+}
+
+#[test]
+fn test_opcode_lui() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[5] = 0x123;
+    // lui x5, 0x10010
+    cpu.execute_instr(0x100102b7);
+    assert!(cpu.regs.x[5] == 0x10010000);
 }
 
 #[test]
