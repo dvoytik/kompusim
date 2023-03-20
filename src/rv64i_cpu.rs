@@ -123,6 +123,24 @@ impl RV64ICpu {
         println!("DBG: pc: 0x{:x} -> 0x{:x}", self.regs.pc - 4, self.regs.pc)
     }
 
+    fn pc_add_i13(&mut self, off13: u16) {
+        let old_pc = self.regs.pc;
+        self.regs.pc = self.regs.pc.add_i13(I13::from_u16(off13));
+        println!(
+            "DBG: pc: 0x{old_pc:x} + 0x{off13:x} -> 0x{:x}",
+            self.regs.pc
+        );
+    }
+
+    fn pc_add_i21(&mut self, off21: u32) {
+        let old_pc = self.regs.pc;
+        self.regs.pc = self.regs.pc.add_i21(I21::from_u32(off21));
+        println!(
+            "DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
+            self.regs.pc
+        );
+    }
+
     // Zics SYSTEM opcodes: CSRRS, ...
     fn opc_system(&mut self, ins: u32) {
         // I-type instruction
@@ -165,7 +183,7 @@ impl RV64ICpu {
                 println!("DBG: bne x{}, x{}, 0x{:x}", rs1, rs2, off13);
                 // Branch Not Equal
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
-                    self.regs.pc = self.regs.pc.add_i13(I13::from_u16(off13));
+                    self.pc_add_i13(off13);
                 } else {
                     self.pc_inc()
                 }
@@ -206,7 +224,6 @@ impl RV64ICpu {
 
     // Only one instrucitn JAL - Jump and Link
     fn opc_jal(&mut self, ins: u32) {
-        //
         let rd = i_rd(ins);
         let imm21 = ins.bits(31, 31) << 20
             | ins.bits(19, 12) << 12
@@ -214,7 +231,7 @@ impl RV64ICpu {
             | ins.bits(30, 21) << 1;
         println!("DBG: jal x{rd}, 0x{imm21:x} # {imm21}");
         self.regs_w64(rd, self.regs.pc + 4);
-        self.regs.pc = self.regs.pc.add_i21(I21::from_u32(imm21));
+        self.pc_add_i21(imm21);
     }
 
     fn execute_instr(&mut self, ins: u32) {
@@ -234,11 +251,14 @@ impl RV64ICpu {
     }
 
     pub fn run_until(&mut self, break_point: u64) {
+        println!("Running until breakpoint 0x{break_point:x}");
         println!("DBG: pc: 0x{:08x}", self.regs.pc);
         while self.regs.pc != break_point {
             let instr = self.mem.read32(self.regs.pc);
             self.execute_instr(instr);
+            //println!("{}", self.regs);
         }
+        println!("Stopped at breakpoint 0x{break_point:x}");
     }
 }
 
