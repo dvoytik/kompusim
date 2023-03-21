@@ -8,14 +8,13 @@ use crate::pmem::Pmem;
 //
 #[derive(Debug, Default)]
 pub struct RV64IUnprivRegs {
-    //x0: is always zero
-    x: [u64; 32],
+    // x0: is always zero
+    x:      [u64; 32],
     pub pc: u64,
 }
 
 impl fmt::Display for RV64IUnprivRegs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        //let (x1, x2) = self;
         writeln!(f, " x1: 0x{:016x} | b'{0:064b}", self.x[1])?;
         writeln!(f, " x2: 0x{:016x} | b'{0:064b}", self.x[2])?;
         writeln!(f, " x3: 0x{:016x} | b'{0:064b}", self.x[3])?;
@@ -33,7 +32,7 @@ impl fmt::Display for RV64IUnprivRegs {
 #[derive(Default)]
 pub struct RV64ICpu {
     pub regs: RV64IUnprivRegs,
-    pub mem: Pmem,
+    pub mem:  Pmem,
 }
 
 const OPC_SYSTEM: u8 = 0b11_100_11;
@@ -101,10 +100,8 @@ fn i_i_imm12(ins: u32) -> u16 {
 
 impl RV64ICpu {
     pub fn new(mem: Pmem) -> RV64ICpu {
-        RV64ICpu {
-            mem,
-            regs: RV64IUnprivRegs::default(),
-        }
+        RV64ICpu { mem,
+                   regs: RV64IUnprivRegs::default() }
     }
 
     // reg_i - register index (0 - 31)
@@ -127,19 +124,15 @@ impl RV64ICpu {
     fn pc_add_i13(&mut self, off13: u16) {
         let old_pc = self.regs.pc;
         self.regs.pc = self.regs.pc.add_i13(I13::from_u16(off13));
-        println!(
-            "DBG: pc: 0x{old_pc:x} + 0x{off13:x} -> 0x{:x}",
-            self.regs.pc
-        );
+        println!("DBG: pc: 0x{old_pc:x} + 0x{off13:x} -> 0x{:x}",
+                 self.regs.pc);
     }
 
     fn pc_add_i21(&mut self, off21: u32) {
         let old_pc = self.regs.pc;
         self.regs.pc = self.regs.pc.add_i21(I21::from_u32(off21));
-        println!(
-            "DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
-            self.regs.pc
-        );
+        println!("DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
+                 self.regs.pc);
     }
 
     // Zics SYSTEM opcodes: CSRRS, ...
@@ -149,10 +142,8 @@ impl RV64ICpu {
         let rd = i_rd(ins);
         let rs1 = i_rs1(ins);
         let csr = i_csr(ins);
-        println!(
-            "DBG: SYSTEM: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
-            csr, rs1, funct3, rd
-        );
+        println!("DBG: SYSTEM: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
+                 csr, rs1, funct3, rd);
         match funct3 {
             F3_SYSTEM_CSRRS => {
                 println!("DBG: CSRRS");
@@ -175,10 +166,7 @@ impl RV64ICpu {
         let rs1 = i_rs1(ins);
         let rs2 = i_rs2(ins);
         let off13 = i_b_off13(ins);
-        println!(
-            "DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, \
-             rs1: {rs1}, f3: 0x{funct3:x}"
-        );
+        println!("DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, rs1: {rs1}, f3: 0x{funct3:x}");
         match funct3 {
             F3_BRANCH_BNE => {
                 println!("DBG: bne x{}, x{}, 0x{:x}", rs1, rs2, off13);
@@ -268,14 +256,15 @@ impl RV64ICpu {
         while self.regs.pc != break_point {
             let instr = self.mem.read32(self.regs.pc);
             self.execute_instr(instr);
-            //println!("{}", self.regs);
+            // println!("{}", self.regs);
         }
         println!("Stopped at breakpoint 0x{break_point:x}");
     }
 }
 
 #[test]
-fn test_opcode_csrrs() {}
+fn test_opcode_csrrs() {
+}
 
 #[test]
 fn test_opcode_bne() {

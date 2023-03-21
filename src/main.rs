@@ -12,11 +12,9 @@ fn main() {
     let mut pmem = pmem::Pmem::default();
     pmem.alloc_region(LOAD_ADDRESS, 4 * 1024);
 
-    pmem.load_bin_file(
-        LOAD_ADDRESS,
-        "tests/uart_hello_world/out/uart_hello_world.bin",
-    )
-    .unwrap();
+    pmem.load_bin_file(LOAD_ADDRESS,
+                       "tests/uart_hello_world/out/uart_hello_world.bin")
+        .unwrap();
     pmem.dump_hex(LOAD_ADDRESS, 80);
 
     let mut cpu0 = RV64ICpu::new(pmem);

@@ -1,10 +1,13 @@
+use std::error::Error;
 use std::fs;
-use std::{error::Error, fs::File, io::Read, result::Result};
+use std::fs::File;
+use std::io::Read;
+use std::result::Result;
 
 // TODO: use generics
 pub struct MemRegion {
     start: u64,
-    end: u64,
+    end:   u64,
     pub m: Vec<u8>,
 }
 
@@ -15,11 +18,9 @@ pub struct Pmem {
 
 impl Pmem {
     pub fn alloc_region(&mut self, start_addr: u64, size: u64) {
-        self.regions.push(MemRegion {
-            start: start_addr,
-            end: start_addr + size,
-            m: vec![0; size as usize],
-        })
+        self.regions.push(MemRegion { start: start_addr,
+                                      end:   start_addr + size,
+                                      m:     vec![0; size as usize], })
     }
 
     pub fn find_mem_region(&self, start: u64, end: u64) -> Option<&MemRegion> {
@@ -47,12 +48,10 @@ impl Pmem {
     pub fn load_bin_file(&mut self, addr: u64, fname: &str) -> Result<(), Box<dyn Error>> {
         // TODO: check if exists
         let f_size = fs::metadata(fname)?.len();
-        let mr: &mut MemRegion = self
-            .find_mem_region_mut(addr, addr + f_size)
-            .ok_or("region is too small")?;
+        let mr: &mut MemRegion = self.find_mem_region_mut(addr, addr + f_size)
+                                     .ok_or("region is too small")?;
         let mut f = File::open(fname)?;
         f.read(&mut mr.m[..])?;
-        //mr.m[0] = 1;
         Ok(())
     }
 
@@ -85,10 +84,9 @@ impl Pmem {
     pub fn dump_hex(&self, addr: u64, size: u64) {
         let aligned_addr = addr & !0xf_u64;
         let aligned_size = (size + 16) & !0xf_u64;
-        let m = &self
-            .find_mem_region(aligned_addr, aligned_addr + aligned_size)
-            .unwrap()
-            .m;
+        let m = &self.find_mem_region(aligned_addr, aligned_addr + aligned_size)
+                     .unwrap()
+                     .m;
         let mut line = String::with_capacity(size as usize + 32);
         // TODO: optimize - slow
         let mut pr_str = String::with_capacity(22);
@@ -115,10 +113,10 @@ impl Pmem {
             }
             line.push_str(&format!("{:02x} ", b));
             pr_str.push(if *b >= 0x20 && *b <= 0x7e {
-                *b as char
-            } else {
-                '.'
-            })
+                            *b as char
+                        } else {
+                            '.'
+                        })
         }
         println!("{}", line);
     }
