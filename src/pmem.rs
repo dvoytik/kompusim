@@ -55,19 +55,17 @@ impl Pmem {
         Ok(())
     }
 
-    #[allow(dead_code)]
     pub fn read8(&self, addr: u64) -> u8 {
-        if let Some(mr) = self.find_mem_region(addr, 1) {
-            return mr.m[addr as usize];
-        }
-        return 0;
+        let mr = self.find_mem_region(addr, 1).unwrap();
+        let offs = (addr - mr.start) as usize;
+        mr.m[offs]
     }
 
     #[allow(dead_code)]
     pub fn write8(&mut self, addr: u64, val: u8) {
-        if let Some(mr) = self.find_mem_region_mut(addr, 1) {
-            mr.m[addr as usize] = val;
-        }
+        let mr = self.find_mem_region_mut(addr, 1).unwrap();
+        let offs = (addr - mr.start) as usize;
+        mr.m[offs] = val;
     }
 
     pub fn read32(&self, addr: u64) -> u32 {
@@ -124,7 +122,8 @@ impl Pmem {
 
 #[test]
 pub fn test_pmem_dump() {
-    let pmem = Pmem::default();
+    let mut pmem = Pmem::default();
+    pmem.alloc_region(0, 1024);
     let b = pmem.read8(0);
     assert!(b == 0)
 }

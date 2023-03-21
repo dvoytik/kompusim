@@ -15,37 +15,48 @@ pub struct RV64IUnprivRegs {
 
 impl fmt::Display for RV64IUnprivRegs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, " x1: 0x{:016x} | b'{0:064b}", self.x[1])?;
-        writeln!(f, " x2: 0x{:016x} | b'{0:064b}", self.x[2])?;
-        writeln!(f, " x3: 0x{:016x} | b'{0:064b}", self.x[3])?;
-        writeln!(f, " x4: 0x{:016x} | b'{0:064b}", self.x[4])?;
-        writeln!(f, " x5: 0x{:016x} | b'{0:064b}", self.x[5])?;
-        writeln!(f, " x6: 0x{:016x} | b'{0:064b}", self.x[6])?;
-        writeln!(f, " x7: 0x{:016x} | b'{0:064b}", self.x[7])?;
-        writeln!(f, " x8: 0x{:016x} | b'{0:064b}", self.x[8])?;
-        writeln!(f, " x9: 0x{:016x} | b'{0:064b}", self.x[8])?;
-        writeln!(f, "x10: 0x{:016x} | b'{0:064b}", self.x[8])?;
-        writeln!(f, " pc: 0x{:016x} | b'{0:064b}", self.pc)
+        writeln!(f, " x1 (ra): 0x{:016x} | b'{0:064b}", self.x[1])?;
+        writeln!(f, " x2 (sp): 0x{:016x} | b'{0:064b}", self.x[2])?;
+        writeln!(f, " x3 (gp): 0x{:016x} | b'{0:064b}", self.x[3])?;
+        writeln!(f, " x4 (tp): 0x{:016x} | b'{0:064b}", self.x[4])?;
+        writeln!(f, " x5 (t0): 0x{:016x} | b'{0:064b}", self.x[5])?;
+        writeln!(f, " x6 (t1): 0x{:016x} | b'{0:064b}", self.x[6])?;
+        writeln!(f, " x7 (t2): 0x{:016x} | b'{0:064b}", self.x[7])?;
+        writeln!(f, " x8 (s0): 0x{:016x} | b'{0:064b}", self.x[8])?;
+        writeln!(f, " x9 (s1): 0x{:016x} | b'{0:064b}", self.x[9])?;
+        writeln!(f, "x10 (a0): 0x{:016x} | b'{0:064b}", self.x[10])?;
+        writeln!(f, "x11 (a1): 0x{:016x} | b'{0:064b}", self.x[11])?;
+        writeln!(f, "      pc: 0x{:016x} | b'{0:064b}", self.pc)
     }
 }
 
+// TODO: make regs private?
 #[derive(Default)]
 pub struct RV64ICpu {
     pub regs: RV64IUnprivRegs,
     pub mem:  Pmem,
 }
 
+// TODO:
+// #[repr(u8)]
+// enum Opcodes {
+//
+// }
 const OPC_SYSTEM: u8 = 0b11_100_11;
 const OPC_BRANCH: u8 = 0b11_000_11;
 const OPC_AUIPC: u8 = 0b00_101_11;
 const OPC_OP_IMM: u8 = 0b00_100_11;
 const OPC_JAL: u8 = 0b11_011_11;
 const OPC_LUI: u8 = 0b01_101_11;
+const OPC_LOAD: u8 = 0b00_000_11;
 
 const F3_BRANCH_BNE: u8 = 0b001;
 const F3_SYSTEM_CSRRS: u8 = 0b010;
 
 const F3_OP_IMM_ADDI: u8 = 0b000;
+
+const F3_OP_LOAD_LB: u8 = 0b000;
+const F3_OP_LOAD_LBU: u8 = 0b100;
 
 #[inline(always)]
 fn i_opcode(ins: u32) -> u8 {
@@ -115,6 +126,16 @@ impl RV64ICpu {
             return; // writes to x0 are ignored
         }
         self.regs.x[reg_i as usize] = val;
+    }
+
+    // writes i8 LSB and sign extends
+    // fn regs_wi8(&mut self, reg_i: u8, val: u8) {
+    // todo!()
+    // }
+
+    /// writes zero extended u8 to reg_i register
+    fn regs_wu8(&mut self, reg_i: u8, val: u8) {
+        self.regs_w64(reg_i, val as u64)
     }
 
     fn regs_r64(&self, reg_i: u8) -> u64 {
@@ -231,13 +252,34 @@ impl RV64ICpu {
     // Only one instrucitn JAL - Jump and Link
     fn opc_jal(&mut self, ins: u32) {
         let rd = i_rd(ins);
-        let imm21 = ins.bits(31, 31) << 20
-            | ins.bits(19, 12) << 12
-            | ins.bits(20, 20) << 11
-            | ins.bits(30, 21) << 1;
+        let imm21 = ins.bits(31, 31) << 20 |
+                    ins.bits(19, 12) << 12 |
+                    ins.bits(20, 20) << 11 |
+                    ins.bits(30, 21) << 1;
         println!("DBG: jal x{rd}, 0x{imm21:x} # {imm21}");
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
+    }
+
+    fn opc_load(&mut self, ins: u32) {
+        let imm12 = i_i_imm12(ins);
+        let rs1 = i_rs1(ins);
+        let funct3 = i_funct3(ins);
+        let rd = i_rd(ins);
+        let addr = self.regs_r64(rs1).add_i12(I12::from_u16(imm12));
+        match funct3 {
+            F3_OP_LOAD_LB => {
+                todo!();
+            }
+            F3_OP_LOAD_LBU => {
+                self.regs_wu8(rd, self.mem.read8(addr));
+                println!("DBG: lbu x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
+            }
+            _ => {
+                bad_instr(ins);
+            }
+        }
+        self.pc_inc()
     }
 
     fn execute_instr(&mut self, ins: u32) {
@@ -251,6 +293,7 @@ impl RV64ICpu {
             OPC_OP_IMM => self.opc_op_imm(ins),
             OPC_JAL => self.opc_jal(ins),
             OPC_LUI => self.opc_lui(ins),
+            OPC_LOAD => self.opc_load(ins),
             _ => {
                 bad_instr(ins);
             }
@@ -330,4 +373,19 @@ fn test_opcode_jal() {
     cpu.regs.pc = 0x80000010;
     cpu.execute_instr(0x008000ef);
     assert!(cpu.regs.pc == 0x80000018);
+}
+
+#[test]
+// lbu x6, 0x0(x10)
+fn test_opcode_lbu() {
+    let mut pmem = Pmem::default();
+    pmem.alloc_region(0x0000_0000_8000_0000, 4 * 1024);
+    pmem.write8(0x00000000_8000_003c, 0x48);
+    let mut cpu = RV64ICpu::new(pmem);
+
+    cpu.regs_w64(6, 0xa5a5a5a5_a5a5_a5a5);
+    cpu.regs_w64(10, 0x00000000_8000_003c);
+    // cpu.regs.pc = 0x80000010;
+    cpu.execute_instr(0x00054303);
+    assert!(cpu.regs_r64(6) == 0x48);
 }
