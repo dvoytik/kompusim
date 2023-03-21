@@ -98,6 +98,11 @@ fn i_i_imm12(ins: u32) -> u16 {
     ins.bits(31, 20) as u16
 }
 
+fn bad_instr(ins: u32) {
+    let opc = i_opcode(ins);
+    panic!("DBG: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})");
+}
+
 impl RV64ICpu {
     pub fn new(mem: Pmem) -> RV64ICpu {
         RV64ICpu { mem,
@@ -153,7 +158,8 @@ impl RV64ICpu {
                 csr::csr_w64(csr, csr_v);
             }
             _ => {
-                panic!("wrong Zicsr instr")
+                println!("wrong SYSTEM instr");
+                bad_instr(ins);
             }
         }
         self.pc_inc();
@@ -178,7 +184,8 @@ impl RV64ICpu {
                 }
             }
             _ => {
-                panic!("unsupported SYSTEM instr")
+                println!("unsupported BRACH instr");
+                bad_instr(ins);
             }
         }
     }
@@ -215,7 +222,7 @@ impl RV64ICpu {
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(I12::from_u16(imm12)));
             }
             _ => {
-                panic!("unsupported OP-IMM instr")
+                bad_instr(ins);
             }
         }
         self.pc_inc()
@@ -245,7 +252,7 @@ impl RV64ICpu {
             OPC_JAL => self.opc_jal(ins),
             OPC_LUI => self.opc_lui(ins),
             _ => {
-                panic!("not implemented opcode: 0x{:x}", opcode)
+                bad_instr(ins);
             }
         }
     }
