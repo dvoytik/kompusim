@@ -1,3 +1,6 @@
+use core::fmt;
+use std::fmt::LowerHex;
+
 use crate::bits::BitOps;
 
 pub trait Imm {
@@ -22,6 +25,7 @@ impl Imm for u64 {
 }
 
 /// Immidiate signed 12 bit
+#[derive(Copy, Clone)]
 pub struct I12(pub i16);
 
 impl I12 {
@@ -40,6 +44,7 @@ impl I12 {
 }
 
 /// Immidiate signed 13 bit
+#[derive(Copy, Clone)]
 pub struct I13(pub i16);
 
 impl I13 {
@@ -57,7 +62,15 @@ impl I13 {
     }
 }
 
+/// Used for format!()
+impl LowerHex for I13 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// Immidiate signed 21 bit
+#[derive(Copy, Clone)]
 pub struct I21(pub i32);
 
 impl I21 {

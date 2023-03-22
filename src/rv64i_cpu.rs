@@ -50,7 +50,9 @@ const OPC_JAL: u8 = 0b11_011_11;
 const OPC_LUI: u8 = 0b01_101_11;
 const OPC_LOAD: u8 = 0b00_000_11;
 
+const F3_BRANCH_BEQ: u8 = 0b000;
 const F3_BRANCH_BNE: u8 = 0b001;
+
 const F3_SYSTEM_CSRRS: u8 = 0b010;
 
 const F3_OP_IMM_ADDI: u8 = 0b000;
@@ -90,12 +92,12 @@ fn i_csr(ins: u32) -> u16 {
 
 // Decode 13-bit signed offset from a B-type instruction
 #[inline(always)]
-fn i_b_off13(ins: u32) -> u16 {
+fn i_b_off13(ins: u32) -> I13 {
     let off_4_1 = ins.bits(11, 8) as u16;
     let off_11 = ins.bits(7, 7) as u16;
     let off_10_5 = ins.bits(30, 25) as u16;
     let off_12 = ins.bits(31, 31) as u16;
-    off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1
+    I13::from_u16(off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1)
 }
 
 // extract upper 20-bit for LUI, AUIPC instructions
@@ -147,9 +149,9 @@ impl RV64ICpu {
         println!("DBG: pc: 0x{:x} -> 0x{:x}", self.regs.pc - 4, self.regs.pc)
     }
 
-    fn pc_add_i13(&mut self, off13: u16) {
+    fn pc_add_i13(&mut self, off13: I13) {
         let old_pc = self.regs.pc;
-        self.regs.pc = self.regs.pc.add_i13(I13::from_u16(off13));
+        self.regs.pc = self.regs.pc.add_i13(off13);
         println!("DBG: pc: 0x{old_pc:x} + 0x{off13:x} -> 0x{:x}",
                  self.regs.pc);
     }
@@ -186,7 +188,7 @@ impl RV64ICpu {
         self.pc_inc();
     }
 
-    // BRANCH opcodes: BNE, ...
+    // BRANCH opcodes: BEQ, BNE, ...
     fn opc_branch(&mut self, ins: u32) {
         // B-type instructions
         let funct3 = i_funct3(ins);
@@ -195,10 +197,21 @@ impl RV64ICpu {
         let off13 = i_b_off13(ins);
         println!("DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, rs1: {rs1}, f3: 0x{funct3:x}");
         match funct3 {
+            // Branch Not Equal
             F3_BRANCH_BNE => {
-                println!("DBG: bne x{}, x{}, 0x{:x}", rs1, rs2, off13);
-                // Branch Not Equal
+                println!("DBG: bne x{rs1}, x{rs2}, 0x{:x}",
+                         self.regs.pc.add_i13(off13));
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
+                    self.pc_add_i13(off13);
+                } else {
+                    self.pc_inc()
+                }
+            }
+            // Branch EQual
+            F3_BRANCH_BEQ => {
+                println!("DBG: beq x{rs1}, x{rs2}, 0x{:x}",
+                         self.regs.pc.add_i13(off13));
+                if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
                     self.pc_inc()
@@ -388,4 +401,21 @@ fn test_opcode_lbu() {
     // cpu.regs.pc = 0x80000010;
     cpu.execute_instr(0x00054303);
     assert!(cpu.regs_r64(6) == 0x48);
+}
+
+#[test]
+// beq x6, x0, 0x80000038
+fn test_opcode_beq() {
+    let mut cpu = RV64ICpu::default();
+    // equal
+    cpu.regs.x[6] = 0;
+    // pc = 0, offset = 18
+    cpu.execute_instr(0x00030c63);
+    assert!(cpu.regs.pc == 0x18);
+
+    // not equal
+    cpu.regs.x[6] = 1;
+    cpu.execute_instr(0x00030c63);
+    // pc = 0x18 + 4
+    assert!(cpu.regs.pc == 0x1c);
 }
