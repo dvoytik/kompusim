@@ -2,8 +2,8 @@ use core::fmt;
 
 use crate::alu::{Imm, I12, I13, I21};
 use crate::bits::BitOps;
+use crate::bus::Bus;
 use crate::csr;
-use crate::pmem::Pmem;
 
 //
 #[derive(Debug, Default)]
@@ -34,7 +34,7 @@ impl fmt::Display for RV64IUnprivRegs {
 #[derive(Default)]
 pub struct RV64ICpu {
     pub regs: RV64IUnprivRegs,
-    pub mem:  Pmem,
+    pub bus:  Bus,
 }
 
 // TODO:
@@ -117,8 +117,8 @@ fn bad_instr(ins: u32) {
 }
 
 impl RV64ICpu {
-    pub fn new(mem: Pmem) -> RV64ICpu {
-        RV64ICpu { mem,
+    pub fn new(bus: Bus) -> RV64ICpu {
+        RV64ICpu { bus,
                    regs: RV64IUnprivRegs::default() }
     }
 
@@ -317,7 +317,7 @@ impl RV64ICpu {
         println!("Running until breakpoint 0x{break_point:x}");
         println!("DBG: pc: 0x{:08x}", self.regs.pc);
         while self.regs.pc != break_point {
-            let instr = self.mem.read32(self.regs.pc);
+            let instr = self.bus.read32(self.regs.pc);
             self.execute_instr(instr);
             // println!("{}", self.regs);
         }
@@ -391,10 +391,9 @@ fn test_opcode_jal() {
 #[test]
 // lbu x6, 0x0(x10)
 fn test_opcode_lbu() {
-    let mut pmem = Pmem::default();
-    pmem.alloc_region(0x0000_0000_8000_0000, 4 * 1024);
-    pmem.write8(0x00000000_8000_003c, 0x48);
-    let mut cpu = RV64ICpu::new(pmem);
+    let mut bus = Bus::new_with_ram(0x0000_0000_8000_0000, 4 * 1024);
+    bus.write8(0x00000000_8000_003c, 0x48);
+    let mut cpu = RV64ICpu::new(bus);
 
     cpu.regs_w64(6, 0xa5a5a5a5_a5a5_a5a5);
     cpu.regs_w64(10, 0x00000000_8000_003c);
