@@ -52,6 +52,7 @@ const OPC_LOAD: u8 = 0b00_000_11;
 
 const F3_BRANCH_BEQ: u8 = 0b000;
 const F3_BRANCH_BNE: u8 = 0b001;
+const F3_BRANCH_BLT: u8 = 0b100;
 
 const F3_SYSTEM_CSRRS: u8 = 0b010;
 
@@ -152,6 +153,11 @@ impl RV64ICpu {
         self.regs.x[reg_i as usize]
     }
 
+    // Treat register as signed 64 bit double word
+    fn regs_ri64(&self, reg_i: u8) -> i64 {
+        self.regs.x[reg_i as usize] as i64
+    }
+
     fn pc_inc(&mut self) {
         self.regs.pc += 4;
         println!("DBG: pc: 0x{:x} -> 0x{:x}", self.regs.pc - 4, self.regs.pc)
@@ -196,7 +202,7 @@ impl RV64ICpu {
         self.pc_inc();
     }
 
-    // BRANCH opcodes: BEQ, BNE, ...
+    // BRANCH opcodes: BEQ, BNE, BLT, ...
     fn opc_branch(&mut self, ins: u32) {
         // B-type instructions
         let funct3 = i_funct3(ins);
@@ -225,8 +231,18 @@ impl RV64ICpu {
                     self.pc_inc()
                 }
             }
+            // Branch Less Than (signed comparison)
+            F3_BRANCH_BLT => {
+                println!("DBG: blt x{rs1}, x{rs2}, 0x{:x}",
+                         self.regs.pc.add_i13(off13));
+                if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
+                    self.pc_add_i13(off13);
+                } else {
+                    self.pc_inc()
+                }
+            }
             _ => {
-                println!("unsupported BRACH instr");
+                println!("DBG: unsupported BRACH instr, funct3: 0b{funct3:b}");
                 bad_instr(ins);
             }
         }
@@ -429,7 +445,7 @@ fn test_opcode_lw() {
 }
 
 #[test]
-// beq x6, x0, 0x80000038
+// beq x6, x0, 0x00000018
 fn test_opcode_beq() {
     let mut cpu = RV64ICpu::default();
     // equal
@@ -443,6 +459,27 @@ fn test_opcode_beq() {
     cpu.execute_instr(0x00030c63);
     // pc = 0x18 + 4
     assert!(cpu.regs.pc == 0x1c);
+}
+
+#[test]
+// blt x7, x0, -4
+fn test_opcode_blt() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.pc = 0x4;
+
+    // less
+    cpu.regs.x[7] = -1_i64 as u64;
+    // pc = 0, offset = 24
+    cpu.execute_instr(0xfe03cee3);
+    println!("{:x}", cpu.regs.pc);
+    // pc = 0x4 - 4
+    assert!(cpu.regs.pc == 0x0);
+
+    // equal
+    cpu.regs.x[7] = 0;
+    cpu.execute_instr(0xfe03cee3);
+    // pc = 0x0 + 4
+    assert!(cpu.regs.pc == 0x4);
 }
 
 #[test]
