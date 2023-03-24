@@ -28,6 +28,13 @@ impl BusAgent {
             BusAgent::Device(ram) => ram.write8(addr, val),
         }
     }
+
+    pub fn write32(&mut self, addr: u64, val: u32) {
+        match self {
+            BusAgent::RAM(ram) => ram.write32(addr, val),
+            BusAgent::Device(ram) => ram.write32(addr, val),
+        }
+    }
 }
 
 struct AddrRegion {
@@ -96,20 +103,38 @@ impl Bus {
     /// Read byte
     /// TODO: implement exception logic - return Error
     pub fn read8(&self, addr: u64) -> u8 {
-        let ar = self.find_addr_region(addr, 1).unwrap();
-        ar.agent.read8(addr)
+        if let Some(ar) = self.find_addr_region(addr, 1) {
+            ar.agent.read8(addr)
+        } else {
+            panic!("DBG: read8 buf fault: 0x{addr:x}");
+        }
     }
 
     #[allow(dead_code)]
     pub fn write8(&mut self, addr: u64, val: u8) {
-        let ar = self.find_addr_region_mut(addr, 1).unwrap();
-        ar.agent.write8(addr, val)
+        if let Some(ar) = self.find_addr_region_mut(addr, 1) {
+            ar.agent.write8(addr, val)
+        } else {
+            panic!("DBG: write8 bus fault: 0x{addr:x}");
+        }
     }
 
     // Little Endian 32 bit read
     pub fn read32(&self, addr: u64) -> u32 {
-        let ar = self.find_addr_region(addr, 4).unwrap();
-        ar.agent.read32(addr)
+        if let Some(ar) = self.find_addr_region(addr, 4) {
+            ar.agent.read32(addr)
+        } else {
+            panic!("DBG: read32 bus fault: 0x{addr:x}");
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn write32(&mut self, addr: u64, val: u32) {
+        if let Some(ar) = self.find_addr_region_mut(addr, 4) {
+            ar.agent.write32(addr, val)
+        } else {
+            panic!("DBG: write32 bus fault: 0x{addr:x}");
+        }
     }
 }
 
@@ -130,4 +155,14 @@ pub fn test_read32_le() {
     bus.write8(3, 0xde);
     let v: u32 = bus.read32(0);
     assert!(v == 0xdeadbeef);
+}
+
+#[test]
+pub fn test_write32_le() {
+    let mut bus = Bus::new_with_ram(0, 4 * 1024);
+    bus.write32(0, 0x_dead_beef);
+    assert!(bus.read8(0) == 0xef);
+    assert!(bus.read8(1) == 0xbe);
+    assert!(bus.read8(2) == 0xad);
+    assert!(bus.read8(3) == 0xde);
 }

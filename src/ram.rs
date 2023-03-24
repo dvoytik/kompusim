@@ -3,6 +3,8 @@ use std::error::Error;
 use std::fs::{self, File};
 use std::io::Read;
 
+use crate::bits::BitOps;
+
 #[derive(Debug)]
 struct RamError {
     details: String,
@@ -53,6 +55,15 @@ impl Ram {
         let b3 = self.m[offs + 3] as u32;
         // little endian
         b3 << 24 | b2 << 16 | b1 << 8 | b0
+    }
+
+    // Little Endian 32-bit write
+    pub fn write32(&mut self, addr: u64, val: u32) {
+        let offs = (addr - self.start) as usize;
+        self.m[offs] = val.bits(7, 0) as u8;
+        self.m[offs + 1] = val.bits(15, 8) as u8;
+        self.m[offs + 2] = val.bits(23, 16) as u8;
+        self.m[offs + 3] = val.bits(31, 24) as u8;
     }
 
     pub fn load_bin_file(&mut self, addr: u64, fname: &str) -> Result<(), Box<dyn Error>> {

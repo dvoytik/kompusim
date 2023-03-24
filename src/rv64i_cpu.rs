@@ -59,6 +59,7 @@ const F3_OP_IMM_ADDI: u8 = 0b000;
 
 const F3_OP_LOAD_LB: u8 = 0b000;
 const F3_OP_LOAD_LBU: u8 = 0b100;
+const F3_OP_LOAD_LW: u8 = 0b010;
 
 #[inline(always)]
 fn i_opcode(ins: u32) -> u8 {
@@ -134,6 +135,13 @@ impl RV64ICpu {
     // fn regs_wi8(&mut self, reg_i: u8, val: u8) {
     // todo!()
     // }
+
+    /// writes sign extended u32 to reg_i register
+    fn regs_wi32(&mut self, reg_i: u8, val_i32: u32) {
+        // extend sign
+        let val_u64 = val_i32 as i32 as i64 as u64;
+        self.regs_w64(reg_i, val_u64)
+    }
 
     /// writes zero extended u8 to reg_i register
     fn regs_wu8(&mut self, reg_i: u8, val: u8) {
@@ -284,11 +292,18 @@ impl RV64ICpu {
             F3_OP_LOAD_LB => {
                 todo!();
             }
+            // Load Byte Unsigned
             F3_OP_LOAD_LBU => {
-                self.regs_wu8(rd, self.mem.read8(addr));
                 println!("DBG: lbu x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
+                self.regs_wu8(rd, self.bus.read8(addr));
+            }
+            // Load Word
+            F3_OP_LOAD_LW => {
+                println!("DBG: lw x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
+                self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
+                println!("DBG: unsupported LOAD instruction, funct3: 0b{funct3:b}");
                 bad_instr(ins);
             }
         }
@@ -397,9 +412,20 @@ fn test_opcode_lbu() {
 
     cpu.regs_w64(6, 0xa5a5a5a5_a5a5_a5a5);
     cpu.regs_w64(10, 0x00000000_8000_003c);
-    // cpu.regs.pc = 0x80000010;
     cpu.execute_instr(0x00054303);
     assert!(cpu.regs_r64(6) == 0x48);
+}
+
+#[test]
+// lw x7, 0x0(x5)
+fn test_opcode_lw() {
+    let mut bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
+    bus.write32(0x00000000_0000_0000, 0xa5a5_a5a5);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.regs_w64(7, 0xdead_beef_dead_beef);
+    cpu.execute_instr(0x0002a383);
+    // lw sign extends 32-bit word
+    assert!(cpu.regs_r64(7) == 0xffff_ffff_a5a5_a5a5);
 }
 
 #[test]
@@ -417,4 +443,12 @@ fn test_opcode_beq() {
     cpu.execute_instr(0x00030c63);
     // pc = 0x18 + 4
     assert!(cpu.regs.pc == 0x1c);
+}
+
+#[test]
+fn registers_writes() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs_wi32(1, 0x_8000_0000);
+    println!("{:x}", cpu.regs.x[1]); // == 0xffff_ffff_8000_000);
+    assert!(cpu.regs.x[1] == 0xffff_ffff_8000_0000);
 }

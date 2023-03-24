@@ -34,4 +34,8 @@ impl DevIO for Uart {
             _ => panic!("DBG: Uart: register read not implemented"),
         }
     }
+
+    fn write32(&mut self, _addr: u64, _val: u32) {
+        panic!("DBG: Uart: write8 is not supported")
+    }
 }

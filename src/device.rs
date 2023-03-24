@@ -3,6 +3,7 @@ pub trait DevIO {
     fn read8(&self, addr: u64) -> u8;
     fn write8(&mut self, addr: u64, val: u8);
     fn read32(&self, addr: u64) -> u32;
+    fn write32(&mut self, addr: u64, val: u32);
 }
 
 pub struct Device {
@@ -28,5 +29,9 @@ impl Device {
 
     pub fn read32(&self, addr: u64) -> u32 {
         self.dev.read32(addr - self.start)
+    }
+
+    pub fn write32(&mut self, addr: u64, val: u32) {
+        self.dev.write32(addr - self.start, val)
     }
 }
