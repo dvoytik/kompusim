@@ -398,11 +398,11 @@ impl RV64ICpu {
 }
 
 #[test]
-fn test_opcode_csrrs() {
+fn test_instruction_csrrs() {
 }
 
 #[test]
-fn test_opcode_bne() {
+fn test_instruction_bne() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.x[5] = 1;
     // BNE t0, x0, 0x10
@@ -411,7 +411,7 @@ fn test_opcode_bne() {
 }
 
 #[test]
-fn test_opcode_lui() {
+fn test_instruction_lui() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.x[5] = 0x123;
     // lui x5, 0x10010
@@ -420,7 +420,7 @@ fn test_opcode_lui() {
 }
 
 #[test]
-fn test_opcode_auipc() {
+fn test_instruction_auipc() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.pc = 0x100;
     cpu.regs.x[10] = 0x123;
@@ -443,7 +443,7 @@ fn test_instr_decode_immidiates() {
 
 #[test]
 // addi x10, x10, 52
-fn test_opcode_addi() {
+fn test_instruction_addi() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.x[10] = 0x123;
     cpu.execute_instr(0x03450513);
@@ -452,7 +452,7 @@ fn test_opcode_addi() {
 
 #[test]
 // jal ra, 80000018
-fn test_opcode_jal() {
+fn test_instruction_jal() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.x[5] = 1;
     cpu.regs.pc = 0x80000010;
@@ -462,7 +462,7 @@ fn test_opcode_jal() {
 
 #[test]
 // lbu x6, 0x0(x10)
-fn test_opcode_lbu() {
+fn test_instruction_lbu() {
     let mut bus = Bus::new_with_ram(0x0000_0000_8000_0000, 4 * 1024);
     bus.write8(0x00000000_8000_003c, 0x48);
     let mut cpu = RV64ICpu::new(bus);
@@ -475,7 +475,7 @@ fn test_opcode_lbu() {
 
 #[test]
 // lw x7, 0x0(x5)
-fn test_opcode_lw() {
+fn test_instruction_lw() {
     let mut bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
     bus.write32(0x00000000_0000_0000, 0xa5a5_a5a5);
     let mut cpu = RV64ICpu::new(bus);
@@ -487,7 +487,7 @@ fn test_opcode_lw() {
 
 #[test]
 // sw x6, 0x0(x5)
-fn test_opcode_sw() {
+fn test_instruction_sw() {
     let bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
     cpu.regs_w64(5, 0x10); // address
@@ -499,7 +499,7 @@ fn test_opcode_sw() {
 
 #[test]
 // beq x6, x0, 0x00000018
-fn test_opcode_beq() {
+fn test_instruction_beq() {
     let mut cpu = RV64ICpu::default();
     // equal
     cpu.regs.x[6] = 0;
@@ -516,7 +516,7 @@ fn test_opcode_beq() {
 
 #[test]
 // blt x7, x0, -4
-fn test_opcode_blt() {
+fn test_instruction_blt() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.pc = 0x4;
 
