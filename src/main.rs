@@ -22,9 +22,9 @@ fn main() {
 
     let mut bus = bus::Bus::new();
     bus.attach_ram(ram);
-    bus.attach_device(Device::new(Box::new(Uart::new()), 0x1001_0000, 0x100));
+    bus.attach_device(Device::new(Box::new(Uart::new("0".to_string())), 0x1001_0000, 0x20));
     let mut cpu0 = RV64ICpu::new(bus);
     cpu0.regs.pc = LOAD_ADDRESS;
-    cpu0.run_until(0x000000008000002c);
+    cpu0.run_until(0x0000000080000030);
     // cpu0.run_until(0x0000000080000014);
 }

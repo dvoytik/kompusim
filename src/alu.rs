@@ -43,6 +43,13 @@ impl I12 {
     }
 }
 
+/// Used for format!()
+impl LowerHex for I12 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// Immidiate signed 13 bit
 #[derive(Copy, Clone)]
 pub struct I13(pub i16);

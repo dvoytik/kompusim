@@ -49,6 +49,7 @@ const OPC_OP_IMM: u8 = 0b00_100_11;
 const OPC_JAL: u8 = 0b11_011_11;
 const OPC_LUI: u8 = 0b01_101_11;
 const OPC_LOAD: u8 = 0b00_000_11;
+const OPC_STORE: u8 = 0b01_000_11;
 
 const F3_BRANCH_BEQ: u8 = 0b000;
 const F3_BRANCH_BNE: u8 = 0b001;
@@ -61,6 +62,9 @@ const F3_OP_IMM_ADDI: u8 = 0b000;
 const F3_OP_LOAD_LB: u8 = 0b000;
 const F3_OP_LOAD_LBU: u8 = 0b100;
 const F3_OP_LOAD_LW: u8 = 0b010;
+
+const F3_OP_STORE_SB: u8 = 0b000;
+const F3_OP_STORE_SW: u8 = 0b010;
 
 #[inline(always)]
 fn i_opcode(ins: u32) -> u8 {
@@ -113,6 +117,14 @@ fn i_i_imm12(ins: u32) -> u16 {
     ins.bits(31, 20) as u16
 }
 
+// Decode signed 12-bit immidiate from S-type instruction
+#[inline(always)]
+fn i_s_type_imm12(ins: u32) -> I12 {
+    let imm11_5 = ins.bits(31, 25) as u16;
+    let imm4_0 = ins.bits(11, 7) as u16;
+    I12::from_u16(imm11_5 << 5 | imm4_0)
+}
+
 fn bad_instr(ins: u32) {
     let opc = i_opcode(ins);
     panic!("DBG: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})");
@@ -153,7 +165,12 @@ impl RV64ICpu {
         self.regs.x[reg_i as usize]
     }
 
-    // Treat register as signed 64 bit double word
+    // reads [31:0] from register x[reg_i]
+    fn regs_r32(&self, reg_i: u8) -> u32 {
+        self.regs.x[reg_i as usize] as u32
+    }
+
+    // Treat register as signed 64 bit
     fn regs_ri64(&self, reg_i: u8) -> i64 {
         self.regs.x[reg_i as usize] as i64
     }
@@ -326,6 +343,29 @@ impl RV64ICpu {
         self.pc_inc()
     }
 
+    fn opc_store(&mut self, ins: u32) {
+        let imm12 = i_s_type_imm12(ins);
+        let rs2 = i_rs2(ins);
+        let rs1 = i_rs1(ins);
+        let funct3 = i_funct3(ins);
+        let addr = self.regs_r64(rs1).add_i12(imm12);
+        match funct3 {
+            F3_OP_STORE_SB => {
+                println!("DBG: sb x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
+                todo!();
+            }
+            F3_OP_STORE_SW => {
+                println!("DBG: sw x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
+                self.bus.write32(addr, self.regs_r32(rs2))
+            }
+            _ => {
+                println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
+                bad_instr(ins);
+            }
+        }
+        self.pc_inc()
+    }
+
     fn execute_instr(&mut self, ins: u32) {
         // TODO: macro with bits matching
         println!("\nDBG: instr: 0x{:08x}", ins);
@@ -338,6 +378,7 @@ impl RV64ICpu {
             OPC_JAL => self.opc_jal(ins),
             OPC_LUI => self.opc_lui(ins),
             OPC_LOAD => self.opc_load(ins),
+            OPC_STORE => self.opc_store(ins),
             _ => {
                 bad_instr(ins);
             }
@@ -445,6 +486,18 @@ fn test_opcode_lw() {
 }
 
 #[test]
+// sw x6, 0x0(x5)
+fn test_opcode_sw() {
+    let bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.regs_w64(5, 0x10); // address
+    cpu.regs_w64(6, 0xdead_beef); // what to store
+    cpu.execute_instr(0x0062a023);
+    // lw sign extends 32-bit word
+    assert!(cpu.bus.read32(0x10) == 0xdead_beef);
+}
+
+#[test]
 // beq x6, x0, 0x00000018
 fn test_opcode_beq() {
     let mut cpu = RV64ICpu::default();
@@ -469,7 +522,6 @@ fn test_opcode_blt() {
 
     // less
     cpu.regs.x[7] = -1_i64 as u64;
-    // pc = 0, offset = 24
     cpu.execute_instr(0xfe03cee3);
     println!("{:x}", cpu.regs.pc);
     // pc = 0x4 - 4

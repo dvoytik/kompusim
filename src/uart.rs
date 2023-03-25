@@ -1,6 +1,7 @@
 use crate::device::DevIO;
 
 pub struct Uart {
+    id: String,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
     // txctrl: u32, // 0x08
@@ -13,8 +14,8 @@ pub struct Uart {
 const TXDATA: u64 = 0x00;
 
 impl Uart {
-    pub fn new() -> Uart {
-        Uart {}
+    pub fn new(id: String) -> Uart {
+        Uart { id }
     }
 }
 
@@ -35,7 +36,10 @@ impl DevIO for Uart {
         }
     }
 
-    fn write32(&mut self, _addr: u64, _val: u32) {
-        panic!("DBG: Uart: write8 is not supported")
+    fn write32(&mut self, addr: u64, val: u32) {
+        match addr {
+            TXDATA => println!("UART-{} output:{}", self.id, (val & 0xff) as u8 as char),
+            _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
+        };
     }
 }
