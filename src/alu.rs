@@ -1,5 +1,5 @@
 use core::fmt;
-use std::fmt::LowerHex;
+use std::fmt::{Display, LowerHex};
 
 use crate::bits::BitOps;
 
@@ -40,6 +40,12 @@ impl I12 {
     #[allow(dead_code)]
     pub fn from_i16(v: i16) -> Self {
         I12(v)
+    }
+}
+
+impl Display for I12 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

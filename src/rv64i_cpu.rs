@@ -5,15 +5,78 @@ use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
 
-//
+// RV64I Unpriviliged Registers
 #[derive(Debug, Default)]
-pub struct RV64IUnprivRegs {
+pub struct RV64IURegs {
     // x0: is always zero
     x:      [u64; 32],
     pub pc: u64,
 }
 
-impl fmt::Display for RV64IUnprivRegs {
+impl RV64IURegs {
+    // Get ABI register name
+    fn reg_idx2abi(r: u8) -> &'static str {
+        match r {
+            0 => "zero",
+            1 => "ra",
+            2 => "sp",
+            3 => "gp",
+            4 => "tp",
+            5 => "t0",
+            6 => "t1",
+            7 => "t2",
+            8 => "s0",
+            9 => "s1",
+            10 => "a0",
+            11 => "a1",
+            12 => "a2",
+            13 => "a3",
+            14 => "a4",
+            15 => "a5",
+            16 => "a6",
+            17 => "a7",
+            18 => "s2",
+            19 => "s3",
+            20 => "a4",
+            21 => "s5",
+            22 => "s6",
+            23 => "s7",
+            24 => "s8",
+            25 => "s9",
+            26 => "s10",
+            27 => "s11",
+            28 => "t3",
+            29 => "t4",
+            30 => "t5",
+            31 => "t6",
+            _ => panic!("Unknow register idx"),
+        }
+    }
+
+    fn print_reg(&self, ri: u8) {
+        if ri == 0 {
+            return;
+        }
+        let r_abi = Self::reg_idx2abi(ri);
+        println!(" x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
+                 self.x[ri as usize]);
+    }
+
+    fn print_two_regs(&self, ri1: u8, ri2: u8) {
+        if ri1 != 0 {
+            let r1_abi = Self::reg_idx2abi(ri1);
+            println!(" x{ri1} ({r1_abi}): 0x{0:016x} | b'{0:064b}",
+                     self.x[ri1 as usize]);
+        }
+        if ri2 != 0 {
+            let r2_abi = Self::reg_idx2abi(ri2);
+            println!(" x{ri1} ({r2_abi}): 0x{0:016x} | b'{0:064b}",
+                     self.x[ri2 as usize]);
+        }
+    }
+}
+
+impl fmt::Display for RV64IURegs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, " x1 (ra): 0x{:016x} | b'{0:064b}", self.x[1])?;
         writeln!(f, " x2 (sp): 0x{:016x} | b'{0:064b}", self.x[2])?;
@@ -26,6 +89,8 @@ impl fmt::Display for RV64IUnprivRegs {
         writeln!(f, " x9 (s1): 0x{:016x} | b'{0:064b}", self.x[9])?;
         writeln!(f, "x10 (a0): 0x{:016x} | b'{0:064b}", self.x[10])?;
         writeln!(f, "x11 (a1): 0x{:016x} | b'{0:064b}", self.x[11])?;
+        writeln!(f, "x12 (a2): 0x{:016x} | b'{0:064b}", self.x[12])?;
+        writeln!(f, "x13 (a3): 0x{:016x} | b'{0:064b}", self.x[13])?;
         writeln!(f, "      pc: 0x{:016x} | b'{0:064b}", self.pc)
     }
 }
@@ -33,7 +98,7 @@ impl fmt::Display for RV64IUnprivRegs {
 // TODO: make regs private?
 #[derive(Default)]
 pub struct RV64ICpu {
-    pub regs: RV64IUnprivRegs,
+    pub regs: RV64IURegs,
     pub bus:  Bus,
 }
 
@@ -46,6 +111,7 @@ const OPC_SYSTEM: u8 = 0b11_100_11;
 const OPC_BRANCH: u8 = 0b11_000_11;
 const OPC_AUIPC: u8 = 0b00_101_11;
 const OPC_OP_IMM: u8 = 0b00_100_11;
+const OPC_JALR: u8 = 0b11_001_11;
 const OPC_JAL: u8 = 0b11_011_11;
 const OPC_LUI: u8 = 0b01_101_11;
 const OPC_LOAD: u8 = 0b00_000_11;
@@ -113,8 +179,8 @@ fn i_u_uimm20(ins: u32) -> u64 {
 
 // Decode signed 12-bit immidiate from I-type instruction
 #[inline(always)]
-fn i_i_imm12(ins: u32) -> u16 {
-    ins.bits(31, 20) as u16
+fn i_i_type_imm12(ins: u32) -> I12 {
+    I12::from_u16(ins.bits(31, 20) as u16)
 }
 
 // Decode signed 12-bit immidiate from S-type instruction
@@ -133,7 +199,7 @@ fn bad_instr(ins: u32) {
 impl RV64ICpu {
     pub fn new(bus: Bus) -> RV64ICpu {
         RV64ICpu { bus,
-                   regs: RV64IUnprivRegs::default() }
+                   regs: RV64IURegs::default() }
     }
 
     // reg_i - register index (0 - 31)
@@ -192,6 +258,13 @@ impl RV64ICpu {
         self.regs.pc = self.regs.pc.add_i21(I21::from_u32(off21));
         println!("DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
                  self.regs.pc);
+    }
+
+    // set PC to new_addr
+    fn pc_jump(&mut self, new_addr: u64) {
+        let old_pc = self.regs.pc;
+        self.regs.pc = new_addr;
+        println!("DBG: pc: 0x{old_pc:x} -> 0x{new_addr:x}");
     }
 
     // Zics SYSTEM opcodes: CSRRS, ...
@@ -286,15 +359,17 @@ impl RV64ICpu {
 
     fn opc_op_imm(&mut self, ins: u32) {
         // I-type instructions
-        let imm12 = i_i_imm12(ins);
+        let imm12 = i_i_type_imm12(ins);
         let rs1 = i_rs1(ins);
         let funct3 = i_funct3(ins);
         let rd = i_rd(ins);
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
+                self.regs.print_two_regs(rd, rs1);
                 println!("DBG: addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})");
-                self.regs_w64(rd, self.regs_r64(rs1).add_i12(I12::from_u16(imm12)));
+                self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
+                self.regs.print_reg(rd);
             }
             _ => {
                 bad_instr(ins);
@@ -310,17 +385,32 @@ impl RV64ICpu {
                     ins.bits(19, 12) << 12 |
                     ins.bits(20, 20) << 11 |
                     ins.bits(30, 21) << 1;
-        println!("DBG: jal x{rd}, 0x{imm21:x} # {imm21}");
+        println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
+                 self.regs.pc.add_i21(I21::from_u32(imm21)),
+                 imm21);
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
+        self.regs.print_reg(rd);
+    }
+
+    // JALR - Jump and Link Register
+    fn opc_jalr(&mut self, ins: u32) {
+        let imm12 = i_i_type_imm12(ins);
+        let rs1 = i_rs1(ins);
+        let rd = i_rd(ins);
+        let new_addr = self.regs_r64(rs1).add_i12(imm12).rst_bits(0, 0);
+        self.regs.print_reg(rs1);
+        println!("DBG: jalr x{rd}, 0x{imm12:x}(x{rs1}) # addr: 0x{new_addr:x}");
+        self.regs_w64(rd, self.regs.pc + 4);
+        self.pc_jump(new_addr);
     }
 
     fn opc_load(&mut self, ins: u32) {
-        let imm12 = i_i_imm12(ins);
+        let imm12 = i_i_type_imm12(ins);
         let rs1 = i_rs1(ins);
         let funct3 = i_funct3(ins);
         let rd = i_rd(ins);
-        let addr = self.regs_r64(rs1).add_i12(I12::from_u16(imm12));
+        let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_LOAD_LB => {
                 todo!();
@@ -376,6 +466,7 @@ impl RV64ICpu {
             OPC_AUIPC => self.opc_auipc(ins),
             OPC_OP_IMM => self.opc_op_imm(ins),
             OPC_JAL => self.opc_jal(ins),
+            OPC_JALR => self.opc_jalr(ins),
             OPC_LUI => self.opc_lui(ins),
             OPC_LOAD => self.opc_load(ins),
             OPC_STORE => self.opc_store(ins),
@@ -385,15 +476,20 @@ impl RV64ICpu {
         }
     }
 
-    pub fn run_until(&mut self, break_point: u64) {
+    pub fn run_until(&mut self, break_point: u64, max_instr: u64) {
+        let mut instr_counter = 0;
+        if max_instr < u64::MAX {
+            println!("Maximum instructions: {max_instr}")
+        }
         println!("Running until breakpoint 0x{break_point:x}");
         println!("DBG: pc: 0x{:08x}", self.regs.pc);
-        while self.regs.pc != break_point {
+        while self.regs.pc != break_point && instr_counter < max_instr {
             let instr = self.bus.read32(self.regs.pc);
             self.execute_instr(instr);
             // println!("{}", self.regs);
+            instr_counter += 1;
         }
-        println!("Stopped at breakpoint 0x{break_point:x}");
+        println!("Stopped at 0x{:x}", self.regs.pc);
     }
 }
 
@@ -431,14 +527,14 @@ fn test_instruction_auipc() {
 
 #[test]
 fn test_instr_decode_immidiates() {
-    let imm12 = i_i_imm12(0xffff_ffff);
-    assert!(I12::from_u16(imm12).0 == -1);
+    let imm12 = i_i_type_imm12(0xffff_ffff);
+    assert!(imm12.0 == -1);
 
-    let imm12 = i_i_imm12(0x800f_ffff);
-    assert!(I12::from_u16(imm12).0 == -2048);
+    let imm12 = i_i_type_imm12(0x800f_ffff);
+    assert!(imm12.0 == -2048);
 
-    let imm12 = i_i_imm12(0x0fff_ffff);
-    assert!(imm12 == 255);
+    let imm12 = i_i_type_imm12(0x0fff_ffff);
+    assert!(imm12.0 == 255);
 }
 
 #[test]
@@ -458,6 +554,15 @@ fn test_instruction_jal() {
     cpu.regs.pc = 0x80000010;
     cpu.execute_instr(0x008000ef);
     assert!(cpu.regs.pc == 0x80000018);
+}
+
+#[test]
+// jalr x0, 0x0(x1)
+fn test_instruction_jalr() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[1] = 0x20;
+    cpu.execute_instr(0x00008067);
+    assert!(cpu.regs.pc == 0x20);
 }
 
 #[test]

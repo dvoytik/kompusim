@@ -25,6 +25,5 @@ fn main() {
     bus.attach_device(Device::new(Box::new(Uart::new("0".to_string())), 0x1001_0000, 0x20));
     let mut cpu0 = RV64ICpu::new(bus);
     cpu0.regs.pc = LOAD_ADDRESS;
-    cpu0.run_until(0x0000000080000030);
-    // cpu0.run_until(0x0000000080000014);
+    cpu0.run_until(0x0000000080000014, u64::MAX);
 }
