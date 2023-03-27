@@ -169,7 +169,7 @@ fn i_b_off13(ins: u32) -> I13 {
     let off_11 = ins.bits(7, 7) as u16;
     let off_10_5 = ins.bits(30, 25) as u16;
     let off_12 = ins.bits(31, 31) as u16;
-    I13::from_u16(off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1)
+    I13::from(off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1)
 }
 
 // extract upper 20-bit for LUI, AUIPC instructions
@@ -180,7 +180,7 @@ fn i_u_uimm20(ins: u32) -> u64 {
 // Decode signed 12-bit immidiate from I-type instruction
 #[inline(always)]
 fn i_i_type_imm12(ins: u32) -> I12 {
-    I12::from_u16(ins.bits(31, 20) as u16)
+    I12::from(ins.bits(31, 20) as u16)
 }
 
 // Decode signed 12-bit immidiate from S-type instruction
@@ -188,7 +188,7 @@ fn i_i_type_imm12(ins: u32) -> I12 {
 fn i_s_type_imm12(ins: u32) -> I12 {
     let imm11_5 = ins.bits(31, 25) as u16;
     let imm4_0 = ins.bits(11, 7) as u16;
-    I12::from_u16(imm11_5 << 5 | imm4_0)
+    I12::from(imm11_5 << 5 | imm4_0)
 }
 
 fn bad_instr(ins: u32) {
@@ -255,7 +255,7 @@ impl RV64ICpu {
 
     fn pc_add_i21(&mut self, off21: u32) {
         let old_pc = self.regs.pc;
-        self.regs.pc = self.regs.pc.add_i21(I21::from_u32(off21));
+        self.regs.pc = self.regs.pc.add_i21(I21::from(off21));
         println!("DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
                  self.regs.pc);
     }
@@ -386,7 +386,7 @@ impl RV64ICpu {
                     ins.bits(20, 20) << 11 |
                     ins.bits(30, 21) << 1;
         println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
-                 self.regs.pc.add_i21(I21::from_u32(imm21)),
+                 self.regs.pc.add_i21(I21::from(imm21)),
                  imm21);
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);

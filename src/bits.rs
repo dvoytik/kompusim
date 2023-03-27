@@ -128,6 +128,10 @@ impl BitOps for u64 {
 
 #[test]
 fn test_bit_ops() {
+    // test keyword 'as'
+    assert!(-1_i32 as u32 == u32::MAX);
+
+    // .bit()
     assert!(0b_0001_u16.bit(0) == true);
     assert!(0b_0001_u16.bit(1) == false);
     assert!(0b_0001_u16.bit(15) == false);
