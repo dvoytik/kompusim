@@ -4,6 +4,13 @@ Kompusim is a simple CPU / SoC ISA level simulator. Currently, it supports only 
 It is still heavily under construction.
 
 ## How to run
+
+Demo with UART print:
 ```
-cargo run
+tests/uart_hello_world/run.sh
+```
+
+Compile and run:
+```
+cargo run -- -h
 ```

@@ -2,6 +2,7 @@ use core::fmt;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::Read;
+use std::path::PathBuf;
 
 use crate::bits::BitOps;
 
@@ -21,6 +22,7 @@ impl Error for RamError {
     }
 }
 
+// TODO: consider DS Rope, crate "bytes"
 #[derive(Default)]
 pub struct Ram {
     // TODO: do we need start and end here?
@@ -66,14 +68,11 @@ impl Ram {
         self.m[offs + 3] = val.bits(31, 24) as u8;
     }
 
-    pub fn load_bin_file(&mut self, addr: u64, fname: &str) -> Result<(), Box<dyn Error>> {
+    pub fn load_bin_file(&mut self, addr: u64, fname: &PathBuf) -> Result<(), Box<dyn Error>> {
         // TODO: check if exists
         assert!(addr >= self.start && addr <= self.end);
         let offset = addr - self.start;
         let f_size = fs::metadata(fname)?.len();
-        dbg!(offset);
-        dbg!(f_size);
-        dbg!(self.m.len());
         if offset + f_size > self.m.len() as u64 {
             return Err(Box::new(RamError { details: "size is wrong".to_string(), }));
         }
