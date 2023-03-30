@@ -18,67 +18,94 @@ mod uart;
 //#[command(name = "Kompusim")]
 //#[command(author = "Dmitry Voytik <voytikd@gmail.com>")]
 //#[command(about = "RISC-V ISA simulator")]
-#[command(author, version, about)]
+#[command(author, version, about, arg_required_else_help(true))]
 struct Args {
-    #[arg(short, long)]
-    ram: Option<u64>,
-
-    #[arg(short, long)]
-    breakpoint: Option<u64>,
-
-    #[arg(long)]
-    max_instr: Option<u64>,
-
-    #[arg(short, long)]
-    interactive: Option<bool>,
-
-    #[arg(short, long)]
-    trace: Option<bool>,
-
     #[command(subcommand)]
     command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    Load {
+    // Disasm {},
+    /// Load a binary file and run it
+    Run {
+        /// Address in hex where to load the binary (e.g, 0x0000000080000000)
         #[arg(short, long)]
-        address: String,
+        load_addr: String,
 
+        /// Stop on the first instruction
         #[arg(short, long)]
-        run: bool,
+        stop: bool,
 
-        #[arg(short, long)]
+        /// Path to the binary file
+        #[arg(long)]
         bin: PathBuf,
+
+        /// RAM size in bytes (defult 4096)
+        #[arg(short, long)]
+        ram: Option<u64>,
+
+        /// Breakpont - "auto" or address in hex (e.g. 0x0000000080000014)
+        #[arg(short, long)]
+        breakpoint: Option<String>,
+
+        /// Maximum number of instruction before stop
+        #[arg(long)]
+        max_instr: Option<u64>,
+
+        /// Run in with interactive menu, don't exit
+        #[arg(short, long)]
+        interactive: Option<bool>,
+
+        /// Print CPU state after each instruction execution
+        #[arg(short, long)]
+        trace: Option<bool>,
     },
 }
 
-const DEF_BRK_POINT: u64 = 0x0000_0000_8000_0014;
+/// Convert hex str (e.g, "0x9393") to u64
+fn hex_to_u64(hex_str: &str, err_msg: &str) -> u64 {
+    u64::from_str_radix(hex_str.trim_start_matches("0x"), 16).expect(err_msg)
+}
 
 fn main() {
     let args = Args::parse();
-    let max_instr = args.max_instr.unwrap_or(u64::MAX);
-    let break_point = args.breakpoint.unwrap_or(DEF_BRK_POINT);
-
-    let ram_sz = args.ram.unwrap_or(4 * 1024);
     match &args.command {
-        Some(Commands::Load { address,
-                              run: _,
-                              bin, }) => {
-            let addr = u64::from_str_radix(address.trim_start_matches("0x"), 16).unwrap();
+        // Some(Commands::Disasm {}) => {}
+        Some(Commands::Run { load_addr,
+                             stop,
+                             bin,
+                             ram,
+                             breakpoint,
+                             max_instr,
+                             interactive: _,
+                             trace: _, }) => {
+            let max_instr = max_instr.unwrap_or(u64::MAX);
+            let mut break_point = u64::MAX;
+            if let Some(breakpoint) = breakpoint {
+                if breakpoint.find("auto").is_none() {
+                    break_point = hex_to_u64(breakpoint, "wrong hex in --breakpoint");
+                }
+                // TODO: handel auto breakpoint case
+            }
+
+            let ram_sz = ram.unwrap_or(4 * 1024);
+
+            let addr = hex_to_u64(load_addr, "wrong hex in --load_addr");
             let mut ram = ram::Ram::new(addr, ram_sz);
             ram.load_bin_file(addr, bin).unwrap();
-            ram.dump_hex(addr, 80);
+            println!("Loaded {bin:?} at 0x{addr:x}");
+            // ram.dump_hex(addr, 80);
 
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
             bus.attach_device(Device::new(Box::new(Uart::new("0".to_string())), 0x1001_0000, 0x20));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
-            cpu0.run_until(break_point, max_instr);
+            if *stop == false {
+                cpu0.run_until(break_point, max_instr);
+            }
         }
-        None => {
-            println!("nothing to do")
-        }
+        None => {}
     }
 }

@@ -81,6 +81,7 @@ impl Ram {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn dump_hex(&self, addr: u64, size: u64) {
         let aligned_addr = addr & !0xf_u64;
         let aligned_size = (size + 16) & !0xf_u64;
