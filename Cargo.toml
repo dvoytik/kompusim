@@ -7,8 +7,7 @@ description = "KompuSim - RISC V ISA simulator"
 readme = "README.md"
 homepage = "https://github.com/dvoytik/kompusim"
 repository = "https://github.com/dvoytik/kompusim"
-licese = "Apache-2.0"
-license-file = "LICENSE"
+license = "Apache-2.0"
 keywords = ["riscv"]
 exclude = ["tests/"]
 

@@ -35,7 +35,7 @@ enum Commands {
 
         /// Stop on the first instruction
         #[arg(short, long)]
-        stop: bool,
+        stop: Option<bool>,
 
         /// Path to the binary file
         #[arg(long)]
@@ -79,7 +79,7 @@ fn main() {
                              breakpoint,
                              max_instr,
                              interactive: _,
-                             trace: _, }) => {
+                             trace, }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
             let mut break_point = u64::MAX;
             if let Some(breakpoint) = breakpoint {
@@ -102,7 +102,10 @@ fn main() {
             bus.attach_device(Device::new(Box::new(Uart::new("0".to_string())), 0x1001_0000, 0x20));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
-            if *stop == false {
+            if trace.unwrap_or(false) {
+                cpu0.set_tracing()
+            }
+            if stop.unwrap_or(false) == false {
                 cpu0.run_until(break_point, max_instr);
             }
         }

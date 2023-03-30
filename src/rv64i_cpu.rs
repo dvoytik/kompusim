@@ -62,7 +62,7 @@ impl RV64IURegs {
                  self.x[ri as usize]);
     }
 
-    fn print_two_regs(&self, ri1: u8, ri2: u8) {
+    fn print_2regs(&self, ri1: u8, ri2: u8) {
         if ri1 != 0 {
             let r1_abi = Self::reg_idx2abi(ri1);
             println!(" x{ri1} ({r1_abi}): 0x{0:016x} | b'{0:064b}",
@@ -100,6 +100,7 @@ impl fmt::Display for RV64IURegs {
 pub struct RV64ICpu {
     pub regs: RV64IURegs,
     pub bus:  Bus,
+    tracing:  bool,
 }
 
 // TODO:
@@ -193,13 +194,43 @@ fn i_s_type_imm12(ins: u32) -> I12 {
 
 fn bad_instr(ins: u32) {
     let opc = i_opcode(ins);
-    panic!("DBG: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})");
+    panic!("ERROR: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})");
 }
 
 impl RV64ICpu {
     pub fn new(bus: Bus) -> RV64ICpu {
         RV64ICpu { bus,
-                   regs: RV64IURegs::default() }
+                   regs: RV64IURegs::default(),
+                   tracing: false }
+    }
+
+    /// Enable printing CPU state on console
+    pub fn set_tracing(&mut self) {
+        self.tracing = true;
+    }
+
+    fn trace_pc(&self, old: u64, new: u64) {
+        if self.tracing {
+            println!("PC: 0x{old:x} -> 0x{new:x}")
+        }
+    }
+
+    fn trace_pc_add(&self, old_pc: u64, add: u64, new_pc: u64) {
+        if self.tracing {
+            println!("PC: 0x{old_pc:x} + 0x{add:x} -> 0x{new_pc:x}");
+        }
+    }
+
+    fn trace_print_reg(&self, ri: u8) {
+        if self.tracing {
+            self.regs.print_reg(ri)
+        }
+    }
+
+    fn trace_print_2regs(&self, r1: u8, r2: u8) {
+        if self.tracing {
+            self.regs.print_2regs(r1, r2)
+        }
     }
 
     // reg_i - register index (0 - 31)
@@ -243,28 +274,26 @@ impl RV64ICpu {
 
     fn pc_inc(&mut self) {
         self.regs.pc += 4;
-        println!("DBG: pc: 0x{:x} -> 0x{:x}", self.regs.pc - 4, self.regs.pc)
-    }
-
-    fn pc_add_i13(&mut self, off13: I13) {
-        let old_pc = self.regs.pc;
-        self.regs.pc = self.regs.pc.add_i13(off13);
-        println!("DBG: pc: 0x{old_pc:x} + 0x{off13:x} -> 0x{:x}",
-                 self.regs.pc);
-    }
-
-    fn pc_add_i21(&mut self, off21: u32) {
-        let old_pc = self.regs.pc;
-        self.regs.pc = self.regs.pc.add_i21(I21::from(off21));
-        println!("DBG: pc: 0x{old_pc:x} + 0x{off21:x} -> 0x{:x}",
-                 self.regs.pc);
+        self.trace_pc(self.regs.pc - 4, self.regs.pc);
     }
 
     // set PC to new_addr
     fn pc_jump(&mut self, new_addr: u64) {
         let old_pc = self.regs.pc;
         self.regs.pc = new_addr;
-        println!("DBG: pc: 0x{old_pc:x} -> 0x{new_addr:x}");
+        self.trace_pc(old_pc, new_addr)
+    }
+
+    fn pc_add_i13(&mut self, off13: I13) {
+        let old_pc = self.regs.pc;
+        self.regs.pc = self.regs.pc.add_i13(off13);
+        self.trace_pc_add(old_pc, off13.into(), self.regs.pc);
+    }
+
+    fn pc_add_i21(&mut self, off21: I21) {
+        let old_pc = self.regs.pc;
+        self.regs.pc = self.regs.pc.add_i21(I21::from(off21));
+        self.trace_pc_add(old_pc, off21.into(), self.regs.pc);
     }
 
     // Zics SYSTEM opcodes: CSRRS, ...
@@ -274,11 +303,11 @@ impl RV64ICpu {
         let rd = i_rd(ins);
         let rs1 = i_rs1(ins);
         let csr = i_csr(ins);
-        println!("DBG: SYSTEM: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
-                 csr, rs1, funct3, rd);
+        // println!("DBG: SYSTEM: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
+        //        csr, rs1, funct3, rd);
         match funct3 {
             F3_SYSTEM_CSRRS => {
-                println!("DBG: CSRRS");
+                // println!("DBG: CSRRS");
                 let mut csr_v = csr::csr_r64(csr);
                 self.regs_w64(rd, csr_v);
                 csr_v |= self.regs_r64(rs1);
@@ -299,12 +328,12 @@ impl RV64ICpu {
         let rs1 = i_rs1(ins);
         let rs2 = i_rs2(ins);
         let off13 = i_b_off13(ins);
-        println!("DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, rs1: {rs1}, f3: 0x{funct3:x}");
+        // println!("DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, rs1: {rs1}, f3: 0x{funct3:x}");
         match funct3 {
             // Branch Not Equal
             F3_BRANCH_BNE => {
-                println!("DBG: bne x{rs1}, x{rs2}, 0x{:x}",
-                         self.regs.pc.add_i13(off13));
+                // println!("DBG: bne x{rs1}, x{rs2}, 0x{:x}",
+                //        self.regs.pc.add_i13(off13));
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -313,8 +342,8 @@ impl RV64ICpu {
             }
             // Branch EQual
             F3_BRANCH_BEQ => {
-                println!("DBG: beq x{rs1}, x{rs2}, 0x{:x}",
-                         self.regs.pc.add_i13(off13));
+                // println!("DBG: beq x{rs1}, x{rs2}, 0x{:x}",
+                //        self.regs.pc.add_i13(off13));
                 if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -323,8 +352,8 @@ impl RV64ICpu {
             }
             // Branch Less Than (signed comparison)
             F3_BRANCH_BLT => {
-                println!("DBG: blt x{rs1}, x{rs2}, 0x{:x}",
-                         self.regs.pc.add_i13(off13));
+                // println!("DBG: blt x{rs1}, x{rs2}, 0x{:x}",
+                //        self.regs.pc.add_i13(off13));
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -332,7 +361,7 @@ impl RV64ICpu {
                 }
             }
             _ => {
-                println!("DBG: unsupported BRACH instr, funct3: 0b{funct3:b}");
+                println!("ERROR: unsupported BRACH instr, funct3: 0b{funct3:b}");
                 bad_instr(ins);
             }
         }
@@ -342,8 +371,8 @@ impl RV64ICpu {
     fn opc_lui(&mut self, ins: u32) {
         let rd = i_rd(ins);
         let uimm20 = i_u_uimm20(ins);
-        println!("DBG: LUI: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
-        println!("DBG: lui x{rd}, 0x{:x}", uimm20 >> 12);
+        // println!("DBG: LUI: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
+        // println!("DBG: lui x{rd}, 0x{:x}", uimm20 >> 12);
         self.regs_w64(rd, uimm20);
         self.pc_inc()
     }
@@ -352,7 +381,7 @@ impl RV64ICpu {
     fn opc_auipc(&mut self, ins: u32) {
         let rd = i_rd(ins);
         let uimm20 = i_u_uimm20(ins);
-        println!("DBG: AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
+        // println!("DBG: AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
         self.regs_w64(rd, self.regs.pc + uimm20);
         self.pc_inc()
     }
@@ -366,10 +395,10 @@ impl RV64ICpu {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
-                self.regs.print_two_regs(rd, rs1);
-                println!("DBG: addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})");
+                self.trace_print_2regs(rd, rs1);
+                // println!("DBG: addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})");
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
-                self.regs.print_reg(rd);
+                self.trace_print_reg(rd);
             }
             _ => {
                 bad_instr(ins);
@@ -385,12 +414,13 @@ impl RV64ICpu {
                     ins.bits(19, 12) << 12 |
                     ins.bits(20, 20) << 11 |
                     ins.bits(30, 21) << 1;
-        println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
-                 self.regs.pc.add_i21(I21::from(imm21)),
-                 imm21);
+        let imm21 = I21::from(imm21);
+        // println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
+        //        self.regs.pc.add_i21(imm21),
+        //       imm21);
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
-        self.regs.print_reg(rd);
+        self.trace_print_reg(rd);
     }
 
     // JALR - Jump and Link Register
@@ -399,8 +429,8 @@ impl RV64ICpu {
         let rs1 = i_rs1(ins);
         let rd = i_rd(ins);
         let new_addr = self.regs_r64(rs1).add_i12(imm12).rst_bits(0, 0);
-        self.regs.print_reg(rs1);
-        println!("DBG: jalr x{rd}, 0x{imm12:x}(x{rs1}) # addr: 0x{new_addr:x}");
+        self.trace_print_reg(rs1);
+        // println!("DBG: jalr x{rd}, 0x{imm12:x}(x{rs1}) # addr: 0x{new_addr:x}");
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_jump(new_addr);
     }
@@ -417,16 +447,16 @@ impl RV64ICpu {
             }
             // Load Byte Unsigned
             F3_OP_LOAD_LBU => {
-                println!("DBG: lbu x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
+                // println!("DBG: lbu x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
                 self.regs_wu8(rd, self.bus.read8(addr));
             }
             // Load Word
             F3_OP_LOAD_LW => {
-                println!("DBG: lw x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
+                // println!("DBG: lw x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
                 self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
-                println!("DBG: unsupported LOAD instruction, funct3: 0b{funct3:b}");
+                println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
                 bad_instr(ins);
             }
         }
@@ -441,15 +471,15 @@ impl RV64ICpu {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_STORE_SB => {
-                println!("DBG: sb x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
+                // println!("DBG: sb x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
                 todo!();
             }
             F3_OP_STORE_SW => {
-                println!("DBG: sw x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
+                // println!("DBG: sw x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
                 self.bus.write32(addr, self.regs_r32(rs2))
             }
             _ => {
-                println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
+                // println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
                 bad_instr(ins);
             }
         }
@@ -458,7 +488,9 @@ impl RV64ICpu {
 
     fn execute_instr(&mut self, ins: u32) {
         // TODO: macro with bits matching
-        println!("\nDBG: instr: 0x{:08x}", ins);
+        if self.tracing {
+            println!("\ninstr: 0x{:08x} @ 0x{:08x}", ins, self.regs.pc);
+        }
         let opcode = i_opcode(ins);
         match opcode {
             OPC_SYSTEM => self.opc_system(ins),
@@ -482,7 +514,9 @@ impl RV64ICpu {
             println!("Maximum instructions: {max_instr}")
         }
         println!("Running until breakpoint 0x{break_point:x}");
-        println!("DBG: pc: 0x{:08x}", self.regs.pc);
+        if self.tracing {
+            println!("PC: 0x{:08x}", self.regs.pc);
+        }
         while self.regs.pc != break_point && instr_counter < max_instr {
             let instr = self.bus.read32(self.regs.pc);
             self.execute_instr(instr);
@@ -628,7 +662,6 @@ fn test_instruction_blt() {
     // less
     cpu.regs.x[7] = -1_i64 as u64;
     cpu.execute_instr(0xfe03cee3);
-    println!("{:x}", cpu.regs.pc);
     // pc = 0x4 - 4
     assert!(cpu.regs.pc == 0x0);
 
@@ -643,6 +676,5 @@ fn test_instruction_blt() {
 fn registers_writes() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_wi32(1, 0x_8000_0000);
-    println!("{:x}", cpu.regs.x[1]); // == 0xffff_ffff_8000_000);
     assert!(cpu.regs.x[1] == 0xffff_ffff_8000_0000);
 }

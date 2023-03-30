@@ -77,6 +77,12 @@ impl From<i16> for I13 {
     }
 }
 
+impl From<I13> for u64 {
+    fn from(v: I13) -> u64 {
+        v.0 as u64
+    }
+}
+
 /// Used for format!()
 impl LowerHex for I13 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -101,6 +107,19 @@ impl From<u32> for I21 {
 impl From<i32> for I21 {
     fn from(v: i32) -> I21 {
         I21(v)
+    }
+}
+
+impl From<I21> for u64 {
+    fn from(v: I21) -> u64 {
+        v.0 as u64
+    }
+}
+
+/// Used for format!()
+impl LowerHex for I21 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
