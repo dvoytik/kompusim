@@ -15,10 +15,11 @@ mod rv64i_cpu;
 mod uart;
 
 #[derive(Parser)]
-//#[command(name = "Kompusim")]
-//#[command(author = "Dmitry Voytik <voytikd@gmail.com>")]
-//#[command(about = "RISC-V ISA simulator")]
-#[command(author, version, about, arg_required_else_help(true))]
+#[command(author,
+          version,
+          about,
+          arg_required_else_help(true),
+          hide_possible_values(true))]
 struct Args {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -27,8 +28,8 @@ struct Args {
 #[derive(Subcommand)]
 enum Commands {
     // Disasm {},
-    /// Load a binary file and run it
-    Run {
+    /// Load a binary file and execute it
+    Exec {
         /// Address in hex where to load the binary (e.g, 0x0000000080000000)
         #[arg(short, long)]
         load_addr: String,
@@ -41,7 +42,7 @@ enum Commands {
         #[arg(long)]
         bin: PathBuf,
 
-        /// RAM size in bytes (defult 4096)
+        /// RAM size in KiBytes (defult 4)
         #[arg(short, long)]
         ram: Option<u64>,
 
@@ -70,16 +71,17 @@ fn hex_to_u64(hex_str: &str, err_msg: &str) -> u64 {
 
 fn main() {
     let args = Args::parse();
+
     match &args.command {
         // Some(Commands::Disasm {}) => {}
-        Some(Commands::Run { load_addr,
-                             stop,
-                             bin,
-                             ram,
-                             breakpoint,
-                             max_instr,
-                             interactive: _,
-                             trace, }) => {
+        Some(Commands::Exec { load_addr,
+                              stop,
+                              bin,
+                              ram,
+                              breakpoint,
+                              max_instr,
+                              interactive: _,
+                              trace, }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
             let mut break_point = u64::MAX;
             if let Some(breakpoint) = breakpoint {
@@ -89,7 +91,7 @@ fn main() {
                 // TODO: handel auto breakpoint case
             }
 
-            let ram_sz = ram.unwrap_or(4 * 1024);
+            let ram_sz = ram.unwrap_or(4) * 1024;
 
             let addr = hex_to_u64(load_addr, "wrong hex in --load_addr");
             let mut ram = ram::Ram::new(addr, ram_sz);
@@ -111,4 +113,10 @@ fn main() {
         }
         None => {}
     }
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Args::command().debug_assert()
 }
