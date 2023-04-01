@@ -1,11 +1,12 @@
 pub trait DevIO {
-    // addr is local to the device, i.e bus_address - base_address
+    // addr is local to the device, i.e = PA - Device.start
     fn read8(&self, addr: u64) -> u8;
     fn write8(&mut self, addr: u64, val: u8);
     fn read32(&self, addr: u64) -> u32;
     fn write32(&mut self, addr: u64, val: u32);
 }
 
+/// Device maintains absolute physical address.
 pub struct Device {
     pub start: u64,
     pub end:   u64,

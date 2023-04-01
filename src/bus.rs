@@ -11,28 +11,28 @@ impl BusAgent {
     pub fn read8(&self, addr: u64) -> u8 {
         match self {
             BusAgent::RAM(ram) => ram.read8(addr),
-            BusAgent::Device(ram) => ram.read8(addr),
+            BusAgent::Device(dev) => dev.read8(addr),
         }
     }
 
     pub fn read32(&self, addr: u64) -> u32 {
         match self {
             BusAgent::RAM(ram) => ram.read32(addr),
-            BusAgent::Device(ram) => ram.read32(addr),
+            BusAgent::Device(dev) => dev.read32(addr),
         }
     }
 
     pub fn write8(&mut self, addr: u64, val: u8) {
         match self {
             BusAgent::RAM(ram) => ram.write8(addr, val),
-            BusAgent::Device(ram) => ram.write8(addr, val),
+            BusAgent::Device(dev) => dev.write8(addr, val),
         }
     }
 
     pub fn write32(&mut self, addr: u64, val: u32) {
         match self {
             BusAgent::RAM(ram) => ram.write32(addr, val),
-            BusAgent::Device(ram) => ram.write32(addr, val),
+            BusAgent::Device(dev) => dev.write32(addr, val),
         }
     }
 }

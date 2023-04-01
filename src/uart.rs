@@ -38,7 +38,12 @@ impl DevIO for Uart {
 
     fn write32(&mut self, addr: u64, val: u32) {
         match addr {
-            TXDATA => println!("UART-{} output:{}", self.id, (val & 0xff) as u8 as char),
+            TXDATA => {
+                let byte = (val & 0xff) as u8;
+                let byte_ascii = byte as char;
+                println!("UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
+                         self.id);
+            }
             _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
         };
     }
