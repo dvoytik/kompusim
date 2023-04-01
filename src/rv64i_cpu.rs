@@ -205,8 +205,9 @@ impl RV64ICpu {
     }
 
     /// Enable printing CPU state on console
-    pub fn set_tracing(&mut self) {
-        self.tracing = true;
+    pub fn enable_tracing(&mut self, enable: bool) {
+        self.tracing = enable;
+        self.bus.all_dev_enable_tracing(enable);
     }
 
     fn trace_pc(&self, old: u64, new: u64) {

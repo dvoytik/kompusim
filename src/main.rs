@@ -34,10 +34,6 @@ enum Commands {
         #[arg(short, long)]
         load_addr: String,
 
-        /// Stop on the first instruction
-        #[arg(short, long)]
-        stop: Option<bool>,
-
         /// Path to the binary file
         #[arg(long)]
         bin: PathBuf,
@@ -54,12 +50,16 @@ enum Commands {
         #[arg(long)]
         max_instr: Option<u64>,
 
+        /// Stop on the first instruction
+        #[arg(short, long, action=clap::ArgAction::SetTrue)]
+        stop: Option<bool>,
+
         /// Run in with interactive menu, don't exit
-        #[arg(short, long)]
+        #[arg(short, long, action=clap::ArgAction::SetTrue)]
         interactive: Option<bool>,
 
         /// Print CPU state after each instruction execution
-        #[arg(short, long)]
+        #[arg(short, long, action=clap::ArgAction::SetTrue)]
         trace: Option<bool>,
     },
 }
@@ -105,7 +105,7 @@ fn main() {
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
             if trace.unwrap_or(false) {
-                cpu0.set_tracing()
+                cpu0.enable_tracing(true)
             }
             if stop.unwrap_or(false) == false {
                 cpu0.run_until(break_point, max_instr);

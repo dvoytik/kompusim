@@ -35,6 +35,13 @@ impl BusAgent {
             BusAgent::Device(dev) => dev.write32(addr, val),
         }
     }
+
+    pub fn enable_tracing(&mut self, enable: bool) {
+        match self {
+            BusAgent::RAM(_) => {}
+            BusAgent::Device(dev) => dev.enable_tracing(enable),
+        }
+    }
 }
 
 struct AddrRegion {
@@ -76,6 +83,13 @@ impl Bus {
         self.regions.push(AddrRegion { start: dev.start,
                                        end:   dev.end,
                                        agent: BusAgent::Device(dev), });
+    }
+
+    // All attached devices enable tracing
+    pub fn all_dev_enable_tracing(&mut self, enable: bool) {
+        for r in &mut self.regions {
+            r.agent.enable_tracing(enable)
+        }
     }
 
     fn find_addr_region(&self, start: u64, end: u64) -> Option<&AddrRegion> {

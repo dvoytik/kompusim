@@ -1,7 +1,8 @@
-use crate::device::DevIO;
+use crate::device::Dev;
 
 pub struct Uart {
-    id: String,
+    id:      String,
+    tracing: bool,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
     // txctrl: u32, // 0x08
@@ -15,12 +16,12 @@ const TXDATA: u64 = 0x00;
 
 impl Uart {
     pub fn new(id: String) -> Uart {
-        Uart { id }
+        Uart { id, tracing: false }
     }
 }
 
 // addr is local to the device, i.e bus_address - base_address
-impl DevIO for Uart {
+impl Dev for Uart {
     fn read8(&self, _addr: u64) -> u8 {
         panic!("DBG: Uart: read8 is not supported")
     }
@@ -41,10 +42,18 @@ impl DevIO for Uart {
             TXDATA => {
                 let byte = (val & 0xff) as u8;
                 let byte_ascii = byte as char;
-                println!("UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
-                         self.id);
+                if self.tracing {
+                    println!("UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
+                             self.id);
+                } else {
+                    print!("{byte_ascii}");
+                }
             }
             _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
         };
+    }
+
+    fn enable_tracing(&mut self, enable: bool) {
+        self.tracing = enable
     }
 }
