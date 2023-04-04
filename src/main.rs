@@ -50,11 +50,7 @@ enum Commands {
         #[arg(long)]
         max_instr: Option<u64>,
 
-        /// Stop on the first instruction
-        #[arg(short, long, action=clap::ArgAction::SetTrue)]
-        stop: Option<bool>,
-
-        /// Run in with interactive menu, don't exit
+        /// Run in with interactive menu, don't execute
         #[arg(short, long, action=clap::ArgAction::SetTrue)]
         interactive: Option<bool>,
 
@@ -75,7 +71,6 @@ fn main() {
     match &args.command {
         // Some(Commands::Disasm {}) => {}
         Some(Commands::Exec { load_addr,
-                              stop,
                               bin,
                               ram,
                               breakpoint,
@@ -107,9 +102,8 @@ fn main() {
             if trace.unwrap_or(false) {
                 cpu0.enable_tracing(true)
             }
-            if stop.unwrap_or(false) == false {
-                cpu0.run_until(break_point, max_instr);
-            }
+
+            cpu0.run_until(break_point, max_instr);
         }
         None => {}
     }
