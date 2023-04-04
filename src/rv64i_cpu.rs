@@ -210,6 +210,10 @@ impl RV64ICpu {
         self.bus.all_dev_enable_tracing(enable);
     }
 
+    pub fn tracing(&self) -> bool {
+        self.tracing
+    }
+
     fn trace_pc(&self, old: u64, new: u64) {
         if self.tracing {
             println!("PC: 0x{old:x} -> 0x{new:x}")

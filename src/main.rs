@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::{arg, Parser, Subcommand};
 use device::Device;
 use rv64i_cpu::RV64ICpu;
+use tui::TuiMenuOpt;
 use uart::Uart;
 
 mod alu;
@@ -12,6 +13,7 @@ mod csr;
 mod device;
 mod ram;
 mod rv64i_cpu;
+mod tui;
 mod uart;
 
 #[derive(Parser)]
@@ -75,7 +77,7 @@ fn main() {
                               ram,
                               breakpoint,
                               max_instr,
-                              interactive: _,
+                              interactive,
                               trace, }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
             let mut break_point = u64::MAX;
@@ -103,7 +105,17 @@ fn main() {
                 cpu0.enable_tracing(true)
             }
 
-            cpu0.run_until(break_point, max_instr);
+            if interactive.unwrap_or(false) {
+                loop {
+                    match tui::interactive_menu(cpu0.tracing()) {
+                        TuiMenuOpt::Step => cpu0.run_until(break_point, 1),
+                        TuiMenuOpt::Continue => cpu0.run_until(break_point, max_instr),
+                        TuiMenuOpt::Quit => break,
+                    }
+                }
+            } else {
+                cpu0.run_until(break_point, max_instr);
+            }
         }
         None => {}
     }
