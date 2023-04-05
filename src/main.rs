@@ -108,9 +108,12 @@ fn main() {
             if interactive.unwrap_or(false) {
                 loop {
                     match tui::interactive_menu(cpu0.tracing()) {
+                        TuiMenuOpt::Quit => break,
                         TuiMenuOpt::Step => cpu0.run_until(break_point, 1),
                         TuiMenuOpt::Continue => cpu0.run_until(break_point, max_instr),
-                        TuiMenuOpt::Quit => break,
+                        TuiMenuOpt::ToggleTracing => {
+                            cpu0.enable_tracing(!cpu0.tracing());
+                        }
                     }
                 }
             } else {
