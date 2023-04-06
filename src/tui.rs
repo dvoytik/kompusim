@@ -1,4 +1,6 @@
 use text_io::read;
+use anstream::println;
+use owo_colors::OwoColorize;
 
 pub enum TuiMenuOpt {
     Step,
@@ -7,9 +9,12 @@ pub enum TuiMenuOpt {
     ToggleTracing, // Enables/disable tracing
 }
 
+fn green_line() {
+    println!("{}", "─────────────────────────────────────────────────────────────".green().bold());
+}
 pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
     let selected_option = loop {
-        println!("------------------------------------------------------------");
+        green_line();
         print!("command (h for Help): ");
         let l: String = read!("{}\n");
         if l.contains("help") || l.contains("h") {
@@ -34,6 +39,6 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
             println!("unrecognized command");
         }
     };
-    println!("------------------------------------------------------------");
+    green_line();
     selected_option
 }

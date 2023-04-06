@@ -16,3 +16,5 @@ exclude = ["tests/"]
 [dependencies]
 clap = { version = "4.2.0", features = ["derive"] }
 text_io = "0.1.12"
+anstream  = "0.2.6"
+owo-colors = "3.5.0"
