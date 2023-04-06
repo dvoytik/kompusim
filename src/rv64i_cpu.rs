@@ -1,4 +1,4 @@
-use core::fmt;
+//use core::fmt;
 
 use crate::alu::{Imm, I12, I13, I21};
 use crate::bits::BitOps;
@@ -9,7 +9,7 @@ use crate::csr;
 #[derive(Debug, Default)]
 pub struct RV64IURegs {
     // x0: is always zero
-    x:      [u64; 32],
+    pub x:  [u64; 32],
     pub pc: u64,
 }
 
@@ -76,24 +76,26 @@ impl RV64IURegs {
     }
 }
 
+/*
 impl fmt::Display for RV64IURegs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, " x1 (ra): 0x{:016x} | b'{0:064b}", self.x[1])?;
-        writeln!(f, " x2 (sp): 0x{:016x} | b'{0:064b}", self.x[2])?;
-        writeln!(f, " x3 (gp): 0x{:016x} | b'{0:064b}", self.x[3])?;
-        writeln!(f, " x4 (tp): 0x{:016x} | b'{0:064b}", self.x[4])?;
-        writeln!(f, " x5 (t0): 0x{:016x} | b'{0:064b}", self.x[5])?;
-        writeln!(f, " x6 (t1): 0x{:016x} | b'{0:064b}", self.x[6])?;
-        writeln!(f, " x7 (t2): 0x{:016x} | b'{0:064b}", self.x[7])?;
-        writeln!(f, " x8 (s0): 0x{:016x} | b'{0:064b}", self.x[8])?;
-        writeln!(f, " x9 (s1): 0x{:016x} | b'{0:064b}", self.x[9])?;
-        writeln!(f, "x10 (a0): 0x{:016x} | b'{0:064b}", self.x[10])?;
-        writeln!(f, "x11 (a1): 0x{:016x} | b'{0:064b}", self.x[11])?;
-        writeln!(f, "x12 (a2): 0x{:016x} | b'{0:064b}", self.x[12])?;
-        writeln!(f, "x13 (a3): 0x{:016x} | b'{0:064b}", self.x[13])?;
-        writeln!(f, "      pc: 0x{:016x} | b'{0:064b}", self.pc)
+        writeln!(f, " x1 (ra): {:016x} | {0:064b}", self.x[1])?;
+        writeln!(f, " x2 (sp): {:016x} | {0:064b}", self.x[2])?;
+        writeln!(f, " x3 (gp): {:016x} | {0:064b}", self.x[3])?;
+        writeln!(f, " x4 (tp): {:016x} | {0:064b}", self.x[4])?;
+        writeln!(f, " x5 (t0): {:016x} | {0:064b}", self.x[5])?;
+        writeln!(f, " x6 (t1): {:016x} | {0:064b}", self.x[6])?;
+        writeln!(f, " x7 (t2): {:016x} | {0:064b}", self.x[7])?;
+        writeln!(f, " x8 (s0): {:016x} | {0:064b}", self.x[8])?;
+        writeln!(f, " x9 (s1): {:016x} | {0:064b}", self.x[9])?;
+        writeln!(f, "x10 (a0): {:016x} | {0:064b}", self.x[10])?;
+        writeln!(f, "x11 (a1): {:016x} | {0:064b}", self.x[11])?;
+        writeln!(f, "x12 (a2): {:016x} | {0:064b}", self.x[12])?;
+        writeln!(f, "x13 (a3): {:016x} | {0:064b}", self.x[13])?;
+        writeln!(f, "      pc: {:016x} | {0:064b}", self.pc)
     }
 }
+*/
 
 // TODO: make regs private?
 #[derive(Default)]
@@ -212,6 +214,10 @@ impl RV64ICpu {
 
     pub fn tracing(&self) -> bool {
         self.tracing
+    }
+
+    pub fn get_regs(&self) -> &RV64IURegs {
+        &self.regs
     }
 
     fn trace_pc(&self, old: u64, new: u64) {
@@ -494,7 +500,7 @@ impl RV64ICpu {
     fn execute_instr(&mut self, ins: u32) {
         // TODO: macro with bits matching
         if self.tracing {
-            println!("\ninstr: 0x{:08x} @ 0x{:08x}", ins, self.regs.pc);
+            println!("instr: 0x{:08x} @ 0x{:08x}", ins, self.regs.pc);
         }
         let opcode = i_opcode(ins);
         match opcode {
@@ -513,22 +519,15 @@ impl RV64ICpu {
         }
     }
 
-    pub fn run_until(&mut self, break_point: u64, max_instr: u64) {
+    /// Returns PC (i.e. where stopped)
+    pub fn run_until(&mut self, break_point: u64, max_instr: u64) -> u64 {
         let mut instr_counter = 0;
-        if max_instr < u64::MAX {
-            println!("Maximum instructions: {max_instr}")
-        }
-        println!("Running until breakpoint 0x{break_point:x}");
-        if self.tracing {
-            println!("PC: 0x{:08x}", self.regs.pc);
-        }
         while self.regs.pc != break_point && instr_counter < max_instr {
             let instr = self.bus.read32(self.regs.pc);
             self.execute_instr(instr);
-            // println!("{}", self.regs);
             instr_counter += 1;
         }
-        println!("Stopped at 0x{:x}", self.regs.pc);
+        self.regs.pc
     }
 }
 

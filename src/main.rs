@@ -109,15 +109,20 @@ fn main() {
                 loop {
                     match tui::interactive_menu(cpu0.tracing()) {
                         TuiMenuOpt::Quit => break,
-                        TuiMenuOpt::Step => cpu0.run_until(break_point, 1),
-                        TuiMenuOpt::Continue => cpu0.run_until(break_point, max_instr),
+                        TuiMenuOpt::Step => {let _ = cpu0.run_until(break_point, 1);},
+                        TuiMenuOpt::Continue => {let _ = cpu0.run_until(break_point, max_instr);},
+                        TuiMenuOpt::PrintRegisters => {
+                            // TODO: highlight changed registers - store old state, calc diff
+                            tui::print_regs(cpu0.get_regs())
+                        }
                         TuiMenuOpt::ToggleTracing => {
                             cpu0.enable_tracing(!cpu0.tracing());
+                            println!("Tracing enagbled.")
                         }
                     }
                 }
             } else {
-                cpu0.run_until(break_point, max_instr);
+                let _ = cpu0.run_until(break_point, max_instr);
             }
         }
         None => {}
