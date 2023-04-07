@@ -105,6 +105,10 @@ pub struct RV64ICpu {
     tracing:  bool,
 }
 
+enum Instr {
+    System {csr: u16, rs1: u8, funct3: u8, rd: u8 },
+}
+
 // TODO:
 // #[repr(u8)]
 // enum Opcodes {
@@ -308,23 +312,27 @@ impl RV64ICpu {
     }
 
     // Zics SYSTEM opcodes: CSRRS, ...
-    fn opc_system(&mut self, ins: u32) {
+    fn dec_opc_system(&self, ins: u32) -> Instr {
         // I-type instruction
-        let funct3 = i_funct3(ins);
         let rd = i_rd(ins);
+        let funct3 = i_funct3(ins);
         let rs1 = i_rs1(ins);
         let csr = i_csr(ins);
-        // println!("DBG: SYSTEM: csr: {:x}, rs1: {:x}, f3: {:x}, rd: {:x}",
-        //        csr, rs1, funct3, rd);
+        Instr::System{csr, rs1, funct3, rd}
+    }
+
+    fn exe_opc_system(&mut self, ins: u32) {
+        // I-type instruction
+        let Instr::System{csr, rs1, funct3, rd} = self.dec_opc_system(ins);
         match funct3 {
             F3_SYSTEM_CSRRS => {
-                // println!("DBG: CSRRS");
                 let mut csr_v = csr::csr_r64(csr);
                 self.regs_w64(rd, csr_v);
                 csr_v |= self.regs_r64(rs1);
                 csr::csr_w64(csr, csr_v);
             }
             _ => {
+                // TODO: generate exception
                 println!("wrong SYSTEM instr");
                 bad_instr(ins);
             }
@@ -504,7 +512,7 @@ impl RV64ICpu {
         }
         let opcode = i_opcode(ins);
         match opcode {
-            OPC_SYSTEM => self.opc_system(ins),
+            OPC_SYSTEM => self.exe_opc_system(ins),
             OPC_BRANCH => self.opc_branch(ins),
             OPC_AUIPC => self.opc_auipc(ins),
             OPC_OP_IMM => self.opc_op_imm(ins),
@@ -533,6 +541,11 @@ impl RV64ICpu {
 
 #[test]
 fn test_instruction_csrrs() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[5] = 1; // pollute
+    // csrrs  x5, mhartid, zero
+    cpu.execute_instr(0xf14022f3);
+    assert!(cpu.regs.x[5] == 0);
 }
 
 #[test]
