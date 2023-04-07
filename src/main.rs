@@ -17,11 +17,13 @@ mod tui;
 mod uart;
 
 #[derive(Parser)]
-#[command(author,
-          version,
-          about,
-          arg_required_else_help(true),
-          hide_possible_values(true))]
+#[command(
+    author,
+    version,
+    about,
+    arg_required_else_help(true),
+    hide_possible_values(true)
+)]
 struct Args {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -72,13 +74,15 @@ fn main() {
 
     match &args.command {
         // Some(Commands::Disasm {}) => {}
-        Some(Commands::Exec { load_addr,
-                              bin,
-                              ram,
-                              breakpoint,
-                              max_instr,
-                              interactive,
-                              trace, }) => {
+        Some(Commands::Exec {
+            load_addr,
+            bin,
+            ram,
+            breakpoint,
+            max_instr,
+            interactive,
+            trace,
+        }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
             let mut break_point = u64::MAX;
             if let Some(breakpoint) = breakpoint {
@@ -98,7 +102,11 @@ fn main() {
 
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
-            bus.attach_device(Device::new(Box::new(Uart::new("0".to_string())), 0x1001_0000, 0x20));
+            bus.attach_device(Device::new(
+                Box::new(Uart::new("0".to_string())),
+                0x1001_0000,
+                0x20,
+            ));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
             if trace.unwrap_or(false) {
@@ -109,8 +117,12 @@ fn main() {
                 loop {
                     match tui::interactive_menu(cpu0.tracing()) {
                         TuiMenuOpt::Quit => break,
-                        TuiMenuOpt::Step => {let _ = cpu0.run_until(break_point, 1);},
-                        TuiMenuOpt::Continue => {let _ = cpu0.run_until(break_point, max_instr);},
+                        TuiMenuOpt::Step => {
+                            let _ = cpu0.run_until(break_point, 1);
+                        }
+                        TuiMenuOpt::Continue => {
+                            let _ = cpu0.run_until(break_point, max_instr);
+                        }
                         TuiMenuOpt::PrintRegisters => {
                             // TODO: highlight changed registers - store old state, calc diff
                             tui::print_regs(cpu0.get_regs())

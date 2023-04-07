@@ -46,7 +46,7 @@ impl BusAgent {
 
 struct AddrRegion {
     start: u64,
-    end:   u64,
+    end: u64,
     agent: BusAgent,
 }
 
@@ -70,9 +70,11 @@ impl Bus {
 
     pub fn attach_ram(&mut self, ram: Ram) {
         // TODO: insert in sorted order - search optimization
-        self.regions.push(AddrRegion { start: ram.start,
-                                       end:   ram.end,
-                                       agent: BusAgent::RAM(ram), });
+        self.regions.push(AddrRegion {
+            start: ram.start,
+            end: ram.end,
+            agent: BusAgent::RAM(ram),
+        });
     }
 
     pub fn attach_device(&mut self, dev: Device) {
@@ -80,9 +82,11 @@ impl Bus {
         if let Some(_) = self.find_addr_region(dev.start, dev.end) {
             panic!("address region is occupied")
         }
-        self.regions.push(AddrRegion { start: dev.start,
-                                       end:   dev.end,
-                                       agent: BusAgent::Device(dev), });
+        self.regions.push(AddrRegion {
+            start: dev.start,
+            end: dev.end,
+            agent: BusAgent::Device(dev),
+        });
     }
 
     // All attached devices enable tracing

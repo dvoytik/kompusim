@@ -1,7 +1,7 @@
 use crate::device::Dev;
 
 pub struct Uart {
-    id:      String,
+    id: String,
     tracing: bool,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
@@ -43,8 +43,10 @@ impl Dev for Uart {
                 let byte = (val & 0xff) as u8;
                 let byte_ascii = byte as char;
                 if self.tracing {
-                    println!("UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
-                             self.id);
+                    println!(
+                        "UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
+                        self.id
+                    );
                 } else {
                     print!("{byte_ascii}");
                 }

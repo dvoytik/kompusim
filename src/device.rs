@@ -12,15 +12,17 @@ pub trait Dev {
 /// Device maintains absolute physical address.
 pub struct Device {
     pub start: u64,
-    pub end:   u64,
-    pub dev:   Box<dyn Dev>,
+    pub end: u64,
+    pub dev: Box<dyn Dev>,
 }
 
 impl Device {
     pub fn new(d: Box<dyn Dev>, start: u64, size: u64) -> Device {
-        Device { start,
-                 end: start + size,
-                 dev: d }
+        Device {
+            start,
+            end: start + size,
+            dev: d,
+        }
     }
 
     pub fn read8(&self, addr: u64) -> u8 {

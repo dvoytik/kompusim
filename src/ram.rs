@@ -27,15 +27,17 @@ impl Error for RamError {
 pub struct Ram {
     // TODO: do we need start and end here?
     pub start: u64, // start physical address
-    pub end:   u64, // end physical address
-    pub m:     Vec<u8>,
+    pub end: u64,   // end physical address
+    pub m: Vec<u8>,
 }
 
 impl Ram {
     pub fn new(start: u64, size: u64) -> Ram {
-        Ram { start,
-              end: start + size as u64,
-              m: vec![0; size as usize] } // TODO: is it lazy allocation?
+        Ram {
+            start,
+            end: start + size as u64,
+            m: vec![0; size as usize],
+        } // TODO: is it lazy allocation?
     }
 
     pub fn read8(&self, addr: u64) -> u8 {
@@ -74,7 +76,9 @@ impl Ram {
         let offset = addr - self.start;
         let f_size = fs::metadata(fname)?.len();
         if offset + f_size > self.m.len() as u64 {
-            return Err(Box::new(RamError { details: "size is wrong".to_string(), }));
+            return Err(Box::new(RamError {
+                details: "size is wrong".to_string(),
+            }));
         }
         let mut f = File::open(fname)?;
         f.read(&mut self.m[offset as usize..])?;
@@ -111,10 +115,10 @@ impl Ram {
             }
             line.push_str(&format!("{:02x} ", b));
             pr_str.push(if *b >= 0x20 && *b <= 0x7e {
-                            *b as char
-                        } else {
-                            '.'
-                        })
+                *b as char
+            } else {
+                '.'
+            })
         }
         println!("{}", line);
     }

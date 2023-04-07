@@ -1,4 +1,4 @@
-//use core::fmt;
+// use core::fmt;
 
 use crate::alu::{Imm, I12, I13, I21};
 use crate::bits::BitOps;
@@ -9,7 +9,7 @@ use crate::csr;
 #[derive(Debug, Default)]
 pub struct RV64IURegs {
     // x0: is always zero
-    pub x:  [u64; 32],
+    pub x: [u64; 32],
     pub pc: u64,
 }
 
@@ -58,55 +58,64 @@ impl RV64IURegs {
             return;
         }
         let r_abi = Self::reg_idx2abi(ri);
-        println!(" x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
-                 self.x[ri as usize]);
+        println!(
+            " x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
+            self.x[ri as usize]
+        );
     }
 
     fn print_2regs(&self, ri1: u8, ri2: u8) {
         if ri1 != 0 {
             let r1_abi = Self::reg_idx2abi(ri1);
-            println!(" x{ri1} ({r1_abi}): 0x{0:016x} | b'{0:064b}",
-                     self.x[ri1 as usize]);
+            println!(
+                " x{ri1} ({r1_abi}): 0x{0:016x} | b'{0:064b}",
+                self.x[ri1 as usize]
+            );
         }
         if ri2 != 0 {
             let r2_abi = Self::reg_idx2abi(ri2);
-            println!(" x{ri1} ({r2_abi}): 0x{0:016x} | b'{0:064b}",
-                     self.x[ri2 as usize]);
+            println!(
+                " x{ri1} ({r2_abi}): 0x{0:016x} | b'{0:064b}",
+                self.x[ri2 as usize]
+            );
         }
     }
 }
 
-/*
-impl fmt::Display for RV64IURegs {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, " x1 (ra): {:016x} | {0:064b}", self.x[1])?;
-        writeln!(f, " x2 (sp): {:016x} | {0:064b}", self.x[2])?;
-        writeln!(f, " x3 (gp): {:016x} | {0:064b}", self.x[3])?;
-        writeln!(f, " x4 (tp): {:016x} | {0:064b}", self.x[4])?;
-        writeln!(f, " x5 (t0): {:016x} | {0:064b}", self.x[5])?;
-        writeln!(f, " x6 (t1): {:016x} | {0:064b}", self.x[6])?;
-        writeln!(f, " x7 (t2): {:016x} | {0:064b}", self.x[7])?;
-        writeln!(f, " x8 (s0): {:016x} | {0:064b}", self.x[8])?;
-        writeln!(f, " x9 (s1): {:016x} | {0:064b}", self.x[9])?;
-        writeln!(f, "x10 (a0): {:016x} | {0:064b}", self.x[10])?;
-        writeln!(f, "x11 (a1): {:016x} | {0:064b}", self.x[11])?;
-        writeln!(f, "x12 (a2): {:016x} | {0:064b}", self.x[12])?;
-        writeln!(f, "x13 (a3): {:016x} | {0:064b}", self.x[13])?;
-        writeln!(f, "      pc: {:016x} | {0:064b}", self.pc)
-    }
-}
-*/
+// impl fmt::Display for RV64IURegs {
+// fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+// writeln!(f, " x1 (ra): {:016x} | {0:064b}", self.x[1])?;
+// writeln!(f, " x2 (sp): {:016x} | {0:064b}", self.x[2])?;
+// writeln!(f, " x3 (gp): {:016x} | {0:064b}", self.x[3])?;
+// writeln!(f, " x4 (tp): {:016x} | {0:064b}", self.x[4])?;
+// writeln!(f, " x5 (t0): {:016x} | {0:064b}", self.x[5])?;
+// writeln!(f, " x6 (t1): {:016x} | {0:064b}", self.x[6])?;
+// writeln!(f, " x7 (t2): {:016x} | {0:064b}", self.x[7])?;
+// writeln!(f, " x8 (s0): {:016x} | {0:064b}", self.x[8])?;
+// writeln!(f, " x9 (s1): {:016x} | {0:064b}", self.x[9])?;
+// writeln!(f, "x10 (a0): {:016x} | {0:064b}", self.x[10])?;
+// writeln!(f, "x11 (a1): {:016x} | {0:064b}", self.x[11])?;
+// writeln!(f, "x12 (a2): {:016x} | {0:064b}", self.x[12])?;
+// writeln!(f, "x13 (a3): {:016x} | {0:064b}", self.x[13])?;
+// writeln!(f, "      pc: {:016x} | {0:064b}", self.pc)
+// }
+// }
 
 // TODO: make regs private?
 #[derive(Default)]
 pub struct RV64ICpu {
     pub regs: RV64IURegs,
-    pub bus:  Bus,
-    tracing:  bool,
+    pub bus: Bus,
+    tracing: bool,
 }
 
 enum Instr {
-    System {csr: u16, rs1: u8, funct3: u8, rd: u8 },
+    System {
+        csr: u16,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
 }
 
 // TODO:
@@ -205,9 +214,11 @@ fn bad_instr(ins: u32) {
 
 impl RV64ICpu {
     pub fn new(bus: Bus) -> RV64ICpu {
-        RV64ICpu { bus,
-                   regs: RV64IURegs::default(),
-                   tracing: false }
+        RV64ICpu {
+            bus,
+            regs: RV64IURegs::default(),
+            tracing: false,
+        }
     }
 
     /// Enable printing CPU state on console
@@ -318,12 +329,22 @@ impl RV64ICpu {
         let funct3 = i_funct3(ins);
         let rs1 = i_rs1(ins);
         let csr = i_csr(ins);
-        Instr::System{csr, rs1, funct3, rd}
+        Instr::System {
+            csr,
+            rs1,
+            funct3,
+            rd,
+        }
     }
 
     fn exe_opc_system(&mut self, ins: u32) {
         // I-type instruction
-        let Instr::System{csr, rs1, funct3, rd} = self.dec_opc_system(ins);
+        let Instr::System {
+            csr,
+            rs1,
+            funct3,
+            rd,
+        } = self.dec_opc_system(ins);
         match funct3 {
             F3_SYSTEM_CSRRS => {
                 let mut csr_v = csr::csr_r64(csr);
@@ -429,10 +450,10 @@ impl RV64ICpu {
     // Only one instrucitn JAL - Jump and Link
     fn opc_jal(&mut self, ins: u32) {
         let rd = i_rd(ins);
-        let imm21 = ins.bits(31, 31) << 20 |
-                    ins.bits(19, 12) << 12 |
-                    ins.bits(20, 20) << 11 |
-                    ins.bits(30, 21) << 1;
+        let imm21 = ins.bits(31, 31) << 20
+            | ins.bits(19, 12) << 12
+            | ins.bits(20, 20) << 11
+            | ins.bits(30, 21) << 1;
         let imm21 = I21::from(imm21);
         // println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
         //        self.regs.pc.add_i21(imm21),
@@ -542,7 +563,8 @@ impl RV64ICpu {
 #[test]
 fn test_instruction_csrrs() {
     let mut cpu = RV64ICpu::default();
-    cpu.regs.x[5] = 1; // pollute
+    // pollute x5
+    cpu.regs.x[5] = 1;
     // csrrs  x5, mhartid, zero
     cpu.execute_instr(0xf14022f3);
     assert!(cpu.regs.x[5] == 0);
