@@ -84,10 +84,11 @@ fn main() {
             trace,
         }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
-            let mut break_point = u64::MAX;
+
+            let mut break_point: Option<u64> = None;
             if let Some(breakpoint) = breakpoint {
                 if breakpoint.find("auto").is_none() {
-                    break_point = hex_to_u64(breakpoint, "wrong hex in --breakpoint");
+                    break_point = Some(hex_to_u64(breakpoint, "wrong hex in --breakpoint"));
                 }
                 // TODO: handel auto breakpoint case
             }
@@ -113,15 +114,19 @@ fn main() {
                 cpu0.enable_tracing(true)
             }
 
+            if let Some(breakpoint) = break_point {
+                cpu0.add_breakpoint(breakpoint)
+            }
+
             if interactive.unwrap_or(false) {
                 loop {
                     match tui::interactive_menu(cpu0.tracing()) {
                         TuiMenuOpt::Quit => break,
                         TuiMenuOpt::Step => {
-                            let _ = cpu0.run_until(break_point, 1);
+                            let _ = cpu0.exec_continue(1);
                         }
                         TuiMenuOpt::Continue => {
-                            let _ = cpu0.run_until(break_point, max_instr);
+                            let _ = cpu0.exec_continue(max_instr);
                         }
                         TuiMenuOpt::PrintRegisters => {
                             // TODO: highlight changed registers - store old state, calc diff
@@ -134,7 +139,7 @@ fn main() {
                     }
                 }
             } else {
-                let _ = cpu0.run_until(break_point, max_instr);
+                let _ = cpu0.exec_continue(max_instr);
             }
         }
         None => {}

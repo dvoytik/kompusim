@@ -106,6 +106,7 @@ impl RV64IURegs {
 pub struct RV64ICpu {
     pub regs: RV64IURegs,
     pub bus: Bus,
+    breakpoints: Vec<u64>, // TODO: optimize - use hashmap
     tracing: bool,
 }
 
@@ -218,6 +219,7 @@ impl RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
             tracing: false,
+            breakpoints: Vec::with_capacity(2),
         }
     }
 
@@ -233,6 +235,10 @@ impl RV64ICpu {
 
     pub fn get_regs(&self) -> &RV64IURegs {
         &self.regs
+    }
+
+    pub fn add_breakpoint(&mut self, breakpoint: u64) {
+        self.breakpoints.push(breakpoint)
     }
 
     fn trace_pc(&self, old: u64, new: u64) {
@@ -549,12 +555,15 @@ impl RV64ICpu {
     }
 
     /// Returns PC (i.e. where stopped)
-    pub fn run_until(&mut self, break_point: u64, max_instr: u64) -> u64 {
-        let mut instr_counter = 0;
-        while self.regs.pc != break_point && instr_counter < max_instr {
+    pub fn exec_continue(&mut self, max_instr: u64) -> u64 {
+        for _ in 0..max_instr {
             let instr = self.bus.read32(self.regs.pc);
             self.execute_instr(instr);
-            instr_counter += 1;
+            // TODO: check all breakpoints
+            // TODO: optimize to use hashmap
+            if self.breakpoints[0] == self.regs.pc {
+                break;
+            }
         }
         self.regs.pc
     }
