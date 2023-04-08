@@ -1,20 +1,14 @@
-use std::path::PathBuf;
+mod tui;
 
 use clap::{arg, Parser, Subcommand};
-use device::Device;
-use rv64i_cpu::RV64ICpu;
-use tui::TuiMenuOpt;
-use uart::Uart;
+use std::path::PathBuf;
 
-mod alu;
-mod bits;
-mod bus;
-mod csr;
-mod device;
-mod ram;
-mod rv64i_cpu;
-mod tui;
-mod uart;
+use kompusim::bus;
+use kompusim::device::Device;
+use kompusim::ram;
+use kompusim::rv64i_cpu::RV64ICpu;
+use kompusim::uart::Uart;
+use tui::TuiMenuOpt;
 
 #[derive(Parser)]
 #[command(

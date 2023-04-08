@@ -2,7 +2,7 @@ use anstream::println;
 use owo_colors::OwoColorize;
 use text_io::read;
 
-use crate::rv64i_cpu::RV64IURegs;
+use kompusim::rv64i_cpu::RV64IURegs;
 
 pub enum TuiMenuOpt {
     Step,

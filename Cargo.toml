@@ -3,15 +3,26 @@ name = "kompusim"
 version = "0.1.0"
 edition = "2021"
 authors = ["Dmitry Voytik <voytikd@gmail.com"]
-description = "KompuSim - RISC V ISA simulator"
+description = "KompuSim - RISC-V ISA simulator"
 readme = "README.md"
 homepage = "https://github.com/dvoytik/kompusim"
 repository = "https://github.com/dvoytik/kompusim"
 license = "Apache-2.0"
 keywords = ["riscv"]
-exclude = ["tests/"]
+exclude = ["tests/test_programs"]
+# documentation =
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "kompusim"
+path = "src/lib.rs"
+# doc = true
+
+[[bin]]
+name = "kompusim"
+path = "src/main.rs"
+doc = false
 
 [dependencies]
 clap = { version = "4.2.0", features = ["derive"] }
