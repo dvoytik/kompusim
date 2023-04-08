@@ -7,7 +7,7 @@ It is still heavily under construction.
 
 It is expected that [Rust tool chain is installed](https://www.rust-lang.org/tools/install).
 
-Demo with UART print:
+A demo of running the bare metal program that prints "Hello, World!" to the UART:
 ```
 ./tests/uart_hello_world/run.sh
 ```
