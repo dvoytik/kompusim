@@ -105,6 +105,14 @@ impl RV64ICpu {
         }
     }
 
+    pub fn get_cur_instr(&self) -> u32 {
+        self.bus.read32(self.regs.pc)
+    }
+
+    pub fn get_pc(&self) -> u64 {
+        self.regs.pc
+    }
+
     /// Enable printing CPU state on console
     pub fn enable_tracing(&mut self, enable: bool) {
         self.tracing = enable;
@@ -400,12 +408,7 @@ impl RV64ICpu {
     }
 
     pub fn execute_instr(&mut self, ins: u32) {
-        // TODO: macro with bits matching
-        if self.tracing {
-            println!("instr: 0x{:08x} @ 0x{:08x}", ins, self.regs.pc);
-        }
-        let opcode = i_opcode(ins);
-        match opcode {
+        match i_opcode(ins) {
             OPC_SYSTEM => self.exe_opc_system(ins),
             OPC_BRANCH => self.opc_branch(ins),
             OPC_AUIPC => self.opc_auipc(ins),
@@ -424,8 +427,7 @@ impl RV64ICpu {
     /// Returns PC (i.e. where stopped)
     pub fn exec_continue(&mut self, max_instr: u64) -> u64 {
         for _ in 0..max_instr {
-            let instr = self.bus.read32(self.regs.pc);
-            self.execute_instr(instr);
+            self.execute_instr(self.get_cur_instr());
             // TODO: check all breakpoints
             // TODO: optimize to use hashmap
             if self.breakpoints[0] == self.regs.pc {

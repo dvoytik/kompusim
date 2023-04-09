@@ -2,7 +2,7 @@ use anstream::println;
 use owo_colors::OwoColorize;
 use text_io::read;
 
-use kompusim::rv64i_cpu::RV64IURegs;
+use kompusim::{rv64i_cpu::RV64IURegs, rv64i_disasm::disasm};
 
 pub enum TuiMenuOpt {
     Step,
@@ -71,4 +71,9 @@ pub fn print_regs(regs: &RV64IURegs) {
     println!("x12 (a2): {:016x} | {0:064b}", regs.x[12]);
     println!("x13 (a3): {:016x} | {0:064b}", regs.x[13]);
     println!("      pc: {:016x} | {0:064b}", regs.pc)
+}
+
+pub fn print_instr(instr: u32, addr: u64) {
+    println!("instr: 0x{instr:08x} @ 0x{addr:08x}");
+    println!("{}", disasm(instr))
 }
