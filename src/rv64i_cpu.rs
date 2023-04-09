@@ -1,11 +1,10 @@
-// use core::fmt;
-
-use crate::alu::{Imm, I12, I13, I21};
+use crate::alu::{Imm, I13, I21};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
+use crate::rv64i_dec::*;
 
-// RV64I Unpriviliged Registers
+// RV64I Unprivileged Registers
 #[derive(Debug, Default)]
 pub struct RV64IURegs {
     // x0: is always zero
@@ -82,25 +81,6 @@ impl RV64IURegs {
     }
 }
 
-// impl fmt::Display for RV64IURegs {
-// fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-// writeln!(f, " x1 (ra): {:016x} | {0:064b}", self.x[1])?;
-// writeln!(f, " x2 (sp): {:016x} | {0:064b}", self.x[2])?;
-// writeln!(f, " x3 (gp): {:016x} | {0:064b}", self.x[3])?;
-// writeln!(f, " x4 (tp): {:016x} | {0:064b}", self.x[4])?;
-// writeln!(f, " x5 (t0): {:016x} | {0:064b}", self.x[5])?;
-// writeln!(f, " x6 (t1): {:016x} | {0:064b}", self.x[6])?;
-// writeln!(f, " x7 (t2): {:016x} | {0:064b}", self.x[7])?;
-// writeln!(f, " x8 (s0): {:016x} | {0:064b}", self.x[8])?;
-// writeln!(f, " x9 (s1): {:016x} | {0:064b}", self.x[9])?;
-// writeln!(f, "x10 (a0): {:016x} | {0:064b}", self.x[10])?;
-// writeln!(f, "x11 (a1): {:016x} | {0:064b}", self.x[11])?;
-// writeln!(f, "x12 (a2): {:016x} | {0:064b}", self.x[12])?;
-// writeln!(f, "x13 (a3): {:016x} | {0:064b}", self.x[13])?;
-// writeln!(f, "      pc: {:016x} | {0:064b}", self.pc)
-// }
-// }
-
 // TODO: make regs private?
 #[derive(Default)]
 pub struct RV64ICpu {
@@ -108,104 +88,6 @@ pub struct RV64ICpu {
     pub bus: Bus,
     breakpoints: Vec<u64>, // TODO: optimize - use hashmap
     tracing: bool,
-}
-
-enum Instr {
-    System {
-        csr: u16,
-        rs1: u8,
-        funct3: u8,
-        rd: u8,
-    },
-}
-
-// TODO:
-// #[repr(u8)]
-// enum Opcodes {
-//
-// }
-const OPC_SYSTEM: u8 = 0b11_100_11;
-const OPC_BRANCH: u8 = 0b11_000_11;
-const OPC_AUIPC: u8 = 0b00_101_11;
-const OPC_OP_IMM: u8 = 0b00_100_11;
-const OPC_JALR: u8 = 0b11_001_11;
-const OPC_JAL: u8 = 0b11_011_11;
-const OPC_LUI: u8 = 0b01_101_11;
-const OPC_LOAD: u8 = 0b00_000_11;
-const OPC_STORE: u8 = 0b01_000_11;
-
-const F3_BRANCH_BEQ: u8 = 0b000;
-const F3_BRANCH_BNE: u8 = 0b001;
-const F3_BRANCH_BLT: u8 = 0b100;
-
-const F3_SYSTEM_CSRRS: u8 = 0b010;
-
-const F3_OP_IMM_ADDI: u8 = 0b000;
-
-const F3_OP_LOAD_LB: u8 = 0b000;
-const F3_OP_LOAD_LBU: u8 = 0b100;
-const F3_OP_LOAD_LW: u8 = 0b010;
-
-const F3_OP_STORE_SB: u8 = 0b000;
-const F3_OP_STORE_SW: u8 = 0b010;
-
-#[inline(always)]
-fn i_opcode(ins: u32) -> u8 {
-    ins.bits(6, 0) as u8
-}
-
-#[inline(always)]
-fn i_funct3(ins: u32) -> u8 {
-    ins.bits(14, 12) as u8
-}
-
-#[inline(always)]
-fn i_rd(ins: u32) -> u8 {
-    ins.bits(11, 7) as u8
-}
-
-#[inline(always)]
-fn i_rs1(ins: u32) -> u8 {
-    ins.bits(19, 15) as u8
-}
-
-#[inline(always)]
-fn i_rs2(ins: u32) -> u8 {
-    ins.bits(24, 20) as u8
-}
-
-#[inline(always)]
-fn i_csr(ins: u32) -> u16 {
-    ins.bits(31, 20) as u16
-}
-
-// Decode 13-bit signed offset from a B-type instruction
-#[inline(always)]
-fn i_b_off13(ins: u32) -> I13 {
-    let off_4_1 = ins.bits(11, 8) as u16;
-    let off_11 = ins.bits(7, 7) as u16;
-    let off_10_5 = ins.bits(30, 25) as u16;
-    let off_12 = ins.bits(31, 31) as u16;
-    I13::from(off_12 << 12 | off_11 << 11 | off_10_5 << 5 | off_4_1 << 1)
-}
-
-// extract upper 20-bit for LUI, AUIPC instructions
-fn i_u_uimm20(ins: u32) -> u64 {
-    (ins & 0xffff_f000) as u64
-}
-
-// Decode signed 12-bit immidiate from I-type instruction
-#[inline(always)]
-fn i_i_type_imm12(ins: u32) -> I12 {
-    I12::from(ins.bits(31, 20) as u16)
-}
-
-// Decode signed 12-bit immidiate from S-type instruction
-#[inline(always)]
-fn i_s_type_imm12(ins: u32) -> I12 {
-    let imm11_5 = ins.bits(31, 25) as u16;
-    let imm4_0 = ins.bits(11, 7) as u16;
-    I12::from(imm11_5 << 5 | imm4_0)
 }
 
 fn bad_instr(ins: u32) {
@@ -328,21 +210,6 @@ impl RV64ICpu {
         self.trace_pc_add(old_pc, off21.into(), self.regs.pc);
     }
 
-    // Zics SYSTEM opcodes: CSRRS, ...
-    fn dec_opc_system(&self, ins: u32) -> Instr {
-        // I-type instruction
-        let rd = i_rd(ins);
-        let funct3 = i_funct3(ins);
-        let rs1 = i_rs1(ins);
-        let csr = i_csr(ins);
-        Instr::System {
-            csr,
-            rs1,
-            funct3,
-            rd,
-        }
-    }
-
     fn exe_opc_system(&mut self, ins: u32) {
         // I-type instruction
         let Instr::System {
@@ -350,7 +217,7 @@ impl RV64ICpu {
             rs1,
             funct3,
             rd,
-        } = self.dec_opc_system(ins);
+        } = dec_opc_system(ins);
         match funct3 {
             F3_SYSTEM_CSRRS => {
                 let mut csr_v = csr::csr_r64(csr);
