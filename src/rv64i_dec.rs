@@ -1,15 +1,57 @@
 // RV64i decoder
 
-use crate::alu::{I12, I13};
+use crate::alu::{I12, I13, I21};
 use crate::bits::BitOps;
 
-pub enum Instr {
+pub enum Opcode {
     System {
         csr: u16,
         rs1: u8,
         funct3: u8,
         rd: u8,
     },
+    Branch {
+        off13: I13,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+    },
+    Auipc {
+        uimm20: u64,
+        rd: u8,
+    },
+    OpImm {
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
+    Jal {
+        imm21: I21,
+        rd: u8,
+    },
+    Jalr {
+        imm12: I12,
+        rs1: u8,
+        rd: u8,
+    },
+    Lui {
+        uimm20: u64,
+        rd: u8,
+    },
+    Load {
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
+    Store {
+        imm12: I12,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+    },
+    Uknown,
 }
 
 // TODO:
@@ -102,17 +144,110 @@ pub fn i_s_type_imm12(ins: u32) -> I12 {
     I12::from(imm11_5 << 5 | imm4_0)
 }
 
-// Zics SYSTEM opcodes: CSRRS, ...
-pub fn dec_opc_system(ins: u32) -> Instr {
+/// Decodes Zics SYSTEM opcodes: CSRRS, ...
+pub fn dec_opc_system(ins: u32) -> Opcode {
     // I-type instruction
     let rd = i_rd(ins);
     let funct3 = i_funct3(ins);
     let rs1 = i_rs1(ins);
     let csr = i_csr(ins);
-    Instr::System {
+    Opcode::System {
         csr,
         rs1,
         funct3,
         rd,
+    }
+}
+
+/// Decodes BRANCH opcodes: BEQ, BNE, BLT, ...
+pub fn dec_opc_branch(instr: u32) -> Opcode {
+    // B-type instructions
+    let off13 = i_b_off13(instr);
+    let rs2 = i_rs2(instr);
+    let rs1 = i_rs1(instr);
+    let funct3 = i_funct3(instr);
+    Opcode::Branch {
+        off13,
+        rs2,
+        rs1,
+        funct3,
+    }
+}
+
+pub fn dec_opc_op_imm(instr: u32) -> Opcode {
+    // I-type instructions
+    let imm12 = i_i_type_imm12(instr);
+    let rs1 = i_rs1(instr);
+    let funct3 = i_funct3(instr);
+    let rd = i_rd(instr);
+    Opcode::OpImm {
+        imm12,
+        rs1,
+        funct3,
+        rd,
+    }
+}
+
+pub fn dec_opc_jal(instr: u32) -> Opcode {
+    let imm21 = instr.bits(31, 31) << 20
+        | instr.bits(19, 12) << 12
+        | instr.bits(20, 20) << 11
+        | instr.bits(30, 21) << 1;
+    let imm21 = I21::from(imm21);
+    let rd = i_rd(instr);
+    Opcode::Jal { imm21, rd }
+}
+
+pub fn dec_opc_jalr(instr: u32) -> Opcode {
+    let imm12 = i_i_type_imm12(instr);
+    let rs1 = i_rs1(instr);
+    let rd = i_rd(instr);
+    Opcode::Jalr { imm12, rs1, rd }
+}
+
+pub fn dec_opc_load(instr: u32) -> Opcode {
+    let imm12 = i_i_type_imm12(instr);
+    let rs1 = i_rs1(instr);
+    let funct3 = i_funct3(instr);
+    let rd = i_rd(instr);
+    Opcode::Load {
+        imm12,
+        rs1,
+        funct3,
+        rd,
+    }
+}
+
+pub fn dec_opc_store(instr: u32) -> Opcode {
+    let imm12 = i_s_type_imm12(instr);
+    let rs2 = i_rs2(instr);
+    let rs1 = i_rs1(instr);
+    let funct3 = i_funct3(instr);
+    Opcode::Store {
+        imm12,
+        rs2,
+        rs1,
+        funct3,
+    }
+}
+
+pub fn decode_instr(instr: u32) -> Opcode {
+    match i_opcode(instr) {
+        OPC_LUI => Opcode::Lui {
+            uimm20: i_u_uimm20(instr),
+            rd: i_rd(instr),
+        },
+        OPC_AUIPC => Opcode::Auipc {
+            uimm20: i_u_uimm20(instr),
+            rd: i_rd(instr),
+        },
+        OPC_JAL => dec_opc_jal(instr),
+        OPC_JALR => dec_opc_jalr(instr),
+        OPC_BRANCH => dec_opc_branch(instr),
+        OPC_LOAD => dec_opc_load(instr),
+        OPC_STORE => dec_opc_store(instr),
+        OPC_OP_IMM => dec_opc_op_imm(instr),
+        OPC_SYSTEM => dec_opc_system(instr),
+        _ => Opcode::Uknown,
     }
 }

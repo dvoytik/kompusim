@@ -1,4 +1,4 @@
-use crate::alu::{Imm, I13, I21};
+use crate::alu::{Imm, I12, I13, I21};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
@@ -218,14 +218,7 @@ impl RV64ICpu {
         self.trace_pc_add(old_pc, off21.into(), self.regs.pc);
     }
 
-    fn exe_opc_system(&mut self, ins: u32) {
-        // I-type instruction
-        let Instr::System {
-            csr,
-            rs1,
-            funct3,
-            rd,
-        } = dec_opc_system(ins);
+    fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) {
         match funct3 {
             F3_SYSTEM_CSRRS => {
                 let mut csr_v = csr::csr_r64(csr);
@@ -235,26 +228,17 @@ impl RV64ICpu {
             }
             _ => {
                 // TODO: generate exception
-                println!("wrong SYSTEM instr");
-                bad_instr(ins);
+                println!("wrong SYSTEM instr (funct3: {funct3:x})");
             }
         }
         self.pc_inc();
     }
 
     // BRANCH opcodes: BEQ, BNE, BLT, ...
-    fn opc_branch(&mut self, ins: u32) {
-        // B-type instructions
-        let funct3 = i_funct3(ins);
-        let rs1 = i_rs1(ins);
-        let rs2 = i_rs2(ins);
-        let off13 = i_b_off13(ins);
-        // println!("DBG: BRANCH: imm[12:0]: 0x{off13:x}, rs2: {rs2}, rs1: {rs1}, f3: 0x{funct3:x}");
+    fn exe_opc_branch(&mut self, off13: I13, rs2: u8, rs1: u8, funct3: u8) {
         match funct3 {
             // Branch Not Equal
             F3_BRANCH_BNE => {
-                // println!("DBG: bne x{rs1}, x{rs2}, 0x{:x}",
-                //        self.regs.pc.add_i13(off13));
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -263,8 +247,6 @@ impl RV64ICpu {
             }
             // Branch EQual
             F3_BRANCH_BEQ => {
-                // println!("DBG: beq x{rs1}, x{rs2}, 0x{:x}",
-                //        self.regs.pc.add_i13(off13));
                 if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -273,8 +255,6 @@ impl RV64ICpu {
             }
             // Branch Less Than (signed comparison)
             F3_BRANCH_BLT => {
-                // println!("DBG: blt x{rs1}, x{rs2}, 0x{:x}",
-                //        self.regs.pc.add_i13(off13));
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
@@ -283,84 +263,54 @@ impl RV64ICpu {
             }
             _ => {
                 println!("ERROR: unsupported BRACH instr, funct3: 0b{funct3:b}");
-                bad_instr(ins);
             }
         }
     }
 
     // LUI - Load Upper Immidiate
-    fn opc_lui(&mut self, ins: u32) {
-        let rd = i_rd(ins);
-        let uimm20 = i_u_uimm20(ins);
-        // println!("DBG: LUI: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
-        // println!("DBG: lui x{rd}, 0x{:x}", uimm20 >> 12);
+    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, uimm20);
         self.pc_inc()
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
-    fn opc_auipc(&mut self, ins: u32) {
-        let rd = i_rd(ins);
-        let uimm20 = i_u_uimm20(ins);
-        // println!("DBG: AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}");
+    fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, self.regs.pc + uimm20);
         self.pc_inc()
     }
 
-    fn opc_op_imm(&mut self, ins: u32) {
-        // I-type instructions
-        let imm12 = i_i_type_imm12(ins);
-        let rs1 = i_rs1(ins);
-        let funct3 = i_funct3(ins);
-        let rd = i_rd(ins);
+    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
                 self.trace_print_2regs(rd, rs1);
-                // println!("DBG: addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})");
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
                 self.trace_print_reg(rd);
             }
             _ => {
-                bad_instr(ins);
+                println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
             }
         }
         self.pc_inc()
     }
 
     // Only one instrucitn JAL - Jump and Link
-    fn opc_jal(&mut self, ins: u32) {
-        let rd = i_rd(ins);
-        let imm21 = ins.bits(31, 31) << 20
-            | ins.bits(19, 12) << 12
-            | ins.bits(20, 20) << 11
-            | ins.bits(30, 21) << 1;
-        let imm21 = I21::from(imm21);
-        // println!("DBG: jal x{rd}, 0x{0:x} # imm21 = 0x{1:x}",
-        //        self.regs.pc.add_i21(imm21),
-        //       imm21);
+    fn exe_opc_jal(&mut self, imm21: I21, rd: u8) {
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
         self.trace_print_reg(rd);
     }
 
     // JALR - Jump and Link Register
-    fn opc_jalr(&mut self, ins: u32) {
-        let imm12 = i_i_type_imm12(ins);
-        let rs1 = i_rs1(ins);
-        let rd = i_rd(ins);
+    fn exe_opc_jalr(&mut self, imm12: I12, rs1: u8, rd: u8) {
         let new_addr = self.regs_r64(rs1).add_i12(imm12).rst_bits(0, 0);
         self.trace_print_reg(rs1);
-        // println!("DBG: jalr x{rd}, 0x{imm12:x}(x{rs1}) # addr: 0x{new_addr:x}");
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_jump(new_addr);
     }
 
-    fn opc_load(&mut self, ins: u32) {
-        let imm12 = i_i_type_imm12(ins);
-        let rs1 = i_rs1(ins);
-        let funct3 = i_funct3(ins);
-        let rd = i_rd(ins);
+    // LOAD instructions: LB, LBU, LW, ...
+    fn exe_opc_load(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_LOAD_LB => {
@@ -368,59 +318,70 @@ impl RV64ICpu {
             }
             // Load Byte Unsigned
             F3_OP_LOAD_LBU => {
-                // println!("DBG: lbu x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
                 self.regs_wu8(rd, self.bus.read8(addr));
             }
             // Load Word
             F3_OP_LOAD_LW => {
-                // println!("DBG: lw x{rd}, 0x{imm12}(x{rs1}) # addr: 0x{addr:x}");
                 self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
                 println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
-                bad_instr(ins);
             }
         }
         self.pc_inc()
     }
 
-    fn opc_store(&mut self, ins: u32) {
-        let imm12 = i_s_type_imm12(ins);
-        let rs2 = i_rs2(ins);
-        let rs1 = i_rs1(ins);
-        let funct3 = i_funct3(ins);
+    fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_STORE_SB => {
-                // println!("DBG: sb x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
                 todo!();
             }
-            F3_OP_STORE_SW => {
-                // println!("DBG: sw x{rs2}, 0x{imm12:x}(x{rs1}) # addr: 0x{addr:x}");
-                self.bus.write32(addr, self.regs_r32(rs2))
-            }
+            F3_OP_STORE_SW => self.bus.write32(addr, self.regs_r32(rs2)),
             _ => {
-                // println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
-                bad_instr(ins);
+                println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
             }
         }
         self.pc_inc()
     }
 
-    pub fn execute_instr(&mut self, ins: u32) {
-        match i_opcode(ins) {
-            OPC_SYSTEM => self.exe_opc_system(ins),
-            OPC_BRANCH => self.opc_branch(ins),
-            OPC_AUIPC => self.opc_auipc(ins),
-            OPC_OP_IMM => self.opc_op_imm(ins),
-            OPC_JAL => self.opc_jal(ins),
-            OPC_JALR => self.opc_jalr(ins),
-            OPC_LUI => self.opc_lui(ins),
-            OPC_LOAD => self.opc_load(ins),
-            OPC_STORE => self.opc_store(ins),
-            _ => {
-                bad_instr(ins);
-            }
+    pub fn execute_instr(&mut self, instr: u32) {
+        match decode_instr(instr) {
+            Opcode::Lui { uimm20, rd } => self.exe_opc_lui(uimm20, rd),
+            Opcode::Auipc { uimm20, rd } => self.exe_opc_auipc(uimm20, rd),
+            Opcode::Branch {
+                off13,
+                rs2,
+                rs1,
+                funct3,
+            } => self.exe_opc_branch(off13, rs2, rs1, funct3),
+            Opcode::Jal { imm21, rd } => self.exe_opc_jal(imm21, rd),
+            Opcode::Jalr { imm12, rs1, rd } => self.exe_opc_jalr(imm12, rs1, rd),
+            Opcode::Load {
+                imm12,
+                rs1,
+                funct3,
+                rd,
+            } => self.exe_opc_load(imm12, rs1, funct3, rd),
+            Opcode::Store {
+                imm12,
+                rs2,
+                rs1,
+                funct3,
+            } => self.exe_opc_store(imm12, rs2, rs1, funct3),
+            Opcode::OpImm {
+                imm12,
+                rs1,
+                funct3,
+                rd,
+            } => self.exe_opc_op_imm(imm12, rs1, funct3, rd),
+            Opcode::System {
+                csr,
+                rs1,
+                funct3,
+                rd,
+            } => self.exe_opc_system(csr, rs1, funct3, rd),
+            Opcode::Uknown => bad_instr(instr),
         }
     }
 
