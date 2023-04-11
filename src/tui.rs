@@ -74,6 +74,5 @@ pub fn print_regs(regs: &RV64IURegs) {
 }
 
 pub fn print_instr(instr: u32, addr: u64) {
-    println!("instr: 0x{instr:08x} @ 0x{addr:08x}");
-    println!("{}", disasm(instr))
+    println!("A: 0x{addr:08x} | I: 0x{instr:08x} | {}", disasm(instr));
 }

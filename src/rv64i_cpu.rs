@@ -339,7 +339,7 @@ impl RV64ICpu {
             }
             F3_OP_STORE_SW => self.bus.write32(addr, self.regs_r32(rs2)),
             _ => {
-                println!("DBG: unsupported STORE instruction, funct3: 0b{funct3:b}");
+                println!("ERROR: unsupported STORE instruction, funct3: 0b{funct3:b}");
             }
         }
         self.pc_inc()

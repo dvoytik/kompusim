@@ -4,13 +4,9 @@ use crate::rv64i_dec::*;
 
 pub fn disasm(instr: u32) -> String {
     match decode_instr(instr) {
-        Opcode::Lui { uimm20, rd } => {
-            format!("lui x{rd}, 0x{:x}", uimm20 >> 12)
-        }
+        Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
 
-        Opcode::Auipc { uimm20, rd } => {
-            format!("AUIPC: uimm[31:12]: 0x{uimm20:x}, rd: {rd}")
-        }
+        Opcode::Auipc { uimm20, rd } => format!("auipc x{rd}, 0x{uimm20:x}"),
 
         Opcode::Branch {
             off13,
@@ -41,6 +37,7 @@ pub fn disasm(instr: u32) -> String {
             funct3,
             rd,
         } => match funct3 {
+            F3_OP_LOAD_LB => format!("lb x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LBU => format!("lbu x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LW => format!("lw x{rd}, 0x{imm12}(x{rs1})"),
             _ => "uknown LOAD instruction".to_string(),
