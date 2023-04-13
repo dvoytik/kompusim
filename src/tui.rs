@@ -10,6 +10,7 @@ pub enum TuiMenuOpt {
     Quit,
     ToggleTracing, // Enables/disable tracing
     PrintRegisters,
+    DumpMem(u64, u64),
 }
 
 fn green_line() {
@@ -19,6 +20,21 @@ fn green_line() {
             .green()
             .bold()
     );
+}
+
+fn parse_dm(s: &str) -> Option<(u64, u64)> {
+    if let Some(addr_i) = s.find(" ") {
+        if let Some(size_i) = &s[addr_i + 1..].find(" ") {
+            let addr_str = &s[addr_i + 1..(addr_i + 1 + size_i)];
+            let size_str = &s[addr_i + 1 + size_i + 1..];
+            if let Ok(addr) = u64::from_str_radix(addr_str.trim_start_matches("0x"), 16) {
+                if let Ok(size) = size_str.parse() {
+                    return Some((addr, size));
+                }
+            }
+        }
+    }
+    None
 }
 
 pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
@@ -36,8 +52,9 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
                  pr - print registers\n\
                  b <addr> - set breakpoint\n\
                  lb       - list breakpoints\n\
-                 dm <addr|reg> - dump memory at address <addr>"
+                 dm <addr> <size> - dump memory at address <addr>"
             );
+            // TODO: add dm x0 <size> dump from pointer in x0
         } else if l.contains("q") {
             break TuiMenuOpt::Quit;
         } else if l.contains("c") {
@@ -48,6 +65,12 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
             break TuiMenuOpt::ToggleTracing;
         } else if l.contains("pr") {
             break TuiMenuOpt::PrintRegisters;
+        } else if l.contains("dm") {
+            if let Some((addr, size)) = parse_dm(&l) {
+                break TuiMenuOpt::DumpMem(align16(addr), align16_nonzero(size));
+            } else {
+                println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
+            }
         } else {
             println!("unrecognized command");
         }
@@ -75,4 +98,67 @@ pub fn print_regs(regs: &RV64IURegs) {
 
 pub fn print_instr(instr: u32, addr: u64) {
     println!("A: 0x{addr:08x} | I: 0x{instr:08x} | {}", disasm(instr));
+}
+
+#[inline(always)]
+pub fn align16(n: u64) -> u64 {
+    n & !0xf_u64
+}
+
+#[inline(always)]
+pub fn align16_nonzero(n: u64) -> u64 {
+    let n = n & !0xf_u64;
+    if n == 0 {
+        16
+    } else {
+        n
+    }
+}
+
+pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
+    if let None = m {
+        println!("Wrong address or size");
+        return;
+    }
+    let m = m.unwrap();
+    let aligned_addr = align16(addr);
+    let aligned_size = align16_nonzero(size);
+    let mut line = String::with_capacity(size as usize + 32);
+    // TODO: optimize - slow
+    let mut pr_str = String::with_capacity(22);
+    line.push_str(&format!("{:016x} ", aligned_addr));
+    for (i, b) in m[..aligned_size as usize].iter().enumerate() {
+        let i = i as u64;
+        if i == size {
+            if i % 16 != 0 {
+                let mid_blank = if i % 16 < 8 { 1 } else { 0 };
+                let left_blanks = mid_blank + 3 * (16 - (i % 16));
+                line.push_str(&format!("{:1$}", " ", left_blanks as usize));
+            }
+            line.push_str(&format!("| {} |\n", pr_str));
+            line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
+            break;
+        }
+        if i > 0 && i % 16 == 0 {
+            line.push_str(&format!("| {} |\n", pr_str));
+            line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
+            pr_str.clear();
+        }
+        if i % 8 == 0 {
+            line.push_str(" ");
+        }
+        line.push_str(&format!("{:02x} ", b));
+        pr_str.push(if *b >= 0x20 && *b <= 0x7e {
+            *b as char
+        } else {
+            '.'
+        })
+    }
+    println!("{}", line);
+}
+
+#[test]
+fn test_tui_dm() {
+    assert!(parse_dm("dm 0x1000 1000") == Some((0x1000, 1000)));
+    assert!(parse_dm("dm 0x0 1") == Some((0x0, 1)));
 }

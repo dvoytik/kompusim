@@ -85,41 +85,14 @@ impl Ram {
         Ok(())
     }
 
-    #[allow(dead_code)]
-    pub fn dump_hex(&self, addr: u64, size: u64) {
-        let aligned_addr = addr & !0xf_u64;
-        let aligned_size = (size + 16) & !0xf_u64;
-        let mut line = String::with_capacity(size as usize + 32);
-        // TODO: optimize - slow
-        let mut pr_str = String::with_capacity(22);
-        line.push_str(&format!("{:016x} ", aligned_addr));
-        for (i, b) in self.m[..aligned_size as usize].iter().enumerate() {
-            let i = i as u64;
-            if i == size {
-                if i % 16 != 0 {
-                    let mid_blank = if i % 16 < 8 { 1 } else { 0 };
-                    let left_blanks = mid_blank + 3 * (16 - (i % 16));
-                    line.push_str(&format!("{:1$}", " ", left_blanks as usize));
-                }
-                line.push_str(&format!("| {} |\n", pr_str));
-                line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
-                break;
-            }
-            if i > 0 && i % 16 == 0 {
-                line.push_str(&format!("| {} |\n", pr_str));
-                line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
-                pr_str.clear();
-            }
-            if i % 8 == 0 {
-                line.push_str(" ");
-            }
-            line.push_str(&format!("{:02x} ", b));
-            pr_str.push(if *b >= 0x20 && *b <= 0x7e {
-                *b as char
-            } else {
-                '.'
-            })
+    pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
+        if addr < self.start || addr > self.end {
+            return None;
         }
-        println!("{}", line);
+        if addr + size > self.end {
+            return None;
+        }
+        let offs = (addr - self.start) as usize;
+        Some(&self.m[offs..size as usize])
     }
 }

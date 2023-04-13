@@ -113,6 +113,10 @@ impl RV64ICpu {
         self.regs.pc
     }
 
+    pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
+        self.bus.get_ram(addr, size)
+    }
+
     /// Enable printing CPU state on console
     pub fn enable_tracing(&mut self, enable: bool) {
         self.tracing = enable;

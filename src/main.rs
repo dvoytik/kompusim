@@ -132,6 +132,9 @@ fn main() {
                             cpu0.enable_tracing(!cpu0.tracing());
                             println!("Tracing enagbled.")
                         }
+                        TuiMenuOpt::DumpMem(addr, size) => {
+                            tui::dump_mem(cpu0.get_ram(addr, size), addr, size)
+                        }
                     }
                 }
             } else {

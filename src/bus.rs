@@ -42,6 +42,13 @@ impl BusAgent {
             BusAgent::Device(dev) => dev.enable_tracing(enable),
         }
     }
+
+    pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
+        match self {
+            BusAgent::Device(_) => None,
+            BusAgent::RAM(ram) => ram.get_ram(addr, size),
+        }
+    }
 }
 
 struct AddrRegion {
@@ -152,6 +159,14 @@ impl Bus {
             ar.agent.write32(addr, val)
         } else {
             panic!("DBG: write32 bus fault: 0x{addr:x}");
+        }
+    }
+
+    pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
+        if let Some(ar) = self.find_addr_region(addr, size) {
+            ar.agent.get_ram(addr, size)
+        } else {
+            None
         }
     }
 }
