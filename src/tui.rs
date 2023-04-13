@@ -2,7 +2,10 @@ use anstream::println;
 use owo_colors::OwoColorize;
 use text_io::read;
 
-use kompusim::{rv64i_cpu::RV64IURegs, rv64i_disasm::disasm};
+use kompusim::{
+    rv64i_cpu::RV64IURegs,
+    rv64i_disasm::{disasm, reg_idx2abi},
+};
 
 pub enum TuiMenuOpt {
     Step,
@@ -47,11 +50,12 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
                 "q - exit Kompusim\n\
                  c - continue (run until hitting a breakpoint)\n\
                  s     - step one instruction\n\
-                 s <N> - step <N> instructions\n\
+                 s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
+                 sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
                  t - toggle tracing (enabled: {enabled_tracing})\n\
                  pr - print registers\n\
-                 b <addr> - set breakpoint\n\
-                 lb       - list breakpoints\n\
+                 b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
+                 lb       - list breakpoints (NOT IMPLEMENTED)\n\
                  dm <addr> <size> - dump memory at address <addr>"
             );
             // TODO: add dm x0 <size> dump from pointer in x0
@@ -96,8 +100,32 @@ pub fn print_regs(regs: &RV64IURegs) {
     println!("      pc: {:016x} | {0:064b}", regs.pc)
 }
 
+fn reg2str(regs: &RV64IURegs, ri: u8) -> String {
+    if ri == 0 {
+        return "x0 (zero)".to_string();
+    }
+    let r_abi = reg_idx2abi(ri);
+    format!(
+        "x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
+        regs.x[ri as usize]
+    )
+}
+
+pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
+    for i in 1..31 {
+        if before_regs.x[i] != after_regs.x[i] {
+            println!(
+                "{}\n   ↓\n{}",
+                reg2str(before_regs, i as u8),
+                reg2str(after_regs, i as u8)
+            )
+        }
+    }
+    // TODO: print change PC
+}
+
 pub fn print_instr(instr: u32, addr: u64) {
-    println!("A: 0x{addr:08x} | I: 0x{instr:08x} | {}", disasm(instr));
+    println!("PC: 0x{addr:08x} | I: 0x{instr:08x} | {}", disasm(instr));
 }
 
 #[inline(always)]

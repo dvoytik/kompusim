@@ -5,80 +5,11 @@ use crate::csr;
 use crate::rv64i_dec::*;
 
 // RV64I Unprivileged Registers
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct RV64IURegs {
     // x0: is always zero
     pub x: [u64; 32],
     pub pc: u64,
-}
-
-impl RV64IURegs {
-    // Get ABI register name
-    fn reg_idx2abi(r: u8) -> &'static str {
-        match r {
-            0 => "zero",
-            1 => "ra",
-            2 => "sp",
-            3 => "gp",
-            4 => "tp",
-            5 => "t0",
-            6 => "t1",
-            7 => "t2",
-            8 => "s0",
-            9 => "s1",
-            10 => "a0",
-            11 => "a1",
-            12 => "a2",
-            13 => "a3",
-            14 => "a4",
-            15 => "a5",
-            16 => "a6",
-            17 => "a7",
-            18 => "s2",
-            19 => "s3",
-            20 => "a4",
-            21 => "s5",
-            22 => "s6",
-            23 => "s7",
-            24 => "s8",
-            25 => "s9",
-            26 => "s10",
-            27 => "s11",
-            28 => "t3",
-            29 => "t4",
-            30 => "t5",
-            31 => "t6",
-            _ => panic!("Unknow register idx"),
-        }
-    }
-
-    fn print_reg(&self, ri: u8) {
-        if ri == 0 {
-            return;
-        }
-        let r_abi = Self::reg_idx2abi(ri);
-        println!(
-            " x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
-            self.x[ri as usize]
-        );
-    }
-
-    fn print_2regs(&self, ri1: u8, ri2: u8) {
-        if ri1 != 0 {
-            let r1_abi = Self::reg_idx2abi(ri1);
-            println!(
-                " x{ri1} ({r1_abi}): 0x{0:016x} | b'{0:064b}",
-                self.x[ri1 as usize]
-            );
-        }
-        if ri2 != 0 {
-            let r2_abi = Self::reg_idx2abi(ri2);
-            println!(
-                " x{ri1} ({r2_abi}): 0x{0:016x} | b'{0:064b}",
-                self.x[ri2 as usize]
-            );
-        }
-    }
 }
 
 // TODO: make regs private?
@@ -86,7 +17,9 @@ impl RV64IURegs {
 pub struct RV64ICpu {
     pub regs: RV64IURegs,
     pub bus: Bus,
-    breakpoints: Vec<u64>, // TODO: optimize - use hashmap
+    // TODO: optimize - use hashmap:
+    breakpoints: Vec<u64>,
+    // TODO: remove:
     tracing: bool,
 }
 
@@ -144,18 +77,6 @@ impl RV64ICpu {
     fn trace_pc_add(&self, old_pc: u64, add: u64, new_pc: u64) {
         if self.tracing {
             println!("PC: 0x{old_pc:x} + 0x{add:x} -> 0x{new_pc:x}");
-        }
-    }
-
-    fn trace_print_reg(&self, ri: u8) {
-        if self.tracing {
-            self.regs.print_reg(ri)
-        }
-    }
-
-    fn trace_print_2regs(&self, r1: u8, r2: u8) {
-        if self.tracing {
-            self.regs.print_2regs(r1, r2)
         }
     }
 
@@ -287,9 +208,7 @@ impl RV64ICpu {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
-                self.trace_print_2regs(rd, rs1);
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
-                self.trace_print_reg(rd);
             }
             _ => {
                 println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
@@ -302,13 +221,11 @@ impl RV64ICpu {
     fn exe_opc_jal(&mut self, imm21: I21, rd: u8) {
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
-        self.trace_print_reg(rd);
     }
 
     // JALR - Jump and Link Register
     fn exe_opc_jalr(&mut self, imm12: I12, rs1: u8, rd: u8) {
         let new_addr = self.regs_r64(rs1).add_i12(imm12).rst_bits(0, 0);
-        self.trace_print_reg(rs1);
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_jump(new_addr);
     }

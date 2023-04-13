@@ -118,8 +118,11 @@ fn main() {
                     match tui::interactive_menu(cpu0.tracing()) {
                         TuiMenuOpt::Quit => break,
                         TuiMenuOpt::Step => {
+                            let before_regs = cpu0.get_regs().clone();
                             tui::print_instr(cpu0.get_cur_instr(), cpu0.get_pc());
                             let _ = cpu0.exec_continue(1);
+                            let after_regs = cpu0.get_regs();
+                            tui::print_changed_regs(&before_regs, after_regs);
                         }
                         TuiMenuOpt::Continue => {
                             let _ = cpu0.exec_continue(max_instr);
