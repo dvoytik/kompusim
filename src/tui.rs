@@ -123,7 +123,18 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
             )
         }
     }
-    // TODO: print change PC
+
+    // How has PC changed
+    let jump = after_regs.pc - before_regs.pc;
+    if jump == 0 {
+        println!("PC: {} ↩", after_regs.pc);
+    } else {
+        let sign = if jump > 0 { '+' } else { '-' };
+        println!(
+            "PC: 0x{0:x} {sign} 0x{jump:x} = 0x{1:x}",
+            before_regs.pc, after_regs.pc
+        );
+    }
 }
 
 pub fn print_instr(instr: u32, addr: u64) {

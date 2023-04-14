@@ -68,18 +68,6 @@ impl RV64ICpu {
         self.breakpoints.push(breakpoint)
     }
 
-    fn trace_pc(&self, old: u64, new: u64) {
-        if self.tracing {
-            println!("PC: 0x{old:x} -> 0x{new:x}")
-        }
-    }
-
-    fn trace_pc_add(&self, old_pc: u64, add: u64, new_pc: u64) {
-        if self.tracing {
-            println!("PC: 0x{old_pc:x} + 0x{add:x} -> 0x{new_pc:x}");
-        }
-    }
-
     // reg_i - register index (0 - 31)
     pub fn regs_w64(&mut self, reg_i: u8, val: u64) {
         if reg_i == 0 {
@@ -121,26 +109,19 @@ impl RV64ICpu {
 
     fn pc_inc(&mut self) {
         self.regs.pc += 4;
-        self.trace_pc(self.regs.pc - 4, self.regs.pc);
     }
 
     // set PC to new_addr
     fn pc_jump(&mut self, new_addr: u64) {
-        let old_pc = self.regs.pc;
         self.regs.pc = new_addr;
-        self.trace_pc(old_pc, new_addr)
     }
 
     fn pc_add_i13(&mut self, off13: I13) {
-        let old_pc = self.regs.pc;
         self.regs.pc = self.regs.pc.add_i13(off13);
-        self.trace_pc_add(old_pc, off13.into(), self.regs.pc);
     }
 
     fn pc_add_i21(&mut self, off21: I21) {
-        let old_pc = self.regs.pc;
         self.regs.pc = self.regs.pc.add_i21(I21::from(off21));
-        self.trace_pc_add(old_pc, off21.into(), self.regs.pc);
     }
 
     fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) {
