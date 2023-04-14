@@ -9,9 +9,16 @@ It is expected that [Rust tool chain is installed](https://www.rust-lang.org/too
 
 A demo of running the bare metal program that prints "Hello, World!" to the UART:
 ```
-./tests/uart_hello_world/run.sh
+./tests/test_programs/uart_hello_world/run.sh
 ```
 
+Run the the demo program in the interactive mode:
+```
+./tests/test_programs/uart_hello_world/run.sh -i
+```
+Press `h` to see the full list of commands.
+
+## How to build
 Compile and run:
 ```
 cargo run -- -h

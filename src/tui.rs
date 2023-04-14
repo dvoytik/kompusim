@@ -138,7 +138,10 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
 }
 
 pub fn print_instr(instr: u32, addr: u64) {
-    println!("PC: 0x{addr:08x} | I: 0x{instr:08x} | {}", disasm(instr));
+    println!(
+        "PC: 0x{addr:08x} | I: 0x{instr:08x} | {}",
+        disasm(instr, addr)
+    );
 }
 
 #[inline(always)]
