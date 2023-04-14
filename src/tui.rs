@@ -25,11 +25,13 @@ fn green_line() {
     );
 }
 
+/// Parses string "dm 0x10000 1024" to (0x10000, 1024)
 fn parse_dm(s: &str) -> Option<(u64, u64)> {
-    if let Some(addr_i) = s.find(" ") {
-        if let Some(size_i) = &s[addr_i + 1..].find(" ") {
-            let addr_str = &s[addr_i + 1..(addr_i + 1 + size_i)];
-            let size_str = &s[addr_i + 1 + size_i + 1..];
+    if let Some(addr_i) = s.trim().find(" ") {
+        let s = &s[addr_i + 1..].trim();
+        if let Some(size_i) = s.find(" ") {
+            let addr_str = &s[..size_i].trim();
+            let size_str = &s[size_i + 1..].trim();
             if let Ok(addr) = u64::from_str_radix(addr_str.trim_start_matches("0x"), 16) {
                 if let Ok(size) = size_str.parse() {
                     return Some((addr, size));
@@ -189,4 +191,6 @@ pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
 fn test_tui_dm() {
     assert!(parse_dm("dm 0x1000 1000") == Some((0x1000, 1000)));
     assert!(parse_dm("dm 0x0 1") == Some((0x0, 1)));
+    assert!(parse_dm("dm  0x2000   3000") == Some((0x2000, 3000)));
+    assert!(parse_dm("dm 	 0x4000 	  10") == Some((0x4000, 10)));
 }
