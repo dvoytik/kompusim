@@ -12,10 +12,11 @@ A demo of running the bare metal program that prints "Hello, World!" to the UART
 ./tests/test_programs/uart_hello_world/run.sh
 ```
 
-Run the the demo program in the interactive mode:
+Run the demo program in the interactive mode:
 ```
 ./tests/test_programs/uart_hello_world/run.sh -i
 ```
+Press `s` repeatedly to step over instructions.  
 Press `h` to see the full list of commands.
 
 ## How to build

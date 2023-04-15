@@ -7,6 +7,7 @@ use kompusim::{
     rv64i_disasm::{disasm, reg_idx2abi},
 };
 
+#[derive(PartialEq)]
 pub enum TuiMenuOpt {
     Step,
     Continue,
@@ -42,14 +43,20 @@ fn parse_dm(s: &str) -> Option<(u64, u64)> {
     None
 }
 
-pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
-    let selected_option = loop {
-        green_line();
-        print!("command (h for Help): ");
-        let l: String = read!("{}\n");
-        if l.contains("help") || l.contains("h") {
-            println!(
-                "q - exit Kompusim\n\
+fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuOpt> {
+    if l.len() == 0 {
+        return None;
+    }
+    const MAX_CMD_SZ: usize = 2;
+    let cmd_sz = if l.len() < MAX_CMD_SZ {
+        l.len()
+    } else {
+        MAX_CMD_SZ
+    };
+    let cmd = &l[..cmd_sz];
+    if l.contains("help") || l.contains("h") {
+        println!(
+            "q - exit Kompusim\n\
                  c - continue (run until hitting a breakpoint)\n\
                  s     - step one instruction\n\
                  s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
@@ -59,26 +66,37 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
                  b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
                  lb       - list breakpoints (NOT IMPLEMENTED)\n\
                  dm <addr> <size> - dump memory at address <addr>"
-            );
-            // TODO: add dm x0 <size> dump from pointer in x0
-        } else if l.contains("q") {
-            break TuiMenuOpt::Quit;
-        } else if l.contains("c") {
-            break TuiMenuOpt::Continue;
-        } else if l.contains("s") {
-            break TuiMenuOpt::Step;
-        } else if l.contains("t") {
-            break TuiMenuOpt::ToggleTracing;
-        } else if l.contains("pr") {
-            break TuiMenuOpt::PrintRegisters;
-        } else if l.contains("dm") {
-            if let Some((addr, size)) = parse_dm(&l) {
-                break TuiMenuOpt::DumpMem(align16(addr), align16_nonzero(size));
-            } else {
-                println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
-            }
+        );
+        // TODO: add dm x0 <size> dump from pointer in x0
+    } else if cmd.contains("q") {
+        return Some(TuiMenuOpt::Quit);
+    } else if cmd.contains("c") {
+        return Some(TuiMenuOpt::Continue);
+    } else if cmd.contains("s") {
+        return Some(TuiMenuOpt::Step);
+    } else if cmd.contains("t") {
+        return Some(TuiMenuOpt::ToggleTracing);
+    } else if cmd.contains("pr") {
+        return Some(TuiMenuOpt::PrintRegisters);
+    } else if cmd.contains("dm") {
+        if let Some((addr, size)) = parse_dm(&l) {
+            return Some(TuiMenuOpt::DumpMem(align16(addr), align16_nonzero(size)));
         } else {
-            println!("unrecognized command");
+            println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
+        }
+    } else {
+        println!("unrecognized command");
+    }
+    None
+}
+
+pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
+    let selected_option = loop {
+        green_line();
+        print!("command (h for Help): ");
+        let l: String = read!("{}\n");
+        if let Some(valid_menu_opt) = parse_command(l, enabled_tracing) {
+            break valid_menu_opt;
         }
     };
     green_line();
@@ -207,4 +225,11 @@ fn test_tui_dm() {
     assert!(parse_dm("dm 0x0 1") == Some((0x0, 1)));
     assert!(parse_dm("dm  0x2000   3000") == Some((0x2000, 3000)));
     assert!(parse_dm("dm 	 0x4000 	  10") == Some((0x4000, 10)));
+
+    assert!(parse_command("".to_string(), true) == None);
+    assert!(parse_command("c".to_string(), true) == Some(TuiMenuOpt::Continue));
+    assert!(
+        parse_command("dm 0x800000c0 16".to_string(), true)
+            == Some(TuiMenuOpt::DumpMem(0x800000c0, 16))
+    );
 }
