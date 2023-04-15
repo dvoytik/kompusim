@@ -93,6 +93,6 @@ impl Ram {
             return None;
         }
         let offs = (addr - self.start) as usize;
-        Some(&self.m[offs..size as usize])
+        Some(&self.m[offs..offs + size as usize])
     }
 }

@@ -198,12 +198,11 @@ pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
                 line.push_str(&format!("{:1$}", " ", left_blanks as usize));
             }
             line.push_str(&format!("| {} |\n", pr_str));
-            line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
             break;
         }
         if i > 0 && i % 16 == 0 {
             line.push_str(&format!("| {} |\n", pr_str));
-            line.push_str(&format!("{:016x} ", aligned_addr + i + 16));
+            line.push_str(&format!("{:016x} ", aligned_addr + i));
             pr_str.clear();
         }
         if i % 8 == 0 {
