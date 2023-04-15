@@ -8,7 +8,7 @@ use kompusim::{
 };
 
 #[derive(PartialEq)]
-pub enum TuiMenuOpt {
+pub enum TuiMenuCmd {
     Step,
     Continue,
     Quit,
@@ -43,7 +43,7 @@ fn parse_dm(s: &str) -> Option<(u64, u64)> {
     None
 }
 
-fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuOpt> {
+fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     if l.len() == 0 {
         return None;
     }
@@ -69,18 +69,18 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuOpt> {
         );
         // TODO: add dm x0 <size> dump from pointer in x0
     } else if cmd.contains("q") {
-        return Some(TuiMenuOpt::Quit);
+        return Some(TuiMenuCmd::Quit);
     } else if cmd.contains("c") {
-        return Some(TuiMenuOpt::Continue);
+        return Some(TuiMenuCmd::Continue);
     } else if cmd.contains("s") {
-        return Some(TuiMenuOpt::Step);
+        return Some(TuiMenuCmd::Step);
     } else if cmd.contains("t") {
-        return Some(TuiMenuOpt::ToggleTracing);
+        return Some(TuiMenuCmd::ToggleTracing);
     } else if cmd.contains("pr") {
-        return Some(TuiMenuOpt::PrintRegisters);
+        return Some(TuiMenuCmd::PrintRegisters);
     } else if cmd.contains("dm") {
         if let Some((addr, size)) = parse_dm(&l) {
-            return Some(TuiMenuOpt::DumpMem(align16(addr), align16_nonzero(size)));
+            return Some(TuiMenuCmd::DumpMem(align16(addr), align16_nonzero(size)));
         } else {
             println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
@@ -90,7 +90,7 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuOpt> {
     None
 }
 
-pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuOpt {
+pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuCmd {
     let selected_option = loop {
         green_line();
         print!("command (h for Help): ");
@@ -227,9 +227,9 @@ fn test_tui_dm() {
     assert!(parse_dm("dm 	 0x4000 	  10") == Some((0x4000, 10)));
 
     assert!(parse_command("".to_string(), true) == None);
-    assert!(parse_command("c".to_string(), true) == Some(TuiMenuOpt::Continue));
+    assert!(parse_command("c".to_string(), true) == Some(TuiMenuCmd::Continue));
     assert!(
         parse_command("dm 0x800000c0 16".to_string(), true)
-            == Some(TuiMenuOpt::DumpMem(0x800000c0, 16))
+            == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
 }

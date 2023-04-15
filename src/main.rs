@@ -8,7 +8,7 @@ use kompusim::device::Device;
 use kompusim::ram;
 use kompusim::rv64i_cpu::RV64ICpu;
 use kompusim::uart::Uart;
-use tui::TuiMenuOpt;
+use tui::TuiMenuCmd;
 
 #[derive(Parser)]
 #[command(
@@ -116,26 +116,26 @@ fn main() {
                 cpu0.enable_tracing(true); // TODO: remove tracing from rv64i_cpu
                 loop {
                     match tui::interactive_menu(cpu0.tracing()) {
-                        TuiMenuOpt::Quit => break,
-                        TuiMenuOpt::Step => {
+                        TuiMenuCmd::Quit => break,
+                        TuiMenuCmd::Step => {
                             let before_regs = cpu0.get_regs().clone();
                             tui::print_instr(cpu0.get_cur_instr(), cpu0.get_pc());
                             let _ = cpu0.exec_continue(1);
                             let after_regs = cpu0.get_regs();
                             tui::print_changed_regs(&before_regs, after_regs);
                         }
-                        TuiMenuOpt::Continue => {
+                        TuiMenuCmd::Continue => {
                             let _ = cpu0.exec_continue(max_instr);
                         }
-                        TuiMenuOpt::PrintRegisters => {
+                        TuiMenuCmd::PrintRegisters => {
                             // TODO: highlight changed registers - store old state, calc diff
                             tui::print_regs(cpu0.get_regs())
                         }
-                        TuiMenuOpt::ToggleTracing => {
+                        TuiMenuCmd::ToggleTracing => {
                             cpu0.enable_tracing(!cpu0.tracing());
                             println!("Tracing enagbled.")
                         }
-                        TuiMenuOpt::DumpMem(addr, size) => {
+                        TuiMenuCmd::DumpMem(addr, size) => {
                             tui::dump_mem(cpu0.get_ram(addr, size), addr, size)
                         }
                     }
