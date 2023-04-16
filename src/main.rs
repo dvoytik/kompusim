@@ -138,7 +138,7 @@ fn main() {
                         }
                         TuiMenuCmd::ToggleTracing => {
                             cpu0.enable_tracing(!cpu0.tracing());
-                            println!("Tracing enagbled.")
+                            println!("Tracing enabled.")
                         }
                         TuiMenuCmd::DumpMem(addr, size) => {
                             tui::dump_mem(cpu0.get_ram(addr, size), addr, size)

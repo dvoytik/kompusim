@@ -17,7 +17,7 @@ pub enum TuiMenuCmd {
     DumpMem(u64, u64),
 }
 
-fn green_line() {
+fn print_green_line() {
     println!(
         "{}",
         "─────────────────────────────────────────────────────────────"
@@ -92,14 +92,14 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
 
 pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuCmd {
     let selected_option = loop {
-        green_line();
+        print_green_line();
         print!("command (h for Help): ");
         let l: String = read!("{}\n");
         if let Some(valid_menu_opt) = parse_command(l, enabled_tracing) {
             break valid_menu_opt;
         }
     };
-    green_line();
+    print_green_line();
     selected_option
 }
 
@@ -132,6 +132,7 @@ fn reg2str(regs: &RV64IURegs, ri: u8) -> String {
 }
 
 pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
+    print_green_line();
     for i in 1..31 {
         if before_regs.x[i] != after_regs.x[i] {
             println!(
@@ -145,7 +146,7 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
     // How has PC changed
     let jump = after_regs.pc - before_regs.pc;
     if jump == 0 {
-        println!("PC: {} ↩", after_regs.pc);
+        println!("PC: 0x{:x} ↩", after_regs.pc);
     } else {
         let sign = if jump > 0 { '+' } else { '-' };
         println!(
