@@ -155,11 +155,33 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
     }
 }
 
-pub fn print_instr(instr: u32, addr: u64) {
-    println!(
-        "PC: 0x{addr:08x} | I: 0x{instr:08x} | {}",
+fn print_instr(instr: Option<u32>, addr: u64, instr_current: bool) {
+    if instr.is_none() {
+        return;
+    }
+    let instr = instr.unwrap();
+    let cur_char = if instr_current { '→' } else { ' ' };
+    let s = format!(
+        "{} 0x{addr:08x} | 0x{instr:08x} | {}",
+        cur_char,
         disasm(instr, addr)
     );
+    if instr_current {
+        println!("{}", s.bold().green());
+    } else {
+        println!("{}", s);
+    }
+}
+
+pub fn print_3instr(
+    prev_instr: Option<u32>,
+    cur_instr: Option<u32>,
+    next_instr: Option<u32>,
+    addr: u64,
+) {
+    print_instr(prev_instr, addr - 4, false);
+    print_instr(cur_instr, addr, true);
+    print_instr(next_instr, addr + 4, false);
 }
 
 #[inline(always)]

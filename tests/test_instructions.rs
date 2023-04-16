@@ -101,7 +101,7 @@ fn test_instruction_sw() {
     cpu.regs_w64(6, 0xdead_beef); // what to store
     cpu.execute_instr(0x0062a023);
     // lw sign extends 32-bit word
-    assert!(cpu.bus.read32(0x10) == 0xdead_beef);
+    assert!(cpu.bus.read32(0x10).unwrap() == 0xdead_beef);
 }
 
 #[test]

@@ -38,8 +38,13 @@ impl RV64ICpu {
         }
     }
 
-    pub fn get_cur_instr(&self) -> u32 {
-        self.bus.read32(self.regs.pc)
+    pub fn fetch_instr(&self) -> u32 {
+        // TODO: raise fault
+        self.get_instr(self.get_pc()).unwrap()
+    }
+
+    pub fn get_instr(&self, addr: u64) -> Option<u32> {
+        self.bus.read32(addr)
     }
 
     pub fn get_pc(&self) -> u64 {
@@ -224,7 +229,8 @@ impl RV64ICpu {
             }
             // Load Word
             F3_OP_LOAD_LW => {
-                self.regs_wi32(rd, self.bus.read32(addr));
+                // TODO raise fault
+                self.regs_wi32(rd, self.bus.read32(addr).unwrap());
             }
             _ => {
                 println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
@@ -290,7 +296,7 @@ impl RV64ICpu {
     /// Returns PC (i.e. where stopped)
     pub fn exec_continue(&mut self, max_instr: u64) -> u64 {
         for _ in 0..max_instr {
-            self.execute_instr(self.get_cur_instr());
+            self.execute_instr(self.fetch_instr());
             // TODO: check all breakpoints
             // TODO: optimize to use hashmap
             if self.breakpoints[0] == self.regs.pc {

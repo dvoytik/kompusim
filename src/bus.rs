@@ -86,7 +86,7 @@ impl Bus {
 
     pub fn attach_device(&mut self, dev: Device) {
         // TODO: insert in sorted order - search optimization
-        if let Some(_) = self.find_addr_region(dev.start, dev.end) {
+        if let Some(_) = self.find_addr_region(dev.start, dev.start - dev.end) {
             panic!("address region is occupied")
         }
         self.regions.push(AddrRegion {
@@ -103,7 +103,8 @@ impl Bus {
         }
     }
 
-    fn find_addr_region(&self, start: u64, end: u64) -> Option<&AddrRegion> {
+    fn find_addr_region(&self, start: u64, size: u64) -> Option<&AddrRegion> {
+        let end = start + size;
         for r in &self.regions {
             // TODO: fast binary search
             // TODO: what if it crosses two regions?
@@ -145,11 +146,12 @@ impl Bus {
     }
 
     // Little Endian 32 bit read
-    pub fn read32(&self, addr: u64) -> u32 {
+    pub fn read32(&self, addr: u64) -> Option<u32> {
         if let Some(ar) = self.find_addr_region(addr, 4) {
-            ar.agent.read32(addr)
+            Some(ar.agent.read32(addr))
         } else {
-            panic!("DBG: read32 bus fault: 0x{addr:x}");
+            // bus fault
+            None
         }
     }
 
@@ -186,7 +188,7 @@ pub fn test_read32_le() {
     bus.write8(1, 0xbe);
     bus.write8(2, 0xad);
     bus.write8(3, 0xde);
-    let v: u32 = bus.read32(0);
+    let v: u32 = bus.read32(0).unwrap();
     assert!(v == 0xdeadbeef);
 }
 
