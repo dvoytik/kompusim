@@ -55,7 +55,7 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
         MAX_CMD_SZ
     };
     let cmd = &l[..cmd_sz];
-    if l.contains("help") || l.contains("h") {
+    if l.starts_with("help") || l.starts_with("h") {
         println!(
             "q - exit Kompusim\n\
                  c - continue (run until hitting a breakpoint)\n\
@@ -69,17 +69,17 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
                  dm <addr> <size> - dump memory at address <addr>"
         );
         // TODO: add dm x0 <size> dump from pointer in x0
-    } else if cmd.contains("q") {
+    } else if cmd.starts_with("q") {
         return Some(TuiMenuCmd::Quit);
-    } else if cmd.contains("c") {
+    } else if cmd.starts_with("c") {
         return Some(TuiMenuCmd::Continue);
-    } else if cmd.contains("s") {
+    } else if cmd.starts_with("s") {
         return Some(TuiMenuCmd::Step);
-    } else if cmd.contains("t") {
+    } else if cmd.starts_with("t") {
         return Some(TuiMenuCmd::ToggleTracing);
-    } else if cmd.contains("pr") {
+    } else if cmd.starts_with("pr") {
         return Some(TuiMenuCmd::PrintRegisters);
-    } else if cmd.contains("dm") {
+    } else if cmd.starts_with("dm") {
         if let Some((addr, size)) = parse_dm(&l) {
             return Some(TuiMenuCmd::DumpMem(align16(addr), align16_nonzero(size)));
         } else {
