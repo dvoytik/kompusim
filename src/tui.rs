@@ -3,6 +3,7 @@ use owo_colors::OwoColorize;
 use text_io::read;
 
 use kompusim::{
+    bits::BitOps,
     rv64i_cpu::RV64IURegs,
     rv64i_disasm::{disasm, reg_idx2abi},
 };
@@ -103,32 +104,103 @@ pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuCmd {
     selected_option
 }
 
+fn reg_hex(v: u64) -> String {
+    format!(
+        "{:04x}_{:04x}_{:04x}_{:04x}",
+        v.bits(63, 48),
+        v.bits(47, 32),
+        v.bits(31, 16),
+        v.bits(15, 0)
+    )
+}
+
 pub fn print_regs(regs: &RV64IURegs) {
-    println!(" x1 (ra): {:016x} | {0:064b}", regs.x[1]);
-    println!(" x2 (sp): {:016x} | {0:064b}", regs.x[2]);
-    println!(" x3 (gp): {:016x} | {0:064b}", regs.x[3]);
-    println!(" x4 (tp): {:016x} | {0:064b}", regs.x[4]);
-    println!(" x5 (t0): {:016x} | {0:064b}", regs.x[5]);
-    println!(" x6 (t1): {:016x} | {0:064b}", regs.x[6]);
-    println!(" x7 (t2): {:016x} | {0:064b}", regs.x[7]);
-    println!(" x8 (s0): {:016x} | {0:064b}", regs.x[8]);
-    println!(" x9 (s1): {:016x} | {0:064b}", regs.x[9]);
-    println!("x10 (a0): {:016x} | {0:064b}", regs.x[10]);
-    println!("x11 (a1): {:016x} | {0:064b}", regs.x[11]);
-    println!("x12 (a2): {:016x} | {0:064b}", regs.x[12]);
-    println!("x13 (a3): {:016x} | {0:064b}", regs.x[13]);
-    println!("      pc: {:016x} | {0:064b}", regs.pc)
+    println!(
+        " x1 (ra): {} | x17 (a7):  {}",
+        reg_hex(regs.x[1]),
+        reg_hex(regs.x[17])
+    );
+    println!(
+        " x2 (sp): {} | x18 (s2):  {}",
+        reg_hex(regs.x[2]),
+        reg_hex(regs.x[18])
+    );
+    println!(
+        " x3 (gp): {} | x19 (s3):  {}",
+        reg_hex(regs.x[3]),
+        reg_hex(regs.x[19])
+    );
+    println!(
+        " x4 (tp): {} | x20 (s4):  {}",
+        reg_hex(regs.x[4]),
+        reg_hex(regs.x[20])
+    );
+    println!(
+        " x5 (t0): {} | x21 (s5):  {}",
+        reg_hex(regs.x[5]),
+        reg_hex(regs.x[21])
+    );
+    println!(
+        " x6 (t1): {} | x22 (s6):  {}",
+        reg_hex(regs.x[6]),
+        reg_hex(regs.x[22])
+    );
+    println!(
+        " x7 (t2): {} | x23 (s7):  {}",
+        reg_hex(regs.x[7]),
+        reg_hex(regs.x[23])
+    );
+    println!(
+        " x8 (s0): {} | x24 (s8):  {}",
+        reg_hex(regs.x[8]),
+        reg_hex(regs.x[24])
+    );
+    println!(
+        " x9 (s1): {} | x25 (s9):  {}",
+        reg_hex(regs.x[9]),
+        reg_hex(regs.x[25])
+    );
+    println!(
+        "x10 (a0): {} | x26 (s10): {}",
+        reg_hex(regs.x[10]),
+        reg_hex(regs.x[26])
+    );
+    println!(
+        "x11 (a1): {} | x27 (s11): {}",
+        reg_hex(regs.x[11]),
+        reg_hex(regs.x[27])
+    );
+    println!(
+        "x12 (a2): {} | x28 (t3):  {}",
+        reg_hex(regs.x[12]),
+        reg_hex(regs.x[28])
+    );
+    println!(
+        "x13 (a3): {} | x29 (t4):  {}",
+        reg_hex(regs.x[13]),
+        reg_hex(regs.x[29])
+    );
+    println!(
+        "x14 (a4): {} | x30 (t5):  {}",
+        reg_hex(regs.x[14]),
+        reg_hex(regs.x[30])
+    );
+    println!(
+        "x15 (a5): {} | x31 (t6):  {}",
+        reg_hex(regs.x[15]),
+        reg_hex(regs.x[31])
+    );
+    println!("x16 (a6): {} |", reg_hex(regs.x[16]));
+    println!("      pc: {} |", reg_hex(regs.pc));
 }
 
 fn reg2str(regs: &RV64IURegs, ri: u8) -> String {
     if ri == 0 {
         return "x0 (zero)".to_string();
     }
+    let reg_val = regs.x[ri as usize];
     let r_abi = reg_idx2abi(ri);
-    format!(
-        "x{ri} ({r_abi}): 0x{0:016x} | b'{0:064b}",
-        regs.x[ri as usize]
-    )
+    format!("x{ri} ({r_abi}): {}", reg_hex(reg_val))
 }
 
 pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
@@ -136,7 +208,7 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
     for i in 1..31 {
         if before_regs.x[i] != after_regs.x[i] {
             println!(
-                "{}\n   ↓\n{}",
+                "{} → {}",
                 reg2str(before_regs, i as u8),
                 reg2str(after_regs, i as u8)
             )
@@ -254,4 +326,8 @@ fn test_tui_dm() {
         parse_command("dm 0x800000c0 16".to_string(), true)
             == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
+
+    assert!(reg_hex(0x1234_5678_9abc_def0) == "1234_5678_9abc_def0".to_string());
+    assert!(reg_hex(0x1234) == "0000_0000_0000_1234".to_string());
+    assert!(reg_hex(0xF234_0000_0000_0000) == "f234_0000_0000_0000".to_string());
 }

@@ -1,5 +1,5 @@
 mod alu;
-mod bits;
+pub mod bits;
 pub mod bus;
 mod csr;
 pub mod device;
