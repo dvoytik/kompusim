@@ -18,7 +18,7 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
             let addr = instr_a.add_i13(off13);
             match funct3 {
                 // Branch Not Equal
-                F3_BRANCH_BNE => format!("bne x{rs2}, x{rs1}, 0x{addr:x} # PC + 0x{off13:x}"),
+                F3_BRANCH_BNE => format!("bne x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
                 // Branch EQual
                 F3_BRANCH_BEQ => format!("beq x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
                 // Branch Less Than (signed comparison)
@@ -28,7 +28,10 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
         }
 
         Opcode::Jal { imm21, rd } => {
-            format!("jal x{rd}, 0x{imm21:x}")
+            format!(
+                "jal x{rd}, 0x{0:x} # PC + {imm21:x}",
+                instr_a.add_i21(imm21)
+            )
         }
 
         Opcode::Jalr { imm12, rs1, rd } => {
@@ -76,7 +79,7 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
         } => {
             match funct3 {
                 // TODO: convert csr to string name, e.g. "mhartid"
-                F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {csr:x}, x{rs1:x}"),
+                F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1:x}", csr_name(csr)),
                 _ => "uknown_SYSTEM".to_string(),
             }
         }
@@ -121,5 +124,12 @@ pub fn reg_idx2abi(r: u8) -> &'static str {
         30 => "t5",
         31 => "t6",
         _ => panic!("Unknow register idx"),
+    }
+}
+
+pub fn csr_name(csr: u16) -> &'static str {
+    match csr {
+        0xf14 => "mhartid",
+        _ => "UKNOWN",
     }
 }
