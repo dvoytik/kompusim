@@ -132,9 +132,12 @@ fn main() {
                         TuiMenuCmd::Continue => {
                             let _ = cpu0.exec_continue(max_instr);
                         }
-                        TuiMenuCmd::PrintRegisters => {
+                        TuiMenuCmd::PrintAllRegisters => {
                             // TODO: highlight changed registers - store old state, calc diff
                             tui::print_regs(cpu0.get_regs())
+                        }
+                        TuiMenuCmd::PrintRegister(reg_i) => {
+                            tui::print_reg(cpu0.get_regs(), reg_i);
                         }
                         TuiMenuCmd::ToggleTracing => {
                             cpu0.enable_tracing(!cpu0.tracing());

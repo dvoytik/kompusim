@@ -1,5 +1,6 @@
 # TODO / Ideas
 
+* [ ] implement explain mode
 * [ ] Add abitility to load ELF files
 * [ ] run OpenSBI
 * [ ] run UBoot

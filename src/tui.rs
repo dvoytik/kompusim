@@ -14,7 +14,8 @@ pub enum TuiMenuCmd {
     Continue,
     Quit,
     ToggleTracing, // Enables/disable tracing
-    PrintRegisters,
+    PrintRegister(u8),
+    PrintAllRegisters,
     DumpMem(u64, u64),
 }
 
@@ -44,6 +45,52 @@ fn parse_dm(s: &str) -> Option<(u64, u64)> {
     None
 }
 
+/// Parses "print register" command, e.g. "pr x1", "pr t0"
+fn parse_pr(s: &str) -> Option<u8> {
+    if let Some(reg_s_i) = s.trim().find(|c: char| c.is_ascii_whitespace()) {
+        let reg_s = &s[reg_s_i..].trim();
+        if reg_s.starts_with('x') {
+            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("x"), 10) {
+                if reg_i <= 31 {
+                    return Some(reg_i);
+                }
+            }
+        } else if reg_s.starts_with("ra") {
+            return Some(1);
+        } else if reg_s.starts_with("sp") {
+            return Some(2);
+        } else if reg_s.starts_with("gp") {
+            return Some(3);
+        } else if reg_s.starts_with("tp") {
+            return Some(4);
+        } else if reg_s.starts_with('t') {
+            // t0 ... t6
+            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("t"), 10) {
+                if reg_i < 3 {
+                    return Some(reg_i as u8 + 5);
+                } else if reg_i >= 3 && reg_i <= 6 {
+                    return Some(reg_i + 25);
+                }
+            }
+        } else if reg_s.starts_with('a') {
+            // a0 ... 07
+            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("a"), 10) {
+                return Some(reg_i as u8 + 10);
+            }
+        } else if reg_s.starts_with('s') {
+            // s0, s1, s2 ... s11
+            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("s"), 10) {
+                if reg_i <= 1 {
+                    return Some(reg_i as u8 + 8);
+                } else if reg_i >= 2 && reg_i <= 11 {
+                    return Some(reg_i + 16);
+                }
+            }
+        }
+    }
+    None
+}
+
 fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     if l.len() == 0 {
         return None;
@@ -58,12 +105,14 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     if l.starts_with("help") || l.starts_with("h") {
         println!(
             "q - exit Kompusim\n\
+                 e - enable/disable explain mode (NOT IMPLEMENTED)\n\
                  c - continue (run until hitting a breakpoint)\n\
                  s     - step one instruction\n\
                  s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
                  sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
                  t - toggle tracing (enabled: {enabled_tracing})\n\
-                 pr - print registers\n\
+                 pr     - print all registers\n\
+                 pr <r> - print register <r>\n\
                  b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
                  lb       - list breakpoints (NOT IMPLEMENTED)\n\
                  dm <addr> <size> - dump memory at address <addr>"
@@ -78,7 +127,11 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     } else if cmd.starts_with("t") {
         return Some(TuiMenuCmd::ToggleTracing);
     } else if cmd.starts_with("pr") {
-        return Some(TuiMenuCmd::PrintRegisters);
+        if let Some(reg_i) = parse_pr(&l) {
+            return Some(TuiMenuCmd::PrintRegister(reg_i));
+        } else {
+            return Some(TuiMenuCmd::PrintAllRegisters);
+        }
     } else if cmd.starts_with("dm") {
         if let Some((addr, size)) = parse_dm(&l) {
             return Some(TuiMenuCmd::DumpMem(align16(addr), align16_nonzero(size)));
@@ -112,6 +165,16 @@ fn reg_hex(v: u64) -> String {
         v.bits(31, 16),
         v.bits(15, 0)
     )
+}
+
+/// Print one register
+pub fn print_reg(regs: &RV64IURegs, reg_i: u8) {
+    println!("{}", reg2str(regs, reg_i));
+    let reg_i = reg_i as usize;
+    // TODO: bits
+    // TODO: octal
+    println!("Unsigned: {}", regs.x[reg_i] as u64);
+    println!("Signed:   {}", regs.x[reg_i] as i64);
 }
 
 pub fn print_regs(regs: &RV64IURegs) {
@@ -319,6 +382,11 @@ fn test_tui_dm() {
     assert!(parse_dm("dm 0x0 1") == Some((0x0, 1)));
     assert!(parse_dm("dm  0x2000   3000") == Some((0x2000, 3000)));
     assert!(parse_dm("dm 	 0x4000 	  10") == Some((0x4000, 10)));
+
+    assert!(parse_pr("pr x1") == Some(1));
+    assert!(parse_pr("pr s11") == Some(27));
+    assert!(parse_pr("pr	    x15 ") == Some(15));
+    assert!(parse_pr("pr x32") == None);
 
     assert!(parse_command("".to_string(), true) == None);
     assert!(parse_command("c".to_string(), true) == Some(TuiMenuCmd::Continue));
