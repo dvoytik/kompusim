@@ -22,7 +22,7 @@ pub enum TuiMenuCmd {
 fn print_green_line() {
     println!(
         "{}",
-        "─────────────────────────────────────────────────────────────"
+        "───────────────────────────────────────────────────────────────────────────────"
             .green()
             .bold()
     );
@@ -167,14 +167,41 @@ fn reg_hex(v: u64) -> String {
     )
 }
 
+fn reg32_bin(v: u64) -> String {
+    format!(
+        "{:08b}_{:08b}_{:08b}_{:08b}",
+        v.bits(31, 24),
+        v.bits(23, 16),
+        v.bits(15, 8),
+        v.bits(7, 0)
+    )
+}
+
+#[allow(dead_code)]
+fn reg64_bin(v: u64) -> String {
+    format!(
+        "{:08b}_{:08b}_{:08b}_{:08b}_{:08b}_{:08b}_{:08b}_{:08b}",
+        v.bits(63, 56),
+        v.bits(55, 48),
+        v.bits(47, 40),
+        v.bits(39, 32),
+        v.bits(31, 24),
+        v.bits(23, 16),
+        v.bits(15, 8),
+        v.bits(7, 0)
+    )
+}
+
 /// Print one register
 pub fn print_reg(regs: &RV64IURegs, reg_i: u8) {
     println!("{}", reg2str(regs, reg_i));
     let reg_i = reg_i as usize;
-    // TODO: bits
+    let reg_v = regs.x[reg_i];
     // TODO: octal
-    println!("Unsigned: {}", regs.x[reg_i] as u64);
-    println!("Signed:   {}", regs.x[reg_i] as i64);
+    println!("[63:32]   {}", reg32_bin(reg_v.bits(63, 32)));
+    println!("[31:0]    {}", reg32_bin(reg_v.bits(33, 0)));
+    println!("Unsigned: {}", reg_v);
+    println!("Signed:   {}", reg_v as i64);
 }
 
 pub fn print_regs(regs: &RV64IURegs) {
@@ -263,7 +290,7 @@ fn reg2str(regs: &RV64IURegs, ri: u8) -> String {
     }
     let reg_val = regs.x[ri as usize];
     let r_abi = reg_idx2abi(ri);
-    format!("x{ri} ({r_abi}): {}", reg_hex(reg_val))
+    format!("{:<4}({r_abi}): {}", format!("x{ri}"), reg_hex(reg_val))
 }
 
 pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
