@@ -306,11 +306,15 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
     }
 
     // How has PC changed
-    let jump = after_regs.pc - before_regs.pc;
+    let jump: i64 = after_regs.pc as i64 - before_regs.pc as i64;
     if jump == 0 {
         println!("PC: 0x{:x} ↩", after_regs.pc);
     } else {
-        let sign = if jump > 0 { '+' } else { '-' };
+        let (sign, jump) = if jump > 0 {
+            ('+', jump)
+        } else {
+            ('-', jump.abs())
+        };
         println!(
             "PC: 0x{0:x} {sign} 0x{jump:x} = 0x{1:x}",
             before_regs.pc, after_regs.pc
