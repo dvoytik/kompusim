@@ -322,11 +322,7 @@ pub fn print_changed_regs(before_regs: &RV64IURegs, after_regs: &RV64IURegs) {
     }
 }
 
-fn print_instr(instr: Option<u32>, addr: u64, instr_current: bool) {
-    if instr.is_none() {
-        return;
-    }
-    let instr = instr.unwrap();
+fn print_instr(instr: u32, addr: u64, instr_current: bool) {
     let cur_char = if instr_current { '→' } else { ' ' };
     let s = format!(
         "{} 0x{addr:08x} | 0x{instr:08x} | {}",
@@ -340,15 +336,17 @@ fn print_instr(instr: Option<u32>, addr: u64, instr_current: bool) {
     }
 }
 
-pub fn print_3instr(
-    prev_instr: Option<u32>,
-    cur_instr: Option<u32>,
-    next_instr: Option<u32>,
-    addr: u64,
-) {
-    print_instr(prev_instr, addr - 4, false);
-    print_instr(cur_instr, addr, true);
-    print_instr(next_instr, addr + 4, false);
+/// print any number of instructions
+pub fn print_instr_listing(instructions: Vec<u32>, instr_start_addr: u64, addr: u64) {
+    let mut instr_addr = instr_start_addr;
+    for instr in instructions {
+        if instr_addr == addr {
+            print_instr(instr, instr_addr, true);
+        } else {
+            print_instr(instr, instr_addr, false);
+        }
+        instr_addr += 4;
+    }
 }
 
 #[inline(always)]

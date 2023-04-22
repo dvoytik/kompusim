@@ -40,11 +40,19 @@ impl RV64ICpu {
 
     pub fn fetch_instr(&self) -> u32 {
         // TODO: raise fault
-        self.get_instr(self.get_pc()).unwrap()
+        self.get_instr(self.get_pc())
     }
 
-    pub fn get_instr(&self, addr: u64) -> Option<u32> {
+    pub fn get_instr(&self, addr: u64) -> u32 {
         self.bus.read32(addr)
+    }
+
+    pub fn get_n_instr(&self, addr: u64, number: u64) -> Vec<u32> {
+        let mut instructions = Vec::with_capacity(number as usize);
+        for i in 0..number {
+            instructions.push(self.get_instr(addr + 4 * i))
+        }
+        instructions
     }
 
     pub fn get_pc(&self) -> u64 {
@@ -229,8 +237,8 @@ impl RV64ICpu {
             }
             // Load Word
             F3_OP_LOAD_LW => {
-                // TODO raise fault
-                self.regs_wi32(rd, self.bus.read32(addr).unwrap());
+                // TODO raise fault if returnx 0xffff_ffff?
+                self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
                 println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");

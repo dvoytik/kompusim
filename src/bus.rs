@@ -146,12 +146,12 @@ impl Bus {
     }
 
     // Little Endian 32 bit read
-    pub fn read32(&self, addr: u64) -> Option<u32> {
+    pub fn read32(&self, addr: u64) -> u32 {
         if let Some(ar) = self.find_addr_region(addr, 4) {
-            Some(ar.agent.read32(addr))
+            ar.agent.read32(addr)
         } else {
-            // bus fault
-            None
+            // TODO: is this bus fault or we return 0xffff_ffff?
+            0xffff_ffff
         }
     }
 
@@ -188,7 +188,7 @@ pub fn test_read32_le() {
     bus.write8(1, 0xbe);
     bus.write8(2, 0xad);
     bus.write8(3, 0xde);
-    let v: u32 = bus.read32(0).unwrap();
+    let v: u32 = bus.read32(0);
     assert!(v == 0xdeadbeef);
 }
 
