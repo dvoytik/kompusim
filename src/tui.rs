@@ -17,6 +17,7 @@ pub enum TuiMenuCmd {
     PrintRegister(u8),
     PrintAllRegisters,
     DumpMem(u64, u64),
+    ListInstr(u64, i8), // List instructions
 }
 
 fn print_green_line() {
@@ -105,8 +106,10 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     if l.starts_with("help") || l.starts_with("h") {
         println!(
             "q - exit Kompusim\n\
-                 e - enable/disable explain mode (NOT IMPLEMENTED)\n\
-                 c - continue (run until hitting a breakpoint)\n\
+                 e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
+                 li - list instructions starting from PC\n\
+                 li <-+N> - list instructions starting from PC +- N (NOT IMPLEMENTED)\n\
+                 c  - continue (run until hitting a breakpoint)\n\
                  s     - step one instruction\n\
                  s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
                  sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
@@ -138,6 +141,8 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
         } else {
             println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
+    } else if cmd.starts_with("li") {
+        return Some(TuiMenuCmd::ListInstr(10, -4));
     } else {
         println!("unrecognized command");
     }
@@ -337,10 +342,10 @@ fn print_instr(instr: u32, addr: u64, instr_current: bool) {
 }
 
 /// print any number of instructions
-pub fn print_instr_listing(instructions: Vec<u32>, instr_start_addr: u64, addr: u64) {
+pub fn print_instr_listing(instructions: Vec<u32>, instr_start_addr: u64, pc_addr: u64) {
     let mut instr_addr = instr_start_addr;
     for instr in instructions {
-        if instr_addr == addr {
+        if instr_addr == pc_addr {
             print_instr(instr, instr_addr, true);
         } else {
             print_instr(instr, instr_addr, false);
