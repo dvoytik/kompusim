@@ -13,7 +13,6 @@ pub enum TuiMenuCmd {
     Step,
     Continue,
     Quit,
-    ToggleTracing, // Enables/disable tracing
     PrintRegister(u8),
     PrintAllRegisters,
     DumpMem(u64, u64),
@@ -92,7 +91,26 @@ fn parse_pr(s: &str) -> Option<u8> {
     None
 }
 
-fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
+fn print_help() {
+    println!(
+        "q - exit Kompusim\n\
+         e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
+         li - list instructions starting from PC\n\
+         li <-+N> - list instructions starting from PC +- N (NOT IMPLEMENTED)\n\
+         c  - continue (run until hitting a breakpoint)\n\
+         s     - step one instruction\n\
+         s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
+         sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
+         pr     - print all registers\n\
+         pr <r> - print register <r>\n\
+         b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
+         lb       - list breakpoints (NOT IMPLEMENTED)\n\
+         dm <addr> <size> - dump memory at address <addr>"
+    );
+    // TODO: add dm x0 <size> dump from pointer in x0
+}
+
+fn parse_command(l: String) -> Option<TuiMenuCmd> {
     if l.len() == 0 {
         return None;
     }
@@ -103,32 +121,14 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
         MAX_CMD_SZ
     };
     let cmd = &l[..cmd_sz];
-    if l.starts_with("help") || l.starts_with("h") {
-        println!(
-            "q - exit Kompusim\n\
-                 e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
-                 li - list instructions starting from PC\n\
-                 li <-+N> - list instructions starting from PC +- N (NOT IMPLEMENTED)\n\
-                 c  - continue (run until hitting a breakpoint)\n\
-                 s     - step one instruction\n\
-                 s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
-                 sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
-                 t - toggle tracing (enabled: {enabled_tracing})\n\
-                 pr     - print all registers\n\
-                 pr <r> - print register <r>\n\
-                 b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
-                 lb       - list breakpoints (NOT IMPLEMENTED)\n\
-                 dm <addr> <size> - dump memory at address <addr>"
-        );
-        // TODO: add dm x0 <size> dump from pointer in x0
+    if l.starts_with("h") {
+        print_help();
     } else if cmd.starts_with("q") {
         return Some(TuiMenuCmd::Quit);
     } else if cmd.starts_with("c") {
         return Some(TuiMenuCmd::Continue);
     } else if cmd.starts_with("s") {
         return Some(TuiMenuCmd::Step);
-    } else if cmd.starts_with("t") {
-        return Some(TuiMenuCmd::ToggleTracing);
     } else if cmd.starts_with("pr") {
         if let Some(reg_i) = parse_pr(&l) {
             return Some(TuiMenuCmd::PrintRegister(reg_i));
@@ -149,12 +149,12 @@ fn parse_command(l: String, enabled_tracing: bool) -> Option<TuiMenuCmd> {
     None
 }
 
-pub fn interactive_menu(enabled_tracing: bool) -> TuiMenuCmd {
+pub fn interactive_menu() -> TuiMenuCmd {
     let selected_option = loop {
         print_green_line();
         print!("command (h for Help): ");
         let l: String = read!("{}\n");
-        if let Some(valid_menu_opt) = parse_command(l, enabled_tracing) {
+        if let Some(valid_menu_opt) = parse_command(l) {
             break valid_menu_opt;
         }
     };
@@ -422,11 +422,10 @@ fn test_tui_dm() {
     assert!(parse_pr("pr	    x15 ") == Some(15));
     assert!(parse_pr("pr x32") == None);
 
-    assert!(parse_command("".to_string(), true) == None);
-    assert!(parse_command("c".to_string(), true) == Some(TuiMenuCmd::Continue));
+    assert!(parse_command("".to_string()) == None);
+    assert!(parse_command("c".to_string()) == Some(TuiMenuCmd::Continue));
     assert!(
-        parse_command("dm 0x800000c0 16".to_string(), true)
-            == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
+        parse_command("dm 0x800000c0 16".to_string()) == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
 
     assert!(reg_hex(0x1234_5678_9abc_def0) == "1234_5678_9abc_def0".to_string());

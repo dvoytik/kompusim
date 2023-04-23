@@ -51,10 +51,6 @@ enum Commands {
         /// Run in with interactive menu, don't execute
         #[arg(short, long, action=clap::ArgAction::SetTrue)]
         interactive: Option<bool>,
-
-        /// Print CPU state after each instruction execution
-        #[arg(short, long, action=clap::ArgAction::SetTrue)]
-        trace: Option<bool>,
     },
 }
 
@@ -75,7 +71,6 @@ fn main() {
             breakpoint,
             max_instr,
             interactive,
-            trace,
         }) => {
             let max_instr = max_instr.unwrap_or(u64::MAX);
 
@@ -104,9 +99,6 @@ fn main() {
             ));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
-            if trace.unwrap_or(false) {
-                cpu0.enable_tracing(true)
-            }
 
             if let Some(breakpoint) = break_point {
                 cpu0.add_breakpoint(breakpoint)
@@ -115,7 +107,7 @@ fn main() {
             if interactive.unwrap_or(false) {
                 cpu0.enable_tracing(true); // TODO: remove tracing from rv64i_cpu
                 loop {
-                    match tui::interactive_menu(cpu0.tracing()) {
+                    match tui::interactive_menu() {
                         TuiMenuCmd::Quit => break,
                         TuiMenuCmd::Step => {
                             let before_regs = cpu0.get_regs().clone();
@@ -134,10 +126,6 @@ fn main() {
                         }
                         TuiMenuCmd::PrintRegister(reg_i) => {
                             tui::print_reg(cpu0.get_regs(), reg_i);
-                        }
-                        TuiMenuCmd::ToggleTracing => {
-                            cpu0.enable_tracing(!cpu0.tracing());
-                            println!("Tracing enabled.")
                         }
                         TuiMenuCmd::DumpMem(addr, size) => {
                             tui::dump_mem(cpu0.get_ram(addr, size), addr, size)
