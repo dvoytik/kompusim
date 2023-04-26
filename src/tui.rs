@@ -16,7 +16,8 @@ pub enum TuiMenuCmd {
     PrintRegister(u8),
     PrintAllRegisters,
     DumpMem(u64, u64),
-    ListInstr(u64, i8), // List instructions
+    /// List n_instr instructions strarting at PC+pc_offset (pc_offset, n_instr)
+    ListInstr(i8, usize), // List instructions ()
 }
 
 fn print_green_line() {
@@ -28,7 +29,8 @@ fn print_green_line() {
     );
 }
 
-/// Parses string "dm 0x10000 1024" to (0x10000, 1024)
+/// Parses string "dm <addr> <size>"
+/// "dm 0x10000 1024" to (0x10000, 1024)
 fn parse_dm(s: &str) -> Option<(u64, u64)> {
     if let Some(addr_i) = s.trim().find(" ") {
         let s = &s[addr_i + 1..].trim();
@@ -91,6 +93,16 @@ fn parse_pr(s: &str) -> Option<u8> {
     None
 }
 
+/// Parses string "li 20" to (-4, 20)
+fn parse_cmd_li(l: &str) -> Option<(i8, usize)> {
+    if let Some(n_instr) = l.trim().find(|c: char| c.is_ascii_whitespace()) {
+        if let Ok(n_instr) = l[n_instr..].trim().parse() {
+            return Some((-4, n_instr));
+        }
+    }
+    None
+}
+
 fn print_help() {
     println!(
         "q - exit Kompusim\n\
@@ -142,7 +154,11 @@ fn parse_command(l: String) -> Option<TuiMenuCmd> {
             println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
     } else if cmd.starts_with("li") {
-        return Some(TuiMenuCmd::ListInstr(10, -4));
+        if let Some((pc_offset, n_instr)) = parse_cmd_li(&l) {
+            return Some(TuiMenuCmd::ListInstr(pc_offset, n_instr));
+        } else {
+            return Some(TuiMenuCmd::ListInstr(-4, 10));
+        }
     } else {
         println!("unrecognized command");
     }
@@ -427,6 +443,7 @@ fn test_tui_dm() {
     assert!(
         parse_command("dm 0x800000c0 16".to_string()) == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
+    assert!(parse_command("li 16".to_string()) == Some(TuiMenuCmd::ListInstr(-4, 16)));
 
     assert!(reg_hex(0x1234_5678_9abc_def0) == "1234_5678_9abc_def0".to_string());
     assert!(reg_hex(0x1234) == "0000_0000_0000_1234".to_string());

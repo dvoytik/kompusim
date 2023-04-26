@@ -47,10 +47,10 @@ impl RV64ICpu {
         self.bus.read32(addr)
     }
 
-    pub fn get_n_instr(&self, addr: u64, number: u64) -> Vec<u32> {
-        let mut instructions = Vec::with_capacity(number as usize);
-        for i in 0..number {
-            instructions.push(self.get_instr(addr + 4 * i))
+    pub fn get_n_instr(&self, addr: u64, n_instr: usize) -> Vec<u32> {
+        let mut instructions = Vec::with_capacity(n_instr);
+        for i in 0..n_instr {
+            instructions.push(self.get_instr(addr + 4 * i as u64))
         }
         instructions
     }
