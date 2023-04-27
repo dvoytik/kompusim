@@ -93,22 +93,22 @@ fn parse_pr(s: &str) -> Option<u8> {
     None
 }
 
-/// Parses string "li 20" to (-4, 20)
-fn parse_cmd_li(l: &str) -> Option<(i8, usize)> {
+/// Parses command list, e.g.: "li 20" to (-4, 20)
+fn parse_cmd_li(l: &str) -> (i8, usize) {
     if let Some(n_instr) = l.trim().find(|c: char| c.is_ascii_whitespace()) {
         if let Ok(n_instr) = l[n_instr..].trim().parse() {
-            return Some((-4, n_instr));
+            return (-4, n_instr);
         }
     }
-    None
+    // default
+    (-4, 11)
 }
 
 fn print_help() {
     println!(
         "q - exit Kompusim\n\
          e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
-         li - list instructions starting from PC\n\
-         li <-+N> - list instructions starting from PC +- N (NOT IMPLEMENTED)\n\
+         li [N]- list N (default: 10) instructions starting from PC\n\
          c  - continue (run until hitting a breakpoint)\n\
          s     - step one instruction\n\
          s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
@@ -154,11 +154,8 @@ fn parse_command(l: String) -> Option<TuiMenuCmd> {
             println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
     } else if cmd.starts_with("li") {
-        if let Some((pc_offset, n_instr)) = parse_cmd_li(&l) {
-            return Some(TuiMenuCmd::ListInstr(pc_offset, n_instr));
-        } else {
-            return Some(TuiMenuCmd::ListInstr(-4, 10));
-        }
+        let (pc_offset, n_instr) = parse_cmd_li(&l);
+        return Some(TuiMenuCmd::ListInstr(pc_offset, n_instr));
     } else {
         println!("unrecognized command");
     }
