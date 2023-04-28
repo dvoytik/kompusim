@@ -10,7 +10,7 @@ use kompusim::{
 
 #[derive(PartialEq)]
 pub enum TuiMenuCmd {
-    Step,
+    Step(u8),
     Continue,
     Quit,
     PrintRegister(u8),
@@ -104,14 +104,24 @@ fn parse_cmd_li(l: &str) -> (i8, usize) {
     (-4, 11)
 }
 
+/// Parses any command with a number, e.g.: "cmd 20" to 20
+fn parse_cmd_with_number(l: &str) -> Option<u8> {
+    if let Some(i_number) = l.trim().find(|c: char| c.is_ascii_whitespace()) {
+        if let Ok(number) = l[i_number..].trim().parse() {
+            return Some(number);
+        }
+    }
+    // default
+    None
+}
+
 fn print_help() {
     println!(
         "q - exit Kompusim\n\
          e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
          li [N]- list N (default: 10) instructions starting from PC\n\
          c  - continue (run until hitting a breakpoint)\n\
-         s     - step one instruction\n\
-         s <N> - step <N> instructions (NOT IMPLEMENTED)\n\
+         s [N] - step N (default: 1) instructions\n\
          sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
          pr     - print all registers\n\
          pr <r> - print register <r>\n\
@@ -140,7 +150,11 @@ fn parse_command(l: String) -> Option<TuiMenuCmd> {
     } else if cmd.starts_with("c") {
         return Some(TuiMenuCmd::Continue);
     } else if cmd.starts_with("s") {
-        return Some(TuiMenuCmd::Step);
+        if let Some(n_steps) = parse_cmd_with_number(&l) {
+            return Some(TuiMenuCmd::Step(n_steps));
+        } else {
+            return Some(TuiMenuCmd::Step(1));
+        }
     } else if cmd.starts_with("pr") {
         if let Some(reg_i) = parse_pr(&l) {
             return Some(TuiMenuCmd::PrintRegister(reg_i));

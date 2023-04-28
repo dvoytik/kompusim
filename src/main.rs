@@ -109,13 +109,15 @@ fn main() {
                 loop {
                     match tui::interactive_menu() {
                         TuiMenuCmd::Quit => break,
-                        TuiMenuCmd::Step => {
-                            let before_regs = cpu0.get_regs().clone();
-                            let pc = cpu0.get_pc();
-                            tui::print_instr_listing(cpu0.get_n_instr(pc - 4, 3), pc - 4, pc);
-                            let _ = cpu0.exec_continue(1);
-                            let after_regs = cpu0.get_regs();
-                            tui::print_changed_regs(&before_regs, after_regs);
+                        TuiMenuCmd::Step(n_steps) => {
+                            for _ in 0..n_steps {
+                                let before_regs = cpu0.get_regs().clone();
+                                let pc = cpu0.get_pc();
+                                tui::print_instr_listing(cpu0.get_n_instr(pc - 4, 3), pc - 4, pc);
+                                let _ = cpu0.exec_continue(1);
+                                let after_regs = cpu0.get_regs();
+                                tui::print_changed_regs(&before_regs, after_regs);
+                            }
                         }
                         TuiMenuCmd::Continue => {
                             let _ = cpu0.exec_continue(max_instr);
