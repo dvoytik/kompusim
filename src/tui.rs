@@ -10,7 +10,7 @@ use kompusim::{
 
 #[derive(PartialEq)]
 pub enum TuiMenuCmd {
-    Step(u8),
+    Step(u64),
     Continue,
     Quit,
     PrintRegister(u8),
@@ -105,7 +105,7 @@ fn parse_cmd_li(l: &str) -> (i8, usize) {
 }
 
 /// Parses any command with a number, e.g.: "cmd 20" to 20
-fn parse_cmd_with_number(l: &str) -> Option<u8> {
+fn parse_cmd_with_number(l: &str) -> Option<u64> {
     if let Some(i_number) = l.trim().find(|c: char| c.is_ascii_whitespace()) {
         if let Ok(number) = l[i_number..].trim().parse() {
             return Some(number);
@@ -120,9 +120,9 @@ fn print_help() {
         "q - exit Kompusim\n\
          e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
          li [N]- list N (default: 10) instructions starting from PC\n\
-         c  - continue (run until hitting a breakpoint)\n\
+         c  - continue (run until hitting a breakpoint hits)\n\
          s [N] - step N (default: 1) instructions\n\
-         sa    - step automatically until a breakpoint (NOT IMPLEMENTED)\n\
+         sa    - step automatically until a fault or breakpoint hits (NOT IMPLEMENTED)\n\
          pr     - print all registers\n\
          pr <r> - print register <r>\n\
          b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
