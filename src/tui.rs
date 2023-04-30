@@ -397,9 +397,12 @@ pub fn align16_nonzero(n: u64) -> u64 {
 }
 
 pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
+    print!("{}", __dump_mem(m, addr, size));
+}
+
+fn __dump_mem(m: Option<&[u8]>, addr: u64, size: u64) -> String {
     if let None = m {
-        println!("Wrong address or size");
-        return;
+        return "Wrong address or size".to_string();
     }
     let m = m.unwrap();
     let aligned_addr = align16(addr);
@@ -434,11 +437,22 @@ pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
             '.'
         })
     }
-    println!("{}", line);
+    line.push_str(&format!("| {} |\n", pr_str));
+    line
 }
 
 #[test]
-fn test_tui_dm() {
+fn test_tui_dump_mem() {
+    let m = [0; 16];
+    let s = __dump_mem(Some(&m), 0x800_0000, 16);
+    // TODO: change to 0000_0000_0800_0000
+    let es =
+        "0000000008000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | ................ |\n";
+    assert!(s == es);
+}
+
+#[test]
+fn test_tui_commands() {
     assert!(parse_dm("dm 0x1000 1000") == Some((0x1000, 1000)));
     assert!(parse_dm("dm 0x0 1") == Some((0x0, 1)));
     assert!(parse_dm("dm  0x2000   3000") == Some((0x2000, 3000)));
