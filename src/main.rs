@@ -132,7 +132,7 @@ fn main() {
                         TuiMenuCmd::DumpMem(addr, size) => {
                             tui::dump_mem(cpu0.get_ram(addr, size), addr, size)
                         }
-                        TuiMenuCmd::ListInstr(pc_offset, n_instr) => {
+                        TuiMenuCmd::Disasm(pc_offset, n_instr) => {
                             let pc = cpu0.get_pc();
                             let start = (pc as i64 + pc_offset as i64) as u64;
                             tui::print_instr_listing(cpu0.get_n_instr(start, n_instr), start, pc);

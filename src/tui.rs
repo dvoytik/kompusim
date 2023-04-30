@@ -16,8 +16,8 @@ pub enum TuiMenuCmd {
     PrintRegister(u8),
     PrintAllRegisters,
     DumpMem(u64, u64),
-    /// List n_instr instructions strarting at PC+pc_offset (pc_offset, n_instr)
-    ListInstr(i8, usize), // List instructions ()
+    /// Disassembler and list n_instr instructions strarting at PC+pc_offset (pc_offset, n_instr)
+    Disasm(i8, usize),
 }
 
 fn print_green_line() {
@@ -94,7 +94,7 @@ fn parse_pr(s: &str) -> Option<u8> {
 }
 
 /// Parses command list, e.g.: "li 20" to (-4, 20)
-fn parse_cmd_li(l: &str) -> (i8, usize) {
+fn parse_cmd_di(l: &str) -> (i8, usize) {
     if let Some(n_instr) = l.trim().find(|c: char| c.is_ascii_whitespace()) {
         if let Ok(n_instr) = l[n_instr..].trim().parse() {
             return (-4, n_instr);
@@ -117,17 +117,17 @@ fn parse_cmd_with_number(l: &str) -> Option<u64> {
 
 fn print_help() {
     println!(
-        "q - exit Kompusim\n\
-         e  - enable/disable explain mode (NOT IMPLEMENTED)\n\
-         li [N]- list N (default: 10) instructions starting from PC\n\
-         c  - continue (run until hitting a breakpoint hits)\n\
-         s [N] - step N (default: 1) instructions\n\
-         sa    - step automatically until a fault or breakpoint hits (NOT IMPLEMENTED)\n\
-         pr     - print all registers\n\
-         pr <r> - print register <r>\n\
-         b <addr> - set breakpoint (NOT IMPLEMENTED)\n\
-         lb       - list breakpoints (NOT IMPLEMENTED)\n\
-         dm <addr> <size> - dump memory at address <addr>"
+        "q        quit Kompusim\n\
+         e        enable/disable explain mode (NOT IMPLEMENTED)\n\
+         di [N]   disassembler N (default: 10) instructions starting at PC\n\
+         c        continue (run until a fault or breakpoint hits)\n\
+         s [N]    step N (default: 1) instructions\n\
+         sa       step automatically until a fault or breakpoint hits (NOT IMPLEMENTED)\n\
+         pr       print all registers\n\
+         pr <r>   print register <r>\n\
+         b <a>    set breakpoint (NOT IMPLEMENTED)\n\
+         lb       list breakpoints (NOT IMPLEMENTED)\n\
+         dm [a] [s]   dump memory at address <addr>"
     );
     // TODO: add dm x0 <size> dump from pointer in x0
 }
@@ -167,9 +167,9 @@ fn parse_command(l: String) -> Option<TuiMenuCmd> {
         } else {
             println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
-    } else if cmd.starts_with("li") {
-        let (pc_offset, n_instr) = parse_cmd_li(&l);
-        return Some(TuiMenuCmd::ListInstr(pc_offset, n_instr));
+    } else if cmd.starts_with("di") {
+        let (pc_offset, n_instr) = parse_cmd_di(&l);
+        return Some(TuiMenuCmd::Disasm(pc_offset, n_instr));
     } else {
         println!("unrecognized command");
     }
@@ -454,7 +454,7 @@ fn test_tui_dm() {
     assert!(
         parse_command("dm 0x800000c0 16".to_string()) == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
-    assert!(parse_command("li 16".to_string()) == Some(TuiMenuCmd::ListInstr(-4, 16)));
+    assert!(parse_command("di 16".to_string()) == Some(TuiMenuCmd::Disasm(-4, 16)));
 
     assert!(reg_hex(0x1234_5678_9abc_def0) == "1234_5678_9abc_def0".to_string());
     assert!(reg_hex(0x1234) == "0000_0000_0000_1234".to_string());
