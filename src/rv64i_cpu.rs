@@ -89,16 +89,21 @@ impl RV64ICpu {
         self.regs.x[reg_i as usize] = val;
     }
 
-    // writes i8 LSB and sign extends
-    // fn regs_wi8(&mut self, reg_i: u8, val: u8) {
-    // todo!()
-    // }
-
     /// writes sign extended u32 to reg_i register
     pub fn regs_wi32(&mut self, reg_i: u8, val_i32: u32) {
         // extend sign
         let val_u64 = val_i32 as i32 as i64 as u64;
         self.regs_w64(reg_i, val_u64)
+    }
+
+    // writes i8 LSB and sign extends
+    fn regs_wi8(&mut self, reg_i: u8, val: u8) {
+        let mut val: u64 = val as u64;
+        if val.bit(7) == true {
+            // sign extend
+            val |= 0xfff_ffff_ffff_ff00;
+        }
+        self.regs_w64(reg_i, val)
     }
 
     /// writes zero extended u8 to reg_i register
@@ -229,7 +234,7 @@ impl RV64ICpu {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_LOAD_LB => {
-                todo!();
+                self.regs_wi8(rd, self.bus.read8(addr));
             }
             // Load Byte Unsigned
             F3_OP_LOAD_LBU => {

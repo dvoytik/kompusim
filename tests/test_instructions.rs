@@ -80,6 +80,10 @@ fn test_instruction_lbu() {
     assert!(cpu.regs_r64(6) == 0x48);
 }
 
+// TODO: lb test
+#[test]
+fn test_instruction_lb() {}
+
 #[test]
 // lw x7, 0x0(x5)
 fn test_instruction_lw() {
