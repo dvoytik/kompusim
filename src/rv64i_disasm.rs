@@ -1,6 +1,6 @@
 // Disassembler
 
-use crate::{alu::Imm, rv64i_dec::*};
+use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
 
 /// instr_a - instruction address
 pub fn disasm(instr: u32, instr_a: u64) -> String {
@@ -132,4 +132,27 @@ pub fn csr_name(csr: u16) -> &'static str {
         0xf14 => "mhartid",
         _ => "UKNOWN",
     }
+}
+
+/// Converts u32 to binary string. E.g.: 0x_1234_abcd to "0001_0010_0011_0100_1010_1011_1100_1101"
+pub fn u32_bin4(v: u64) -> String {
+    format!(
+        "{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}",
+        v.bits(31, 28),
+        v.bits(27, 24),
+        v.bits(23, 20),
+        v.bits(19, 16),
+        v.bits(15, 12),
+        v.bits(11, 8),
+        v.bits(7, 4),
+        v.bits(3, 0)
+    )
+}
+
+#[test]
+fn test_u32_bin4() {
+    assert_eq!(
+        u32_bin4(0x_1234_abcd),
+        "0001_0010_0011_0100_1010_1011_1100_1101".to_string()
+    )
 }
