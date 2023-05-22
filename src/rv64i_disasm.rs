@@ -135,7 +135,7 @@ pub fn csr_name(csr: u16) -> &'static str {
 }
 
 /// Converts u32 to binary string. E.g.: 0x_1234_abcd to "0001_0010_0011_0100_1010_1011_1100_1101"
-pub fn u32_bin4(v: u64) -> String {
+pub fn u32_bin4(v: u32) -> String {
     format!(
         "{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}_{:04b}",
         v.bits(31, 28),
@@ -154,5 +154,9 @@ fn test_u32_bin4() {
     assert_eq!(
         u32_bin4(0x_1234_abcd),
         "0001_0010_0011_0100_1010_1011_1100_1101".to_string()
+    );
+    assert_eq!(
+        u32_bin4(0x_ffff_a5a5),
+        "1111_1111_1111_1111_1010_0101_1010_0101".to_string()
     )
 }
