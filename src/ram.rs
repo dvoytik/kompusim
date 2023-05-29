@@ -16,6 +16,7 @@ impl fmt::Display for RamError {
         write!(f, "{}", self.details)
     }
 }
+
 impl Error for RamError {
     fn description(&self) -> &str {
         &self.details
@@ -85,6 +86,25 @@ impl Ram {
         Ok(())
     }
 
+    pub fn load_bin_from_static(
+        &mut self,
+        addr: u64,
+        bin: &'static [u8],
+    ) -> Result<(), Box<dyn Error>> {
+        assert!(addr >= self.start && addr <= self.end);
+        let offset = addr - self.start;
+        let bin_size = bin.len() as u64;
+        if offset + bin_size > self.m.len() as u64 {
+            return Err(Box::new(RamError {
+                details: "size is wrong".to_string(),
+            }));
+        }
+        for i in 0..bin.len() {
+            self.m[offset as usize + i] = bin[i];
+        }
+        Ok(())
+    }
+
     pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
         if addr < self.start || addr > self.end {
             return None;
@@ -95,4 +115,12 @@ impl Ram {
         let offs = (addr - self.start) as usize;
         Some(&self.m[offs..offs + size as usize])
     }
+}
+
+#[test]
+fn test_load_bin_from_static() {
+    static BIN: &'static [u8] = &[0x55; 1024];
+    let mut ram = Ram::new(0x0, 1024);
+    ram.load_bin_from_static(0x0, BIN).unwrap();
+    assert!(ram.read32(0x4) == 0x55555555);
 }
