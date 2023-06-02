@@ -59,6 +59,11 @@ fn hex_to_u64(hex_str: &str, err_msg: &str) -> u64 {
     u64::from_str_radix(hex_str.trim_start_matches("0x"), 16).expect(err_msg)
 }
 
+fn uart_out_to_console(octet: u8) {
+    let char_ascii = octet as char;
+    print!("{char_ascii}");
+}
+
 fn main() {
     let args = Args::parse();
 
@@ -92,11 +97,9 @@ fn main() {
 
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
-            bus.attach_device(Device::new(
-                Box::new(Uart::new("0".to_string())),
-                0x1001_0000,
-                0x20,
-            ));
+            let mut uart0 = Box::new(Uart::new("0".to_string()));
+            uart0.register_out_callbak(uart_out_to_console);
+            bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
 

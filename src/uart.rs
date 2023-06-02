@@ -3,6 +3,7 @@ use crate::device::Dev;
 pub struct Uart {
     id: String,
     tracing: bool,
+    out_callbacks: Vec<fn(u8)>,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
     // txctrl: u32, // 0x08
@@ -16,7 +17,21 @@ const TXDATA: u64 = 0x00;
 
 impl Uart {
     pub fn new(id: String) -> Uart {
-        Uart { id, tracing: false }
+        Uart {
+            id,
+            tracing: false,
+            out_callbacks: Vec::new(),
+        }
+    }
+
+    pub fn register_out_callbak(&mut self, cb: fn(u8)) {
+        self.out_callbacks.push(cb);
+    }
+
+    fn execute_out_callbacks(&self, octet: u8) {
+        for cb in &self.out_callbacks {
+            cb(octet);
+        }
     }
 }
 
@@ -41,15 +56,14 @@ impl Dev for Uart {
         match addr {
             TXDATA => {
                 let byte = (val & 0xff) as u8;
-                let byte_ascii = byte as char;
                 if self.tracing {
+                    let byte_ascii = byte as char;
                     println!(
                         "UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
                         self.id
                     );
-                } else {
-                    print!("{byte_ascii}");
                 }
+                self.execute_out_callbacks(byte);
             }
             _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
         };
