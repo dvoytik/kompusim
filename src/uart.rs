@@ -1,8 +1,8 @@
 use crate::device::Dev;
 
 pub struct Uart {
+    #[allow(dead_code)]
     id: String,
-    tracing: bool,
     out_callbacks: Vec<fn(u8)>,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
@@ -19,7 +19,6 @@ impl Uart {
     pub fn new(id: String) -> Uart {
         Uart {
             id,
-            tracing: false,
             out_callbacks: Vec::new(),
         }
     }
@@ -56,20 +55,9 @@ impl Dev for Uart {
         match addr {
             TXDATA => {
                 let byte = (val & 0xff) as u8;
-                if self.tracing {
-                    let byte_ascii = byte as char;
-                    println!(
-                        "UART-{0} output: hex: 0x{byte:02x}, ascii: {byte_ascii}",
-                        self.id
-                    );
-                }
                 self.execute_out_callbacks(byte);
             }
             _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
         };
-    }
-
-    fn enable_tracing(&mut self, enable: bool) {
-        self.tracing = enable
     }
 }

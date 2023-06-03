@@ -4,9 +4,6 @@ pub trait Dev {
     fn write8(&mut self, addr: u64, val: u8);
     fn read32(&self, addr: u64) -> u32;
     fn write32(&mut self, addr: u64, val: u32);
-
-    /// Enable / disable tracing mode
-    fn enable_tracing(&mut self, enable: bool);
 }
 
 /// Device maintains absolute physical address.
@@ -39,9 +36,5 @@ impl Device {
 
     pub fn write32(&mut self, addr: u64, val: u32) {
         self.dev.write32(addr - self.start, val)
-    }
-
-    pub fn enable_tracing(&mut self, enable: bool) {
-        self.dev.enable_tracing(enable)
     }
 }

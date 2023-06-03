@@ -108,7 +108,6 @@ fn main() {
             }
 
             if interactive.unwrap_or(false) {
-                cpu0.enable_tracing(true); // TODO: remove tracing from rv64i_cpu
                 loop {
                     match tui::interactive_menu() {
                         TuiMenuCmd::Quit => break,

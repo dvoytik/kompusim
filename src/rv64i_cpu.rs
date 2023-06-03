@@ -19,8 +19,6 @@ pub struct RV64ICpu {
     pub bus: Bus,
     // TODO: optimize - use hashmap:
     breakpoints: Vec<u64>,
-    // TODO: remove:
-    tracing: bool,
 }
 
 fn bad_instr(ins: u32) {
@@ -33,7 +31,6 @@ impl RV64ICpu {
         RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
-            tracing: false,
             breakpoints: Vec::with_capacity(2),
         }
     }
@@ -61,16 +58,6 @@ impl RV64ICpu {
 
     pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
         self.bus.get_ram(addr, size)
-    }
-
-    /// Enable printing CPU state on console
-    pub fn enable_tracing(&mut self, enable: bool) {
-        self.tracing = enable;
-        self.bus.all_dev_enable_tracing(enable);
-    }
-
-    pub fn tracing(&self) -> bool {
-        self.tracing
     }
 
     pub fn get_regs(&self) -> &RV64IURegs {
