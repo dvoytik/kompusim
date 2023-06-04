@@ -79,7 +79,7 @@ impl Bus {
 
     pub fn attach_device(&mut self, dev: Device) {
         // TODO: insert in sorted order - search optimization
-        if let Some(_) = self.find_addr_region(dev.start, dev.start - dev.end) {
+        if let Some(_) = self.find_addr_region(dev.start, dev.end - dev.start) {
             panic!("address region is occupied")
         }
         self.regions.push(AddrRegion {
