@@ -23,7 +23,7 @@ impl Uart {
         }
     }
 
-    pub fn register_out_callbak(&mut self, cb: fn(u8)) {
+    pub fn register_out_callback(&mut self, cb: fn(u8)) {
         self.out_callbacks.push(cb);
     }
 
