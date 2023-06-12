@@ -1,5 +1,24 @@
 use crate::device::Device;
 use crate::ram::Ram;
+use core::fmt;
+use std::error::Error;
+
+#[derive(Debug)]
+struct BusError {
+    details: String,
+}
+
+impl fmt::Display for BusError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.details)
+    }
+}
+
+impl Error for BusError {
+    fn description(&self) -> &str {
+        &self.details
+    }
+}
 
 // TODO: use generics
 enum BusAgent {
@@ -157,6 +176,17 @@ impl Bus {
             None
         }
     }
+
+    pub fn load_image(&mut self, addr: u64, image: &'static [u8]) -> Result<(), Box<dyn Error>> {
+        if let Some(ar) = self.find_addr_region_mut(addr, image.len() as u64) {
+            if let BusAgent::RAM(ram) = &mut ar.agent {
+                return ram.load_image(addr, image);
+            }
+        }
+        return Err(Box::new(BusError {
+            details: "No suitable RAM address region".to_string(),
+        }));
+    }
 }
 
 #[test]
@@ -186,4 +216,13 @@ pub fn test_write32_le() {
     assert!(bus.read8(1) == 0xbe);
     assert!(bus.read8(2) == 0xad);
     assert!(bus.read8(3) == 0xde);
+}
+
+#[test]
+fn test_load_image_from_static() {
+    static BIN: &'static [u8] = &[0x55; 1024];
+    let mut bus = Bus::new_with_ram(0, 4 * 1024);
+    bus.load_image(0x4, BIN).unwrap();
+    assert!(bus.read32(0x4) == 0x5555_5555);
+    assert!(bus.read32(0x0) == 0x0000_0000);
 }

@@ -112,11 +112,3 @@ impl Ram {
         Some(&self.m[offs..offs + size as usize])
     }
 }
-
-#[test]
-fn test_load_bin_from_static() {
-    static BIN: &'static [u8] = &[0x55; 1024];
-    let mut ram = Ram::new(0x0, 1024);
-    ram.load_image(0x0, BIN).unwrap();
-    assert!(ram.read32(0x4) == 0x55555555);
-}
