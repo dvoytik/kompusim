@@ -3,7 +3,7 @@ use crate::device::Dev;
 pub struct Uart {
     #[allow(dead_code)]
     id: String,
-    out_callbacks: Vec<fn(u8)>,
+    out_callbacks: Vec<Box<dyn Fn(u8)>>,
     // txdata: u32, // 0x00
     // rxdata: u32, // 0x04
     // txctrl: u32, // 0x08
@@ -23,7 +23,7 @@ impl Uart {
         }
     }
 
-    pub fn register_out_callback(&mut self, cb: fn(u8)) {
+    pub fn register_out_callback(&mut self, cb: Box<dyn Fn(u8)>) {
         self.out_callbacks.push(cb);
     }
 

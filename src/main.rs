@@ -98,7 +98,7 @@ fn main() {
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
             let mut uart0 = Box::new(Uart::new("0".to_string()));
-            uart0.register_out_callback(uart_out_to_console);
+            uart0.register_out_callback(Box::new(uart_out_to_console));
             bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
