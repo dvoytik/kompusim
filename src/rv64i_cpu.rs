@@ -299,7 +299,7 @@ impl RV64ICpu {
             self.execute_instr(self.fetch_instr());
             // TODO: check all breakpoints
             // TODO: optimize to use hashmap
-            if self.breakpoints[0] == self.regs.pc {
+            if self.breakpoints.len() > 0 && self.breakpoints[0] == self.regs.pc {
                 break;
             }
         }
