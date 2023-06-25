@@ -1,31 +1,11 @@
-[package]
-name = "kompusim"
-version = "0.1.0"
-edition = "2021"
-authors = ["Dmitry Voytik <voytikd@gmail.com"]
-description = "KompuSim - RISC-V ISA simulator"
-readme = "README.md"
-homepage = "https://github.com/dvoytik/kompusim"
-repository = "https://github.com/dvoytik/kompusim"
-license = "Apache-2.0"
-keywords = ["riscv"]
-exclude = ["tests/test_programs"]
-# documentation =
+[workspace]
+members = ["kompusim-lib", "kompusim-gui"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+opt-level = 2 # fast and small wasm
 
-[lib]
-name = "kompusim"
-path = "src/lib.rs"
-# doc = true
+# Optimize all dependencies even in debug builds:
+[profile.dev.package."*"]
+opt-level = 2
 
-[[bin]]
-name = "kompusim"
-path = "src/main.rs"
-doc = false
-
-[dependencies]
-clap = { version = "4.2.0", features = ["derive"] }
-text_io = "0.1.12"
-anstream  = "0.2.6"
-owo-colors = "3.5.0"
+[patch.crates-io]

@@ -1,0 +1,33 @@
+[package]
+name = "kompusim-gui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+egui = "0.22.0"
+eframe = { version = "0.22.0", default-features = false, features = [
+#"accesskit",
+  "default_fonts",
+  "glow",
+  #"wgpu",
+  "persistence",
+  #"wayland",
+]}
+log = "0.4"
+egui_extras = "0.22.0"
+kompusim = { path = "../kompusim-lib" }
+
+# app persistence:
+serde = { version = "1", features = ["derive"] }
+
+# native:
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tracing-subscriber = "0.3"
+
+# web:
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1.6"
+tracing-wasm = "0.2"
+wasm-bindgen-futures = "0.4"
