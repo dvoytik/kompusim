@@ -184,10 +184,6 @@ impl eframe::App for KompusimApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("Kompusim");
-            ui.label("A RISC-V ISA simulator with focus on education and debug capabilities");
-            ui.hyperlink("https://github.com/dvoytik/kompusim-gui");
             egui::warn_if_debug_build(ui);
         });
 
