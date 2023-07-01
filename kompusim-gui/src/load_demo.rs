@@ -1,14 +1,14 @@
 pub struct LoadDemo {
     /// Is window open or not
     window_open: bool,
-    demos: Vec<Demo>,
+    demos: Vec<DemoImage>,
     selected_demo: usize,
 }
 
 impl Default for LoadDemo {
     fn default() -> LoadDemo {
         let mut demos = Vec::new();
-        demos.push(Demo {
+        demos.push(DemoImage {
             name: "Hello world",
             descriptoin: "Bare metall program printing Hello World to UART",
             load_address: 0x0000000080000000,
@@ -16,7 +16,7 @@ impl Default for LoadDemo {
             image: include_bytes!("../assets/test_bins/uart_hello_world.bin"),
         });
         // TODO: changes this:
-        demos.push(Demo {
+        demos.push(DemoImage {
             name: "Hello world",
             descriptoin: "Bare metall program printing Hello World to UART",
             load_address: 0x0000000080000000,
@@ -31,12 +31,13 @@ impl Default for LoadDemo {
     }
 }
 
-struct Demo {
+#[derive(Copy, Clone)]
+pub struct DemoImage {
     name: &'static str,
     descriptoin: &'static str,
-    load_address: u64,
-    breakpoint: u64,
-    image: &'static [u8],
+    pub load_address: u64,
+    pub breakpoint: u64,
+    pub image: &'static [u8],
 }
 
 impl LoadDemo {
@@ -44,7 +45,7 @@ impl LoadDemo {
         self.window_open = true;
     }
 
-    pub fn show(&mut self, ctx: &egui::Context) -> Option<&'static [u8]> {
+    pub fn show_pick_demo(&mut self, ctx: &egui::Context) -> Option<DemoImage> {
         let mut loaded_demo = false;
         if self.window_open {
             let mut window_opened = self.window_open;
@@ -89,7 +90,7 @@ impl LoadDemo {
             }
         }
         if loaded_demo {
-            Some(self.demos[self.selected_demo].image)
+            Some(self.demos[self.selected_demo])
         } else {
             None
         }

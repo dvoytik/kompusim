@@ -189,8 +189,12 @@ impl eframe::App for KompusimApp {
 
         instr_list.show(ctx);
         decode_instr.show(ctx);
-        if let Some(demo_bin) = load_demo.show(ctx) {
-            sim.load_image(0x0000000080000000, demo_bin) // TODO: remove hard-coded address
+        if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
+            sim.load_image(
+                demo_image.load_address,
+                demo_image.image,
+                demo_image.breakpoint,
+            )
         }
         console.show(ctx, sim.console_recv());
 

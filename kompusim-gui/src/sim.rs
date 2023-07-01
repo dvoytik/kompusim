@@ -20,7 +20,8 @@ enum SimState {
 enum SimCommand {
     //Reset,
     //Init,
-    LoadImage((u64, &'static [u8])),
+    /// LoadImage(load_address, image addres, breakpoint)
+    LoadImage((u64, &'static [u8], u64)),
     Continue,
     Stop,
     NoCmd,
@@ -73,8 +74,9 @@ impl Simulator {
                     //     println!("Simulator: reset command")
                     // }
                     //SimCommand::Init => {}
-                    SimCommand::LoadImage((load_addr, image)) => {
+                    SimCommand::LoadImage((load_addr, image, breakpoint)) => {
                         cpu0.bus.load_image(load_addr, image).unwrap();
+                        cpu0.add_breakpoint(breakpoint);
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
                     SimCommand::Continue => {
@@ -84,7 +86,8 @@ impl Simulator {
                     SimCommand::Stop => break,
                     SimCommand::NoCmd => {
                         if sim_state == SimState::Running {
-                            let _ = cpu0.exec_continue(1024);
+                            // TODO: move to settings
+                            let _ = cpu0.exec_continue(102400);
                         }
                     }
                 }
@@ -115,8 +118,8 @@ impl Simulator {
             Ok(_) => {}
         }
     }
-    pub fn load_image(&mut self, addr: u64, image: &'static [u8]) {
-        self.send_cmd(SimCommand::LoadImage((addr, image)));
+    pub fn load_image(&mut self, addr: u64, image: &'static [u8], breakpoint: u64) {
+        self.send_cmd(SimCommand::LoadImage((addr, image, breakpoint)));
     }
 
     // continue is a Rust keyword, so use carry_on()
