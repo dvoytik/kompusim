@@ -98,17 +98,21 @@ impl eframe::App for KompusimApp {
                 ui.menu_button("File", |ui| {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
-                    if ui.button("Load binary (unimplemented)").clicked() {
-                        ui.close_menu();
-                    }
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("Load binary (unimplemented)").clicked() {
+                            ui.close_menu();
+                        }
+                    });
                     if ui.button("Load demo...").clicked() {
                         load_demo.open();
                         ui.close_menu();
                     }
-                    if ui.button("Settings").clicked() {
-                        *show_settings = true;
-                        ui.close_menu();
-                    }
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("Settings").clicked() {
+                            *show_settings = true;
+                            ui.close_menu();
+                        }
+                    });
                     if ui.button("Quit").clicked() {
                         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                         _frame.close();
@@ -117,13 +121,17 @@ impl eframe::App for KompusimApp {
                 ui.menu_button("Run", |ui| {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
-                    if ui.button("Run/Continue (unimplemented)").clicked() {
-                        sim.carry_on();
-                        ui.close_menu();
-                    }
-                    if ui.button("Step (unimplemented)").clicked() {
-                        ui.close_menu();
-                    }
+                    ui.add_enabled_ui(true, |ui| {
+                        if ui.button("Run/Continue").clicked() {
+                            sim.carry_on();
+                            ui.close_menu();
+                        }
+                    });
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("Step (unimplemented)").clicked() {
+                            ui.close_menu();
+                        }
+                    });
                 });
                 ui.menu_button("Windows", |ui| {
                     // hack to make menus oneliners
@@ -180,9 +188,11 @@ impl eframe::App for KompusimApp {
                     }
                 });
                 ui.menu_button("Help", |ui| {
-                    if ui.button("About").clicked() {
-                        ui.close_menu();
-                    }
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("About").clicked() {
+                            ui.close_menu();
+                        }
+                    });
                 });
             });
         });
