@@ -1,4 +1,4 @@
-use eframe;
+use eframe::{self, glow::Context};
 use egui::Modifiers;
 
 use crate::{
@@ -52,10 +52,14 @@ impl KompusimApp {
 }
 
 impl eframe::App for KompusimApp {
-    /// Called by the frame work to save state before shutdown.
+    /// Called by the frame work to save state periodically and before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        self.sim.stop();
         eframe::set_value(storage, eframe::APP_KEY, self);
+    }
+
+    /// called before shutdown
+    fn on_exit(&mut self, _gl: Option<&Context>) {
+        self.sim.stop();
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
