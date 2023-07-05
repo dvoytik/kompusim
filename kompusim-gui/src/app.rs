@@ -148,9 +148,11 @@ impl eframe::App for KompusimApp {
                         console.open();
                         ui.close_menu();
                     }
-                    if ui.button("Memory (unimplemented)").clicked() {
-                        ui.close_menu();
-                    }
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("Memory (unimplemented)").clicked() {
+                            ui.close_menu();
+                        }
+                    });
                 });
                 ui.menu_button("View", |ui| {
                     // hack to make menus oneliners
