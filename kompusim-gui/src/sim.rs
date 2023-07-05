@@ -3,7 +3,13 @@ use std::{
     thread,
 };
 
-use kompusim::{bus, device::Device, ram, rv64i_cpu::RV64ICpu, uart::Uart};
+use kompusim::{
+    bus,
+    device::Device,
+    ram,
+    rv64i_cpu::{ExecEvent, RV64ICpu},
+    uart::Uart,
+};
 
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
@@ -14,9 +20,11 @@ pub struct Simulator {
 
 #[derive(PartialEq)]
 enum SimState {
+    StoppedBreakpoint,
     Stopped,
     Running,
 }
+
 enum SimCommand {
     //Reset,
     //Init,
@@ -53,9 +61,11 @@ impl Simulator {
 
             let mut sim_state = SimState::Stopped;
             loop {
-                let recv_cmd = if sim_state == SimState::Stopped {
+                // In non-running state we block on empty command channel
+                let recv_cmd = if sim_state != SimState::Running {
                     cmd_rx.recv().unwrap()
                 } else {
+                    // In SimState:Running we poll command channel
                     match cmd_rx.try_recv() {
                         Err(TryRecvError::Empty) => {
                             // TODO: state machine
@@ -70,10 +80,19 @@ impl Simulator {
                     }
                 };
                 match recv_cmd {
+                    SimCommand::NoCmd => {
+                        if sim_state == SimState::Running {
+                            // TODO: move to settings
+                            if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
+                                sim_state = SimState::StoppedBreakpoint;
+                            }
+                        }
+                    }
                     // SimCommand::Reset => {
                     //     println!("Simulator: reset command")
                     // }
-                    //SimCommand::Init => {}
+                    // SimCommand::Init => {}
+                    // SimCommand::GetState => {}
                     SimCommand::LoadImage((load_addr, image, breakpoint)) => {
                         cpu0.bus.load_image(load_addr, image).unwrap();
                         cpu0.add_breakpoint(breakpoint);
@@ -84,12 +103,6 @@ impl Simulator {
                         let _ = cpu0.exec_continue(1024);
                     }
                     SimCommand::Stop => break,
-                    SimCommand::NoCmd => {
-                        if sim_state == SimState::Running {
-                            // TODO: move to settings
-                            let _ = cpu0.exec_continue(102400);
-                        }
-                    }
                 }
                 //thread::sleep(time::Duration::from_secs(1));
                 // TODO: receive commands from the gui main thread
@@ -118,13 +131,14 @@ impl Simulator {
             Ok(_) => {}
         }
     }
+
     pub fn load_image(&mut self, addr: u64, image: &'static [u8], breakpoint: u64) {
         self.send_cmd(SimCommand::LoadImage((addr, image, breakpoint)));
     }
 
     // continue is a Rust keyword, so use carry_on()
     pub fn carry_on(&self) {
-        self.cmd_channel.send(SimCommand::Continue).unwrap();
+        self.send_cmd(SimCommand::Continue);
     }
 
     pub fn console_recv(&self) -> Option<String> {

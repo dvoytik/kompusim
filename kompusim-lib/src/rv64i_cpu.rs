@@ -4,6 +4,14 @@ use crate::bus::Bus;
 use crate::csr;
 use crate::rv64i_dec::*;
 
+/// exec_continue() returns:
+pub enum ExecEvent {
+    /// CPU stopped at addr because it executed maximum instructions passed to exec_continue()
+    MaxInstructions(u64),
+    /// Hit a breakpoint at addr
+    Breakpoint(u64),
+}
+
 // RV64I Unprivileged Registers
 #[derive(Clone, Debug, Default)]
 pub struct RV64IURegs {
@@ -294,16 +302,16 @@ impl RV64ICpu {
     }
 
     /// Returns PC (i.e. where stopped)
-    pub fn exec_continue(&mut self, max_instr: u64) -> u64 {
+    pub fn exec_continue(&mut self, max_instr: u64) -> ExecEvent {
         for _ in 0..max_instr {
             self.execute_instr(self.fetch_instr());
             // TODO: check all breakpoints
             // TODO: optimize to use hashmap
             if self.breakpoints.len() > 0 && self.breakpoints[0] == self.regs.pc {
-                break;
+                return ExecEvent::Breakpoint(self.regs.pc);
             }
         }
-        self.regs.pc
+        ExecEvent::MaxInstructions(self.regs.pc)
     }
 }
 
