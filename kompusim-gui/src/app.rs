@@ -3,7 +3,7 @@ use egui::Modifiers;
 
 use crate::{
     console::Console, instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo,
-    sim::Simulator,
+    sim::Simulator, status_control::StatusControl,
 };
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
@@ -13,6 +13,8 @@ pub struct KompusimApp {
     /// delta (font_delta * 0.5) for the default font size for all text styles
     font_delta: i32,
     show_settings: bool,
+    #[serde(skip)]
+    status_control: StatusControl,
     instr_list: InstrList,
     decode_instr: InstrDecoder,
     console: Console,
@@ -27,6 +29,7 @@ impl Default for KompusimApp {
         Self {
             show_settings: false,
             font_delta: 0,
+            status_control: StatusControl::default(),
             instr_list: InstrList::default(),
             decode_instr: InstrDecoder::default(),
             load_demo: LoadDemo::default(),
@@ -68,6 +71,7 @@ impl eframe::App for KompusimApp {
         let Self {
             show_settings,
             font_delta,
+            status_control,
             instr_list,
             decode_instr,
             load_demo,
@@ -136,6 +140,10 @@ impl eframe::App for KompusimApp {
                 ui.menu_button("Windows", |ui| {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
+                    if ui.button("Status/Control").clicked() {
+                        status_control.open();
+                        ui.close_menu();
+                    }
                     if ui.button("Instruction list").clicked() {
                         instr_list.open();
                         ui.close_menu();
@@ -203,6 +211,7 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
+        status_control.show_if_opened(ctx);
         instr_list.show(ctx);
         decode_instr.show(ctx);
         if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
