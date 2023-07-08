@@ -211,7 +211,7 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
-        status_control.show_if_opened(ctx);
+        status_control.show_if_opened(ctx, sim.get_state());
         instr_list.show(ctx);
         decode_instr.show(ctx);
         if let Some(demo_image) = load_demo.show_pick_demo(ctx) {

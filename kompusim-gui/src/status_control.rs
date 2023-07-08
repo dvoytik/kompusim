@@ -1,3 +1,5 @@
+use crate::sim::SimState;
+
 pub struct StatusControl {
     /// Is window open or not
     window_open: bool,
@@ -14,21 +16,23 @@ impl StatusControl {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context) {
+    pub fn show_if_opened(&mut self, ctx: &egui::Context, sim_state: SimState) {
         if self.window_open {
             let mut window_opened = self.window_open;
-            egui::Window::new("Status/Control")
+            egui::Window::new("Simulator Status/Control")
                 .open(&mut window_opened)
                 .resizable(true)
                 .default_width(500.0)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        if ui.button("Load").clicked() {
-                            //self.window_open = false;
-                        }
                         if ui.button("Run").clicked() {
-                            //self.window_open = false;
+                            // TODO:
                         }
+                        ui.add_enabled_ui(false, |ui| {
+                            if ui.button("Stop").clicked() {
+                                // TODO:
+                            }
+                        });
                         ui.add_enabled_ui(false, |ui| {
                             if ui.button("Step").clicked() {
                                 self.window_open = false;
@@ -41,7 +45,7 @@ impl StatusControl {
                         .striped(true)
                         .show(ui, |ui| {
                             ui.label("Simulator state: ");
-                            ui.label("TODO");
+                            ui.label(format!("{:?}", sim_state));
                             ui.end_row();
                             ui.label("RAM: ");
                             ui.label("TODO");
