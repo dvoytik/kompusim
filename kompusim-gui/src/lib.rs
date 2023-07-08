@@ -2,6 +2,7 @@
 
 mod app;
 pub use app::KompusimApp;
+mod base_uregs;
 mod console;
 mod instr_decoder;
 mod instr_list;

@@ -2,8 +2,8 @@ use eframe::{self, glow::Context};
 use egui::Modifiers;
 
 use crate::{
-    console::Console, instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo,
-    sim::Simulator, status_control::StatusControl,
+    base_uregs::BaseURegs, console::Console, instr_decoder::InstrDecoder, instr_list::InstrList,
+    load_demo::LoadDemo, sim::Simulator, status_control::StatusControl,
 };
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
@@ -15,6 +15,8 @@ pub struct KompusimApp {
     show_settings: bool,
     #[serde(skip)]
     status_control: StatusControl,
+    #[serde(skip)]
+    base_uregs: BaseURegs,
     instr_list: InstrList,
     decode_instr: InstrDecoder,
     console: Console,
@@ -31,6 +33,7 @@ impl Default for KompusimApp {
             font_delta: 0,
             status_control: StatusControl::default(),
             instr_list: InstrList::default(),
+            base_uregs: BaseURegs::default(),
             decode_instr: InstrDecoder::default(),
             load_demo: LoadDemo::default(),
             console: Console::default(),
@@ -72,6 +75,7 @@ impl eframe::App for KompusimApp {
             show_settings,
             font_delta,
             status_control,
+            base_uregs,
             instr_list,
             decode_instr,
             load_demo,
@@ -148,6 +152,10 @@ impl eframe::App for KompusimApp {
                         instr_list.open();
                         ui.close_menu();
                     }
+                    if ui.button("Registers (base unpriv)").clicked() {
+                        base_uregs.open();
+                        ui.close_menu();
+                    }
                     if ui.button("Instruction decoder").clicked() {
                         decode_instr.open();
                         ui.close_menu();
@@ -212,6 +220,7 @@ impl eframe::App for KompusimApp {
         });
 
         status_control.show_if_opened(ctx, sim.get_state());
+        base_uregs.show_if_opened(ctx);
         instr_list.show(ctx);
         decode_instr.show(ctx);
         if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
