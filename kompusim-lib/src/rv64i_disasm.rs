@@ -149,6 +149,16 @@ pub fn u32_bin4(v: u32) -> String {
     )
 }
 
+pub fn reg_hex(v: u64) -> String {
+    format!(
+        "{:04x}_{:04x}_{:04x}_{:04x}",
+        v.bits(63, 48),
+        v.bits(47, 32),
+        v.bits(31, 16),
+        v.bits(15, 0)
+    )
+}
+
 #[test]
 fn test_u32_bin4() {
     assert_eq!(

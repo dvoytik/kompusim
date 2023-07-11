@@ -5,7 +5,7 @@ use text_io::read;
 use kompusim::{
     bits::BitOps,
     rv64i_cpu::RV64IURegs,
-    rv64i_disasm::{disasm, reg_idx2abi},
+    rv64i_disasm::{disasm, reg_hex, reg_idx2abi},
 };
 
 #[derive(PartialEq)]
@@ -187,16 +187,6 @@ pub fn interactive_menu() -> TuiMenuCmd {
     };
     print_green_line();
     selected_option
-}
-
-fn reg_hex(v: u64) -> String {
-    format!(
-        "{:04x}_{:04x}_{:04x}_{:04x}",
-        v.bits(63, 48),
-        v.bits(47, 32),
-        v.bits(31, 16),
-        v.bits(15, 0)
-    )
 }
 
 fn reg32_bin(v: u64) -> String {
