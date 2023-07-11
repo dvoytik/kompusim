@@ -1,3 +1,8 @@
+use kompusim::{
+    rv64i_cpu::RV64IURegs,
+    rv64i_disasm::{reg_hex, reg_idx2abi},
+};
+
 /// Base Unprivileged Integer Registers
 pub struct BaseURegs {
     /// Is window open or not
@@ -24,107 +29,28 @@ impl BaseURegs {
                 .default_width(500.0)
                 .show(ctx, |ui| {
                     ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                        // TODO: remove this:
+                        let regs = RV64IURegs::default();
                         egui::Grid::new("base_regs_grid0")
                             .num_columns(3)
                             //.min_col_width(600.0)
                             .striped(true)
                             .show(ui, |ui| {
-                                ui.label("x1");
-                                ui.label("ra");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x2");
-                                ui.label("sp");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x3");
-                                ui.label("gp");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x4");
-                                ui.label("tp");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x5");
-                                ui.label("t0");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x6");
-                                ui.label("t1");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x7");
-                                ui.label("t2");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x8");
-                                ui.label("s0");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x9");
-                                ui.label("s1");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x10");
-                                ui.label("a0");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x11");
-                                ui.label("a1");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x12");
-                                ui.label("a2");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x13");
-                                ui.label("a3");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x14");
-                                ui.label("a4");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x15");
-                                ui.label("a5");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-
-                                ui.label("x16");
-                                ui.label("a6");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
+                                for i in 0..=15 {
+                                    grid_row_reg(ui, &regs, i as u8);
+                                }
                             });
                         egui::Grid::new("base_regs_grid1")
                             .num_columns(3)
                             //.min_col_width(600.0)
                             .striped(true)
                             .show(ui, |ui| {
-                                ui.label("x17");
-                                ui.label("a7");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-                                ui.label("x18");
-                                ui.label("s2");
-                                ui.label("0000_0000_0000_0000");
-                                ui.end_row();
-                                ui.label("x19");
-                                ui.label("s3");
-                                ui.label("0000_0000_0000_0000");
+                                for i in 16..=31 {
+                                    grid_row_reg(ui, &regs, i as u8);
+                                }
+                                ui.label(format!("pc"));
+                                ui.label("");
+                                ui.label(reg_hex(regs.pc));
                                 ui.end_row();
                             });
                     });
@@ -134,4 +60,12 @@ impl BaseURegs {
             }
         }
     }
+}
+
+/// show a register in the grid
+fn grid_row_reg(ui: &mut egui::Ui, regs: &RV64IURegs, ri: u8) {
+    ui.label(format!("x{ri}"));
+    ui.label(reg_idx2abi(ri));
+    ui.label(reg_hex(regs.x[ri as usize]));
+    ui.end_row();
 }
