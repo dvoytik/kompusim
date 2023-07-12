@@ -20,7 +20,7 @@ impl BaseURegs {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context) {
+    pub fn show_if_opened(&mut self, ctx: &egui::Context, regs: &RV64IURegs) {
         if self.window_open {
             let mut window_opened = self.window_open;
             egui::Window::new("Base Unprivileged Integer Registers")
@@ -29,15 +29,13 @@ impl BaseURegs {
                 .default_width(500.0)
                 .show(ctx, |ui| {
                     ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
-                        // TODO: remove this:
-                        let regs = RV64IURegs::default();
                         egui::Grid::new("base_regs_grid0")
                             .num_columns(3)
                             //.min_col_width(600.0)
                             .striped(true)
                             .show(ui, |ui| {
                                 for i in 0..=15 {
-                                    grid_row_reg(ui, &regs, i as u8);
+                                    grid_row_reg(ui, regs, i as u8);
                                 }
                             });
                         egui::Grid::new("base_regs_grid1")
@@ -46,7 +44,7 @@ impl BaseURegs {
                             .striped(true)
                             .show(ui, |ui| {
                                 for i in 16..=31 {
-                                    grid_row_reg(ui, &regs, i as u8);
+                                    grid_row_reg(ui, regs, i as u8);
                                 }
                                 ui.label(format!("pc"));
                                 ui.label("");

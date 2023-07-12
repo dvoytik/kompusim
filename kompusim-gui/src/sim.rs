@@ -7,7 +7,7 @@ use kompusim::{
     bus,
     device::Device,
     ram,
-    rv64i_cpu::{ExecEvent, RV64ICpu},
+    rv64i_cpu::{ExecEvent, RV64ICpu, RV64IURegs},
     uart::Uart,
 };
 
@@ -18,6 +18,7 @@ pub struct Simulator {
     uart_tx_recv: Receiver<u8>,
     /// lock-less mirrored state of the simulator
     sim_state: SimState,
+    regs: RV64IURegs,
     event_queue: Receiver<SimEvent>,
 }
 
@@ -41,9 +42,9 @@ enum SimCommand {
     NoCmd,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 enum SimEvent {
-    StateChanged(SimState),
+    StateChanged(SimState, RV64IURegs),
 }
 
 impl Simulator {
@@ -78,7 +79,7 @@ impl Simulator {
             cpu0.regs.pc = addr;
 
             let mut sim_state = SimState::InitializedReady;
-            send_event(SimEvent::StateChanged(sim_state));
+            send_event(SimEvent::StateChanged(sim_state, cpu0.get_regs().clone()));
             loop {
                 // In non-running state we block on empty command channel
                 let recv_cmd = if sim_state != SimState::Running {
@@ -104,7 +105,10 @@ impl Simulator {
                             // TODO: move to settings
                             if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
                                 sim_state = SimState::StoppedBreakpoint;
-                                send_event(SimEvent::StateChanged(sim_state));
+                                send_event(SimEvent::StateChanged(
+                                    sim_state,
+                                    cpu0.get_regs().clone(),
+                                ));
                             }
                         }
                     }
@@ -112,7 +116,7 @@ impl Simulator {
                         sim_state = SimState::Running;
                         if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
                             sim_state = SimState::StoppedBreakpoint;
-                            send_event(SimEvent::StateChanged(sim_state));
+                            send_event(SimEvent::StateChanged(sim_state, cpu0.get_regs().clone()));
                         }
                     }
                     // SimCommand::Reset => {
@@ -136,6 +140,7 @@ impl Simulator {
             cmd_channel: cmd_tx,
             uart_tx_recv,
             sim_state: SimState::Initializing,
+            regs: RV64IURegs::default(),
             event_queue: event_recv,
         }
     }
@@ -168,7 +173,10 @@ impl Simulator {
     fn drain_event_queue(&mut self) {
         for event in self.event_queue.try_iter() {
             match event {
-                SimEvent::StateChanged(new_state) => self.sim_state = new_state,
+                SimEvent::StateChanged(new_state, new_regs) => {
+                    self.sim_state = new_state;
+                    self.regs = new_regs
+                }
             }
         }
     }
@@ -176,6 +184,11 @@ impl Simulator {
     pub fn get_state(&mut self) -> SimState {
         self.drain_event_queue(); // will update self.sim_state
         self.sim_state
+    }
+
+    pub fn get_regs(&mut self) -> &RV64IURegs {
+        self.drain_event_queue();
+        &self.regs
     }
 
     pub fn console_recv(&self) -> Option<String> {
