@@ -1,6 +1,7 @@
 use std::{
-    sync::mpsc::{self, Receiver, Sender, TryRecvError},
+    sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError},
     thread,
+    time::Duration,
 };
 
 use kompusim::{
@@ -8,8 +9,11 @@ use kompusim::{
     device::Device,
     ram,
     rv64i_cpu::{ExecEvent, RV64ICpu, RV64IURegs},
+    rv64i_disasm::disasm,
     uart::Uart,
 };
+
+type DisasmInstructionLine = (Option<&'static str>, String, String, String);
 
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
@@ -19,7 +23,12 @@ pub struct Simulator {
     /// lock-less mirrored state of the simulator
     sim_state: SimState,
     regs: RV64IURegs,
+    /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
+    /// TODO: do we need to cache?
+    instructions: Vec<u32>,
     event_queue: Receiver<SimEvent>,
+    /// Cached disassembler listing
+    disasm_listing: Option<Vec<DisasmInstructionLine>>,
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -36,15 +45,18 @@ enum SimCommand {
     //Reset,
     //Init,
     /// LoadImage(load_address, image addres, breakpoint)
-    LoadImage((u64, &'static [u8], u64)),
+    NoCmd,
     Continue,
     Stop,
-    NoCmd,
+    LoadImage((u64, &'static [u8], u64)),
+    /// Disasm(starting_address, number_of_instruction)
+    Disasm(u64, usize),
 }
 
 #[derive(Clone)]
 enum SimEvent {
     StateChanged(SimState, RV64IURegs),
+    Instructions(Vec<u32>),
 }
 
 impl Simulator {
@@ -128,6 +140,10 @@ impl Simulator {
                         cpu0.add_breakpoint(breakpoint);
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
+                    SimCommand::Disasm(addr, n_instr) => {
+                        let instructions = cpu0.get_n_instr(addr, n_instr);
+                        send_event(SimEvent::Instructions(instructions));
+                    }
                     SimCommand::Stop => break,
                 }
                 //thread::sleep(time::Duration::from_secs(1));
@@ -141,7 +157,9 @@ impl Simulator {
             uart_tx_recv,
             sim_state: SimState::Initializing,
             regs: RV64IURegs::default(),
+            instructions: Vec::default(),
             event_queue: event_recv,
+            disasm_listing: None,
         }
     }
 
@@ -170,14 +188,47 @@ impl Simulator {
         self.send_cmd(SimCommand::Continue);
     }
 
-    fn drain_event_queue(&mut self) {
-        for event in self.event_queue.try_iter() {
-            match event {
-                SimEvent::StateChanged(new_state, new_regs) => {
-                    self.sim_state = new_state;
-                    self.regs = new_regs
-                }
+    fn process_event(&mut self, event: SimEvent) {
+        match event {
+            SimEvent::StateChanged(new_state, new_regs) => {
+                self.sim_state = new_state;
+                self.regs = new_regs;
+                // clear disassembler cache
+                self.disasm_listing.take();
             }
+            SimEvent::Instructions(instructions) => {
+                self.instructions = instructions;
+            }
+        }
+    }
+
+    fn drain_event_queue(&mut self) {
+        let events: Vec<SimEvent> = self.event_queue.try_iter().collect();
+        for event in events {
+            self.process_event(event);
+        }
+    }
+
+    fn wait_for_event(&mut self, expected_event: SimEvent) {
+        loop {
+            let event = match self.event_queue.recv_timeout(Duration::from_millis(5000)) {
+                Ok(e) => e,
+                // TODO: propagate the error up
+                Err(RecvTimeoutError::Timeout) => {
+                    eprintln!("ERROR: event queue failed timed out");
+                    return;
+                }
+                // TODO: propagate the error up
+                Err(RecvTimeoutError::Disconnected) => {
+                    eprintln!("ERROR: event queue disconnected");
+                    return;
+                }
+            };
+            if std::mem::discriminant(&event) == std::mem::discriminant(&expected_event) {
+                self.process_event(event);
+                break;
+            }
+            self.process_event(event);
         }
     }
 
@@ -186,9 +237,33 @@ impl Simulator {
         self.sim_state
     }
 
+    /// If sim is running, this will return stale registers from the last stop
     pub fn get_regs(&mut self) -> &RV64IURegs {
         self.drain_event_queue();
         &self.regs
+    }
+
+    pub fn disasm_at_pc(&mut self) -> &Vec<DisasmInstructionLine> {
+        if self.disasm_listing.is_none() {
+            let pc = self.regs.pc;
+            self.send_cmd(SimCommand::Disasm(pc - 4, 32)); // TOOD: make parameters
+            self.wait_for_event(SimEvent::Instructions(Vec::default()));
+            //let start = (pc as i64 + pc_offset as i64) as u64;
+            //tui::print_instr_listing(cpu0.get_n_instr(start, n_instr), start, pc);
+            //
+            let mut instr_addr = pc; // TODO: make parameter
+            let mut instr_list: Vec<DisasmInstructionLine> = Vec::new();
+            for instr in &self.instructions {
+                let mark = if instr_addr == pc { Some("→") } else { None };
+                let addr_hex = format!("0x{instr_addr}");
+                let instr_hex = format!("0x{instr:08x}");
+                let instr_mnemonic = disasm(*instr, instr_addr);
+                instr_list.push((mark, addr_hex, instr_hex, instr_mnemonic));
+                instr_addr += 4;
+            }
+            self.disasm_listing.replace(instr_list);
+        }
+        self.disasm_listing.as_ref().unwrap()
     }
 
     pub fn console_recv(&self) -> Option<String> {
