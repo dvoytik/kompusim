@@ -221,7 +221,7 @@ impl eframe::App for KompusimApp {
 
         status_control.show_if_opened(ctx, sim.get_state());
         base_uregs.show_if_opened(ctx, sim.get_regs());
-        instr_list.show_if_opened(ctx);
+        instr_list.show_if_opened(ctx, sim.disasm_at_pc());
         decode_instr.show(ctx);
         if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
             sim.load_image(

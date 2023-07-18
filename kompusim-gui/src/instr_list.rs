@@ -1,3 +1,5 @@
+use crate::sim::DisasmInstructionLine;
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct InstrList {
@@ -20,19 +22,23 @@ impl InstrList {
         self.open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context) {
+    pub fn show_if_opened(
+        &mut self,
+        ctx: &egui::Context,
+        instructions: &Vec<DisasmInstructionLine>,
+    ) {
         let mut open = self.open;
         egui::Window::new("Instructions")
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
             .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| self.show_table(ui));
+                egui::ScrollArea::vertical().show(ui, |ui| self.show_table(ui, instructions));
             });
         self.open = open;
     }
 
-    fn show_table(&self, ui: &mut egui::Ui) {
+    fn show_table(&self, ui: &mut egui::Ui, instructions: &Vec<DisasmInstructionLine>) {
         use egui_extras::{Column, TableBuilder};
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
@@ -56,31 +62,35 @@ impl InstrList {
                     ui.strong("Address");
                 });
                 header.col(|ui| {
-                    ui.strong("Instructions");
+                    ui.strong("Instruction");
                 });
                 header.col(|ui| {
-                    ui.strong("Comment");
+                    ui.strong("Mnemonic");
                 });
             })
             .body(|body| {
-                body.rows(text_height, 100, |row_index, mut row| {
+                // for instruction_row in instructions {
+                //     println!("hi")
+                //     body.row()
+                // }
+                body.rows(text_height, instructions.len(), |row_index, mut row| {
+                    let mark = instructions[row_index].0;
+                    let addr_hex = &instructions[row_index].1;
+                    let instr_hex = &instructions[row_index].2;
+                    let instr_mnemonic = &instructions[row_index].3;
                     row.col(|ui| {
-                        ui.label(row_index.to_string());
+                        ui.label(mark.unwrap_or(""));
                     });
                     row.col(|ui| {
-                        ui.label(text_sample(row_index));
+                        ui.label(addr_hex);
                     });
                     row.col(|ui| {
-                        ui.label(text_sample(row_index));
+                        ui.label(instr_hex);
                     });
                     row.col(|ui| {
-                        ui.add(egui::Label::new("Thousands of rows of even height").wrap(false));
+                        ui.label(instr_mnemonic);
                     });
                 })
             });
     }
-}
-
-fn text_sample(row_index: usize) -> String {
-    format!("txt {row_index}")
 }

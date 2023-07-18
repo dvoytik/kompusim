@@ -13,7 +13,7 @@ use kompusim::{
     uart::Uart,
 };
 
-type DisasmInstructionLine = (Option<&'static str>, String, String, String);
+pub type DisasmInstructionLine = (Option<&'static str>, String, String, String);
 
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
