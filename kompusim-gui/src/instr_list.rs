@@ -19,7 +19,8 @@ impl InstrList {
     pub fn open(&mut self) {
         self.open = true;
     }
-    pub fn show(&mut self, ctx: &egui::Context) {
+
+    pub fn show_if_opened(&mut self, ctx: &egui::Context) {
         let mut open = self.open;
         egui::Window::new("Instructions")
             .open(&mut open)
