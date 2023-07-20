@@ -254,8 +254,8 @@ impl Simulator {
             let mut instr_addr = pc; // TODO: make parameter
             let mut instr_list: Vec<DisasmInstructionLine> = Vec::new();
             for instr in &self.instructions {
-                let mark = if instr_addr == pc { Some("→") } else { None };
-                let addr_hex = format!("0x{instr_addr}");
+                let mark = if instr_addr == pc { Some("➡") } else { None };
+                let addr_hex = format!("0x{instr_addr:08x}");
                 let instr_hex = format!("0x{instr:08x}");
                 let instr_mnemonic = disasm(*instr, instr_addr);
                 instr_list.push((mark, addr_hex, instr_hex, instr_mnemonic));
