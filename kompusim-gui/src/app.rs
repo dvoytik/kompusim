@@ -2,8 +2,13 @@ use eframe::{self, glow::Context};
 use egui::Modifiers;
 
 use crate::{
-    base_uregs::BaseURegs, console::Console, instr_decoder::InstrDecoder, instr_list::InstrList,
-    load_demo::LoadDemo, sim::Simulator, status_control::StatusControl,
+    base_uregs::BaseURegs,
+    console::Console,
+    instr_decoder::InstrDecoder,
+    instr_list::InstrList,
+    load_demo::LoadDemo,
+    sim::Simulator,
+    status_control::{StatusControl, StatusControlCmd},
 };
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
@@ -219,7 +224,16 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
-        status_control.show_if_opened(ctx, sim.get_state());
+        match status_control.show_if_opened(ctx, sim.get_state()) {
+            None => {}
+            Some(StatusControlCmd::Run) => sim.carry_on(),
+            Some(StatusControlCmd::Stop) => {
+                todo!()
+            }
+            Some(StatusControlCmd::Step) => {
+                todo!()
+            }
+        }
         base_uregs.show_if_opened(ctx, sim.get_regs());
         instr_list.show_if_opened(ctx, sim.disasm_at_pc());
         decode_instr.show(ctx);

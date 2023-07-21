@@ -1,5 +1,12 @@
 use crate::sim::SimState;
 
+pub enum StatusControlCmd {
+    Run,
+    Stop,
+    Step,
+    //Autostep
+}
+
 pub struct StatusControl {
     /// Is window open or not
     window_open: bool,
@@ -16,7 +23,12 @@ impl StatusControl {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context, sim_state: SimState) {
+    pub fn show_if_opened(
+        &mut self,
+        ctx: &egui::Context,
+        sim_state: SimState,
+    ) -> Option<StatusControlCmd> {
+        let mut command: Option<StatusControlCmd> = None;
         if self.window_open {
             let mut window_opened = self.window_open;
             egui::Window::new("Simulator Status/Control")
@@ -27,6 +39,7 @@ impl StatusControl {
                     ui.horizontal(|ui| {
                         if ui.button("Run").clicked() {
                             // TODO:
+                            command = Some(StatusControlCmd::Run);
                         }
                         ui.add_enabled_ui(false, |ui| {
                             if ui.button("Stop").clicked() {
@@ -59,5 +72,6 @@ impl StatusControl {
                 self.window_open = window_opened;
             }
         }
+        command
     }
 }
