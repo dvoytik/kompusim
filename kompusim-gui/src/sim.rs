@@ -181,6 +181,8 @@ impl Simulator {
 
     pub fn load_image(&mut self, addr: u64, image: &'static [u8], breakpoint: u64) {
         self.send_cmd(SimCommand::LoadImage((addr, image, breakpoint)));
+        // clear disassembler cache - force loading instructions
+        self.disasm_listing.take();
     }
 
     // continue is a Rust keyword, so use carry_on()
