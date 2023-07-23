@@ -27,6 +27,8 @@ pub struct RV64ICpu {
     pub bus: Bus,
     // TODO: optimize - use hashmap:
     breakpoints: Vec<u64>,
+    /// Number of executed instructions
+    num_exec_instr: u64,
 }
 
 fn bad_instr(ins: u32) {
@@ -40,7 +42,12 @@ impl RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
             breakpoints: Vec::with_capacity(2),
+            num_exec_instr: 0,
         }
+    }
+
+    pub fn get_num_exec_instr(&self) -> u64 {
+        self.num_exec_instr
     }
 
     pub fn fetch_instr(&self) -> u32 {
@@ -299,6 +306,8 @@ impl RV64ICpu {
             } => self.exe_opc_system(csr, rs1, funct3, rd),
             Opcode::Uknown => bad_instr(instr),
         }
+
+        self.num_exec_instr += 1;
     }
 
     /// Returns PC (i.e. where stopped)

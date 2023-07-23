@@ -27,6 +27,7 @@ impl StatusControl {
         &mut self,
         ctx: &egui::Context,
         sim_state: SimState,
+        num_exec_instr: u64,
     ) -> Option<StatusControlCmd> {
         let mut command: Option<StatusControlCmd> = None;
         if self.window_open {
@@ -38,7 +39,6 @@ impl StatusControl {
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
                         if ui.button("Run").clicked() {
-                            // TODO:
                             command = Some(StatusControlCmd::Run);
                         }
                         ui.add_enabled_ui(false, |ui| {
@@ -60,8 +60,8 @@ impl StatusControl {
                             ui.label("Simulator state: ");
                             ui.label(format!("{:?}", sim_state));
                             ui.end_row();
-                            ui.label("RAM: ");
-                            ui.label("TODO");
+                            ui.label("Executed instructons: ");
+                            ui.label(format!("{num_exec_instr}"));
                             ui.end_row();
                             ui.label("Devices: ");
                             ui.label("TODO");

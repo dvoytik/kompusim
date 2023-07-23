@@ -224,7 +224,7 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
-        match status_control.show_if_opened(ctx, sim.get_state()) {
+        match status_control.show_if_opened(ctx, sim.get_state(), sim.get_num_exec_instr()) {
             None => {}
             Some(StatusControlCmd::Run) => sim.carry_on(),
             Some(StatusControlCmd::Stop) => {

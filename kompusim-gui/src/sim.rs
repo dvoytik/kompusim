@@ -23,6 +23,8 @@ pub struct Simulator {
     /// lock-less mirrored state of the simulator
     sim_state: SimState,
     regs: RV64IURegs,
+    /// lock-less mirrored number of executed instructions
+    num_exec_instr: u64,
     /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
     /// TODO: do we need to cache?
     instructions: Vec<u32>,
@@ -55,7 +57,8 @@ enum SimCommand {
 
 #[derive(Clone)]
 enum SimEvent {
-    StateChanged(SimState, RV64IURegs),
+    /// SimState, registers, number of executed instructions
+    StateChanged(SimState, RV64IURegs, u64),
     Instructions(Vec<u32>),
 }
 
@@ -91,7 +94,11 @@ impl Simulator {
             cpu0.regs.pc = addr;
 
             let mut sim_state = SimState::InitializedReady;
-            send_event(SimEvent::StateChanged(sim_state, cpu0.get_regs().clone()));
+            send_event(SimEvent::StateChanged(
+                sim_state,
+                cpu0.get_regs().clone(),
+                0,
+            ));
             loop {
                 // In non-running state we block on empty command channel
                 let recv_cmd = if sim_state != SimState::Running {
@@ -120,6 +127,7 @@ impl Simulator {
                                 send_event(SimEvent::StateChanged(
                                     sim_state,
                                     cpu0.get_regs().clone(),
+                                    cpu0.get_num_exec_instr(),
                                 ));
                             }
                         }
@@ -128,7 +136,11 @@ impl Simulator {
                         sim_state = SimState::Running;
                         if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
                             sim_state = SimState::StoppedBreakpoint;
-                            send_event(SimEvent::StateChanged(sim_state, cpu0.get_regs().clone()));
+                            send_event(SimEvent::StateChanged(
+                                sim_state,
+                                cpu0.get_regs().clone(),
+                                cpu0.get_num_exec_instr(),
+                            ));
                         }
                     }
                     // SimCommand::Reset => {
@@ -138,6 +150,12 @@ impl Simulator {
                     SimCommand::LoadImage((load_addr, image, breakpoint)) => {
                         cpu0.bus.load_image(load_addr, image).unwrap();
                         cpu0.add_breakpoint(breakpoint);
+                        sim_state = SimState::Stopped;
+                        send_event(SimEvent::StateChanged(
+                            sim_state,
+                            cpu0.get_regs().clone(),
+                            cpu0.get_num_exec_instr(),
+                        ));
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
                     SimCommand::Disasm(addr, n_instr) => {
@@ -157,6 +175,7 @@ impl Simulator {
             uart_tx_recv,
             sim_state: SimState::Initializing,
             regs: RV64IURegs::default(),
+            num_exec_instr: 0,
             instructions: Vec::default(),
             event_queue: event_recv,
             disasm_listing: None,
@@ -192,9 +211,10 @@ impl Simulator {
 
     fn process_event(&mut self, event: SimEvent) {
         match event {
-            SimEvent::StateChanged(new_state, new_regs) => {
+            SimEvent::StateChanged(new_state, new_regs, num_exec_instr) => {
                 self.sim_state = new_state;
                 self.regs = new_regs;
+                self.num_exec_instr = num_exec_instr;
                 // clear disassembler cache
                 self.disasm_listing.take();
             }
@@ -237,6 +257,11 @@ impl Simulator {
     pub fn get_state(&mut self) -> SimState {
         self.drain_event_queue(); // will update self.sim_state
         self.sim_state
+    }
+
+    pub fn get_num_exec_instr(&mut self) -> u64 {
+        self.drain_event_queue(); // will update self.num_exec_instr
+        self.num_exec_instr
     }
 
     /// If sim is running, this will return stale registers from the last stop
