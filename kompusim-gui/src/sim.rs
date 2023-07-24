@@ -49,6 +49,7 @@ enum SimCommand {
     /// LoadImage(load_address, image addres, breakpoint)
     NoCmd,
     Continue,
+    Step,
     Stop,
     LoadImage((u64, &'static [u8], u64)),
     /// Disasm(starting_address, number_of_instruction)
@@ -143,6 +144,15 @@ impl Simulator {
                             ));
                         }
                     }
+                    SimCommand::Step => {
+                        let _ = cpu0.exec_continue(1);
+                        sim_state = SimState::Stopped;
+                        send_event(SimEvent::StateChanged(
+                            sim_state,
+                            cpu0.get_regs().clone(),
+                            cpu0.get_num_exec_instr(),
+                        ));
+                    }
                     // SimCommand::Reset => {
                     //     println!("Simulator: reset command")
                     // }
@@ -207,6 +217,10 @@ impl Simulator {
     // continue is a Rust keyword, so use carry_on()
     pub fn carry_on(&self) {
         self.send_cmd(SimCommand::Continue);
+    }
+
+    pub fn step(&self) {
+        self.send_cmd(SimCommand::Step);
     }
 
     fn process_event(&mut self, event: SimEvent) {

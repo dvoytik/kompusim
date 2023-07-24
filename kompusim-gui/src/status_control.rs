@@ -46,9 +46,16 @@ impl StatusControl {
                                 // TODO:
                             }
                         });
-                        ui.add_enabled_ui(false, |ui| {
+                        let step_button_enabled = if sim_state == SimState::Stopped
+                            || sim_state == SimState::StoppedBreakpoint
+                        {
+                            true
+                        } else {
+                            false
+                        };
+                        ui.add_enabled_ui(step_button_enabled, |ui| {
                             if ui.button("Step").clicked() {
-                                self.window_open = false;
+                                command = Some(StatusControlCmd::Step);
                             }
                         });
                     });

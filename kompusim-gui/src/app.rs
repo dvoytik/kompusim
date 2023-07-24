@@ -231,7 +231,7 @@ impl eframe::App for KompusimApp {
                 todo!()
             }
             Some(StatusControlCmd::Step) => {
-                todo!()
+                sim.step();
             }
         }
         base_uregs.show_if_opened(ctx, sim.get_regs());
