@@ -9,7 +9,7 @@ use kompusim::{
     device::Device,
     ram,
     rv64i_cpu::{ExecEvent, RV64ICpu, RV64IURegs},
-    rv64i_disasm::disasm,
+    rv64i_disasm::{disasm, u32_hex4, u64_hex4},
     uart::Uart,
 };
 
@@ -286,18 +286,16 @@ impl Simulator {
 
     pub fn disasm_at_pc(&mut self) -> &Vec<DisasmInstructionLine> {
         if self.disasm_listing.is_none() {
+            // TODO: move from sim.rs to instr_list.rs
             let pc = self.regs.pc;
             self.send_cmd(SimCommand::Disasm(pc - 4, 32)); // TOOD: make parameters
             self.wait_for_event(SimEvent::Instructions(Vec::default()));
-            //let start = (pc as i64 + pc_offset as i64) as u64;
-            //tui::print_instr_listing(cpu0.get_n_instr(start, n_instr), start, pc);
-            //
             let mut instr_addr = pc; // TODO: make parameter
             let mut instr_list: Vec<DisasmInstructionLine> = Vec::new();
             for instr in &self.instructions {
                 let mark = if instr_addr == pc { Some("➡") } else { None };
-                let addr_hex = format!("0x{instr_addr:08x}");
-                let instr_hex = format!("0x{instr:08x}");
+                let addr_hex = u64_hex4(instr_addr);
+                let instr_hex = u32_hex4(*instr);
                 let instr_mnemonic = disasm(*instr, instr_addr);
                 instr_list.push((mark, addr_hex, instr_hex, instr_mnemonic));
                 instr_addr += 4;

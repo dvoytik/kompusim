@@ -149,7 +149,11 @@ pub fn u32_bin4(v: u32) -> String {
     )
 }
 
-pub fn reg_hex(v: u64) -> String {
+pub fn u32_hex4(v: u32) -> String {
+    format!("{:04x}_{:04x}", v.bits(31, 16), v.bits(15, 0))
+}
+
+pub fn u64_hex4(v: u64) -> String {
     format!(
         "{:04x}_{:04x}_{:04x}_{:04x}",
         v.bits(63, 48),
@@ -157,6 +161,10 @@ pub fn reg_hex(v: u64) -> String {
         v.bits(31, 16),
         v.bits(15, 0)
     )
+}
+
+pub fn reg_hex(v: u64) -> String {
+    u64_hex4(v)
 }
 
 #[test]
