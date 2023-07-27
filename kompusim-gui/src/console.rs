@@ -23,6 +23,7 @@ impl Console {
             .resizable(true)
             .default_width(400.0)
             .show(ctx, |ui| {
+                ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.add(
                         egui::TextEdit::multiline(&mut self.buffer.as_str())

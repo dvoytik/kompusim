@@ -28,6 +28,7 @@ impl BaseURegs {
                 .resizable(false)
                 .default_width(500.0)
                 .show(ctx, |ui| {
+                    ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
                     ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                         egui::Grid::new("base_regs_grid0")
                             .num_columns(3)

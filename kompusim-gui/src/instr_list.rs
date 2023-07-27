@@ -43,6 +43,7 @@ impl InstrList {
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
 
+        ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
         let table = TableBuilder::new(ui)
             .striped(true)
             .resizable(true)
