@@ -1,4 +1,4 @@
-use kompusim::rv64i_disasm::{disasm, u32_bin4};
+use kompusim::rv64i_disasm::{disasm, u32_bin4, u32_hex4};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -6,7 +6,6 @@ pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
 
-    instr_hex: String,
     #[serde(skip)]
     instr_disasm: String,
     #[serde(skip)]
@@ -17,7 +16,6 @@ impl Default for InstrDecoder {
     fn default() -> InstrDecoder {
         InstrDecoder {
             window_open: true,
-            instr_hex: String::with_capacity(16),
             instr_disasm: String::new(),
             instr_binary: String::new(),
         }
@@ -29,33 +27,29 @@ impl InstrDecoder {
         self.window_open = true;
     }
 
-    pub fn show(&mut self, ctx: &egui::Context) {
+    pub fn show_if_opened(&mut self, ctx: &egui::Context, address: u64, instruction: u32) {
         let mut open = self.window_open;
         egui::Window::new("Instruction decoder")
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
             .show(ctx, |ui| {
-                self.show_window_content(ui);
+                self.show_window_content(ui, address, instruction);
             });
         self.window_open = open;
     }
 
-    fn show_window_content(&mut self, ui: &mut egui::Ui) {
+    fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {
         egui::Grid::new("decode_instr_grid")
             .num_columns(2)
             .spacing([40.0, 4.0])
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Instruction");
-                let response = ui.add(
-                    egui::TextEdit::singleline(&mut self.instr_hex).hint_text("instruction in hex"),
-                );
-                if response.changed() || self.instr_disasm.len() == 0 {
-                    let instr = hex_to_u32(&self.instr_hex);
-                    self.instr_disasm = disasm(instr, 0x0); // TODO: add address
-                    self.instr_binary = u32_bin4(instr);
-                }
+                let mut instr_hex = u32_hex4(instruction);
+                ui.add(egui::TextEdit::singleline(&mut instr_hex));
+                self.instr_disasm = disasm(instruction, address);
+                self.instr_binary = u32_bin4(instruction);
                 ui.end_row();
                 ui.label("Binary");
                 ui.vertical(|ui| {
@@ -65,13 +59,8 @@ impl InstrDecoder {
                 });
                 ui.end_row();
                 ui.label("Assembly");
-                ui.label(&self.instr_disasm);
+                ui.monospace(&self.instr_disasm);
                 ui.end_row();
             });
     }
-}
-
-/// Convert hex str (e.g, "0x9393") to u32
-fn hex_to_u32(hex_str: &str) -> u32 {
-    u32::from_str_radix(hex_str.trim_start_matches("0x"), 16).unwrap_or_default()
 }

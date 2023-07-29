@@ -28,6 +28,7 @@ pub struct Simulator {
     /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
     /// TODO: do we need to cache?
     instructions: Vec<u32>,
+    // TODO: instructions_start: u64,
     event_queue: Receiver<SimEvent>,
     /// Cached disassembler listing
     disasm_listing: Option<Vec<DisasmInstructionLine>>,
@@ -282,6 +283,11 @@ impl Simulator {
     pub fn get_regs(&mut self) -> &RV64IURegs {
         self.drain_event_queue();
         &self.regs
+    }
+
+    pub fn get_cur_instr(&self) -> u32 {
+        self.instructions[0]
+        //self.regs.pc
     }
 
     pub fn disasm_at_pc(&mut self) -> &Vec<DisasmInstructionLine> {
