@@ -1,3 +1,6 @@
+use egui::Color32;
+use egui_extras::TableRow;
+
 use crate::sim::DisasmInstructionLine;
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -70,17 +73,13 @@ impl InstrList {
                 });
             })
             .body(|body| {
-                // for instruction_row in instructions {
-                //     println!("hi")
-                //     body.row()
-                // }
                 body.rows(text_height, instructions.len(), |row_index, mut row| {
-                    let mark = instructions[row_index].0;
+                    let mark = instructions[row_index].0.unwrap_or("");
                     let addr_hex = &instructions[row_index].1;
                     let instr_hex = &instructions[row_index].2;
                     let instr_mnemonic = &instructions[row_index].3;
                     row.col(|ui| {
-                        ui.label(mark.unwrap_or(""));
+                        ui.label(mark);
                     });
                     row.col(|ui| {
                         ui.label(addr_hex);
@@ -94,4 +93,21 @@ impl InstrList {
                 })
             });
     }
+}
+
+fn highlight_col<'a, 'b>(row: &mut TableRow<'a, 'b>, s1: &str, s2: &str, s3: &str, s4: &str) {
+    // TODO: change for white background
+    let color = Color32::YELLOW;
+    row.col(|ui| {
+        ui.colored_label(color, s1);
+    });
+    row.col(|ui| {
+        ui.colored_label(color, s2);
+    });
+    row.col(|ui| {
+        ui.colored_label(color, s3);
+    });
+    row.col(|ui| {
+        ui.colored_label(color, s4);
+    });
 }
