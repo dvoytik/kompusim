@@ -67,7 +67,7 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_IMM_ADDI => format!("addi: x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})"),
+            F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})"),
             _ => "uknown_OP_IMM".to_string(),
         },
 
