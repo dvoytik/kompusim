@@ -9,11 +9,10 @@ use kompusim::{
     device::Device,
     ram,
     rv64i_cpu::{ExecEvent, RV64ICpu, RV64IURegs},
-    rv64i_disasm::{disasm, u32_hex4, u64_hex4},
     uart::Uart,
 };
 
-pub type DisasmInstructionLine = (Option<&'static str>, String, String, String);
+pub const DEFAULT_START_ADDRESS: u64 = 0x8000_0000;
 
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
@@ -22,16 +21,16 @@ pub struct Simulator {
     uart_tx_recv: Receiver<u8>,
     /// lock-less mirrored state of the simulator
     sim_state: SimState,
+    event_queue: Receiver<SimEvent>,
     regs: RV64IURegs,
     /// lock-less mirrored number of executed instructions
     num_exec_instr: u64,
     /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
-    /// TODO: do we need to cache?
-    instructions: Vec<u32>,
-    // TODO: instructions_start: u64,
-    event_queue: Receiver<SimEvent>,
-    /// Cached disassembler listing
-    disasm_listing: Option<Vec<DisasmInstructionLine>>,
+    /// TODO: move to general memory cache - no need to diffirentiate instruction cache from memory
+    /// cache
+    instr_cache: Option<Vec<u32>>,
+    instr_cache_len: usize,
+    instr_cache_start: u64,
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -187,9 +186,10 @@ impl Simulator {
             sim_state: SimState::Initializing,
             regs: RV64IURegs::default(),
             num_exec_instr: 0,
-            instructions: Vec::default(),
+            instr_cache: None,
+            instr_cache_start: 0,
+            instr_cache_len: 0,
             event_queue: event_recv,
-            disasm_listing: None,
         }
     }
 
@@ -212,7 +212,7 @@ impl Simulator {
     pub fn load_image(&mut self, addr: u64, image: &'static [u8], breakpoint: u64) {
         self.send_cmd(SimCommand::LoadImage((addr, image, breakpoint)));
         // clear disassembler cache - force loading instructions
-        self.disasm_listing.take();
+        self.instr_cache.take();
     }
 
     // continue is a Rust keyword, so use carry_on()
@@ -230,11 +230,12 @@ impl Simulator {
                 self.sim_state = new_state;
                 self.regs = new_regs;
                 self.num_exec_instr = num_exec_instr;
-                // clear disassembler cache
-                self.disasm_listing.take();
+                // clear instruction cache
+                // TODO: optimize - use memory watchpoints
+                self.instr_cache.take();
             }
             SimEvent::Instructions(instructions) => {
-                self.instructions = instructions;
+                self.instr_cache.replace(instructions);
             }
         }
     }
@@ -285,30 +286,33 @@ impl Simulator {
         &self.regs
     }
 
-    pub fn get_cur_instr(&self) -> u32 {
-        self.instructions[0]
-        //self.regs.pc
+    pub fn get_cur_instr(&mut self) -> u32 {
+        let pc = self.regs.pc;
+        if self.instr_cache.is_none()
+            || pc < self.instr_cache_start
+            || pc >= self.instr_cache_start + self.instr_cache_len as u64 * 4
+        {
+            // update cache if needed
+            let _ = self.get_instructions(pc, 4);
+        }
+        let offset = (pc - self.instr_cache_start) / 4;
+        self.instr_cache.as_ref().unwrap()[offset as usize]
     }
 
-    pub fn disasm_at_pc(&mut self) -> &Vec<DisasmInstructionLine> {
-        if self.disasm_listing.is_none() {
-            // TODO: move from sim.rs to instr_list.rs
-            let pc = self.regs.pc;
-            self.send_cmd(SimCommand::Disasm(pc - 4, 32)); // TOOD: make parameters
+    /// Returns (instructions_array, start_address)
+    pub fn get_instructions(&mut self, start_addr: u64, num_instr: usize) -> (&Vec<u32>, u64) {
+        if self.instr_cache.is_none()
+            || start_addr < self.instr_cache_start
+            || start_addr + num_instr as u64 * 4
+                > self.instr_cache_start + self.instr_cache_len as u64 * 4
+        {
+            println!("Updating instruction cache"); // keep it for debuggin unnecessary cache updates
+            self.send_cmd(SimCommand::Disasm(start_addr, num_instr));
             self.wait_for_event(SimEvent::Instructions(Vec::default()));
-            let mut instr_addr = pc; // TODO: make parameter
-            let mut instr_list: Vec<DisasmInstructionLine> = Vec::new();
-            for instr in &self.instructions {
-                let mark = if instr_addr == pc { Some("➡") } else { None };
-                let addr_hex = u64_hex4(instr_addr);
-                let instr_hex = u32_hex4(*instr);
-                let instr_mnemonic = disasm(*instr, instr_addr);
-                instr_list.push((mark, addr_hex, instr_hex, instr_mnemonic));
-                instr_addr += 4;
-            }
-            self.disasm_listing.replace(instr_list);
+            self.instr_cache_start = start_addr;
+            self.instr_cache_len = num_instr;
         }
-        self.disasm_listing.as_ref().unwrap()
+        (self.instr_cache.as_ref().unwrap(), self.instr_cache_start)
     }
 
     pub fn console_recv(&self) -> Option<String> {
