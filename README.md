@@ -4,6 +4,8 @@ Kompusim is a simple CPU / SoC ISA level simulator with focus on education and d
 There are GUI and TUI (terminal user interface) versions of the simulator.
 It is still heavily under construction.
 
+See [screenshots](https://github.com/dvoytik/kompusim/wiki/Screenshots).
+
 ## How to build and run the GUI simulator
 
 It is expected that [Rust tool chain is installed](https://www.rust-lang.org/tools/install).
