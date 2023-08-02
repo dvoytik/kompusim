@@ -1,5 +1,6 @@
 use kompusim::rv64i_disasm::{disasm, u32_bin4, u32_hex4};
 
+// TODO: remove serde?
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct InstrDecoder {
@@ -7,17 +8,26 @@ pub struct InstrDecoder {
     window_open: bool,
 
     #[serde(skip)]
-    instr_disasm: String,
+    cached_address: u64,
     #[serde(skip)]
-    instr_binary: String,
+    cached_instruction: u32,
+    #[serde(skip)]
+    cached_instr_hex: String,
+    #[serde(skip)]
+    cached_instr_disasm: String,
+    #[serde(skip)]
+    cached_instr_binary: String,
 }
 
 impl Default for InstrDecoder {
     fn default() -> InstrDecoder {
         InstrDecoder {
             window_open: true,
-            instr_disasm: String::new(),
-            instr_binary: String::new(),
+            cached_address: 0,
+            cached_instruction: 0,
+            cached_instr_hex: String::new(),
+            cached_instr_disasm: String::new(),
+            cached_instr_binary: String::new(),
         }
     }
 }
@@ -40,26 +50,30 @@ impl InstrDecoder {
     }
 
     fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {
+        if address != self.cached_address || instruction != self.cached_instruction {
+            self.cached_instr_hex = u32_hex4(instruction);
+            self.cached_instr_disasm = disasm(instruction, address);
+            self.cached_instr_binary = u32_bin4(instruction);
+            self.cached_address = address;
+            self.cached_instruction = instruction;
+        }
         egui::Grid::new("decode_instr_grid")
             .num_columns(2)
             .spacing([40.0, 4.0])
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Instruction");
-                let mut instr_hex = u32_hex4(instruction);
-                ui.add(egui::TextEdit::singleline(&mut instr_hex));
-                self.instr_disasm = disasm(instruction, address);
-                self.instr_binary = u32_bin4(instruction);
+                ui.add(egui::TextEdit::singleline(&mut self.cached_instr_hex));
                 ui.end_row();
                 ui.label("Binary");
                 ui.vertical(|ui| {
                     //ui.label(RichText::new("").monospace());
                     ui.monospace("31   27   23   19   15   11   7    3   ");
-                    ui.monospace(&self.instr_binary);
+                    ui.monospace(&self.cached_instr_binary);
                 });
                 ui.end_row();
                 ui.label("Assembly");
-                ui.monospace(&self.instr_disasm);
+                ui.monospace(&self.cached_instr_disasm);
                 ui.end_row();
             });
     }
