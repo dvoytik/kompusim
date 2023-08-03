@@ -23,6 +23,7 @@ pub struct KompusimApp {
     #[serde(skip)]
     base_uregs: BaseURegs,
     instr_list: InstrList,
+    #[serde(skip)]
     decode_instr: InstrDecoder,
     console: Console,
     #[serde(skip)] // this how you opt-out of serialization of a member

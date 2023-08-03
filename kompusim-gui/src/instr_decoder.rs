@@ -1,21 +1,13 @@
 use kompusim::rv64i_disasm::{disasm, u32_bin4, u32_hex4};
 
-// TODO: remove serde?
-#[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)]
 pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
 
-    #[serde(skip)]
     cached_address: u64,
-    #[serde(skip)]
     cached_instruction: u32,
-    #[serde(skip)]
     cached_instr_hex: String,
-    #[serde(skip)]
     cached_instr_disasm: String,
-    #[serde(skip)]
     cached_instr_binary: String,
 }
 
