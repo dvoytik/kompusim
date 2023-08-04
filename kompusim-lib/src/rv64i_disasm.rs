@@ -2,6 +2,10 @@
 
 use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
 
+pub fn disasm_mnemonic_operation(instr: u32, instr_a: u64) -> String {
+    String::from("No explanation yet")
+}
+
 /// instr_a - instruction address
 pub fn disasm(instr: u32, instr_a: u64) -> String {
     match decode_instr(instr) {
