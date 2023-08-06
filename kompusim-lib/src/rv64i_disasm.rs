@@ -2,8 +2,57 @@
 
 use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
 
-pub fn disasm_mnemonic_operation(instr: u32, instr_a: u64) -> String {
-    String::from("No explanation yet")
+pub fn disasm_operation_name(instr: u32) -> String {
+    match decode_instr(instr) {
+        Opcode::Lui { .. } => {
+            format!("Load Upper Immediate")
+        }
+
+        Opcode::Auipc { .. } => format!("Add Upper Immediate to PC"),
+
+        // TODO:
+        Opcode::Branch { funct3, .. } => match funct3 {
+            F3_BRANCH_BNE => format!("Branch Not Equal"),
+            F3_BRANCH_BEQ => format!("Branch EQual"),
+            F3_BRANCH_BLT => format!("Branch Less Than (signed comparison)"),
+            _ => "Unknown BRANCH opcode".to_string(),
+        },
+
+        Opcode::Jal { .. } => {
+            format!("Jump And Link")
+        }
+
+        Opcode::Jalr { .. } => {
+            format!("Jump And Link Register")
+        }
+
+        Opcode::Load { funct3, .. } => match funct3 {
+            F3_OP_LOAD_LB => format!("Load Byte (sign extend)"),
+            F3_OP_LOAD_LBU => format!("Load Byte Unsigned"),
+            F3_OP_LOAD_LW => format!("Load Word (sign extend)"),
+            _ => "Unknown LOAD opcode".to_string(),
+        },
+
+        Opcode::Store { funct3, .. } => match funct3 {
+            F3_OP_STORE_SB => format!("Store Byte"),
+            F3_OP_STORE_SW => format!("Store Word"),
+            _ => "Unknown STORE opcode".to_string(),
+        },
+
+        Opcode::OpImm { funct3, .. } => match funct3 {
+            F3_OP_IMM_ADDI => format!("ADD Immediate"),
+            _ => "Unknown OP-IMM opcode".to_string(),
+        },
+
+        Opcode::System { funct3, .. } => match funct3 {
+            F3_SYSTEM_CSRRS => {
+                format!("Control Status Register - Read, Set bitmask")
+            }
+            _ => "Unknown SYSTEM opcode".to_string(),
+        },
+
+        Opcode::Uknown => "Unknown Operation".to_string(),
+    }
 }
 
 /// instr_a - instruction address
