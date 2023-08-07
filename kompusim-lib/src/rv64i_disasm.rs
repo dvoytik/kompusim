@@ -55,8 +55,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
     }
 }
 
-/// instr_a - instruction address
-pub fn disasm(instr: u32, instr_a: u64) -> String {
+pub fn disasm(instr: u32, instr_addr: u64) -> String {
     match decode_instr(instr) {
         Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
 
@@ -68,7 +67,7 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
             rs1,
             funct3,
         } => {
-            let addr = instr_a.add_i13(off13);
+            let addr = instr_addr.add_i13(off13);
             match funct3 {
                 // Branch Not Equal
                 F3_BRANCH_BNE => format!("bne x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
@@ -83,7 +82,7 @@ pub fn disasm(instr: u32, instr_a: u64) -> String {
         Opcode::Jal { imm21, rd } => {
             format!(
                 "jal x{rd}, 0x{0:x} # PC + {imm21:x}",
-                instr_a.add_i21(imm21)
+                instr_addr.add_i21(imm21)
             )
         }
 
