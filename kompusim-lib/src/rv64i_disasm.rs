@@ -75,7 +75,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
                 F3_BRANCH_BEQ => format!("beq x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
                 // Branch Less Than (signed comparison)
                 F3_BRANCH_BLT => format!("blt x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
-                _ => "uknown BRANCH instruction".to_string(),
+                _ => "Unknown BRANCH opcode".to_string(),
             }
         }
 
@@ -99,7 +99,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             F3_OP_LOAD_LB => format!("lb x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LBU => format!("lbu x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LW => format!("lw x{rd}, 0x{imm12}(x{rs1})"),
-            _ => "uknown LOAD instruction".to_string(),
+            _ => "Unknown LOAD opcode".to_string(),
         },
 
         Opcode::Store {
@@ -110,7 +110,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_OP_STORE_SB => format!("sb x{rs2}, 0x{imm12:x}(x{rs1})"),
             F3_OP_STORE_SW => format!("sw x{rs2}, 0x{imm12:x}(x{rs1})"),
-            _ => "uknown_STORE".to_string(),
+            _ => "Unknown STORE opcode".to_string(),
         },
 
         Opcode::OpImm {
@@ -120,7 +120,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})"),
-            _ => "uknown_OP_IMM".to_string(),
+            _ => "Unknown OP-IMM opcode".to_string(),
         },
 
         Opcode::System {
@@ -128,15 +128,12 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rs1,
             funct3,
             rd,
-        } => {
-            match funct3 {
-                // TODO: convert csr to string name, e.g. "mhartid"
-                F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1:x}", csr_name(csr)),
-                _ => "uknown_SYSTEM".to_string(),
-            }
-        }
+        } => match funct3 {
+            F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1:x}", csr_name(csr)),
+            _ => "Unknown SYSTEM opcode".to_string(),
+        },
 
-        Opcode::Uknown => "uknown instr".to_string(),
+        Opcode::Uknown => "Unknown instruction".to_string(),
     }
 }
 
@@ -175,7 +172,7 @@ pub fn reg_idx2abi(r: u8) -> &'static str {
         29 => "t4",
         30 => "t5",
         31 => "t6",
-        _ => panic!("Unknow register idx"),
+        _ => panic!("Unknown register idx"),
     }
 }
 
