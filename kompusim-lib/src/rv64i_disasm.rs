@@ -55,6 +55,101 @@ pub fn disasm_operation_name(instr: u32) -> String {
     }
 }
 
+pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
+    match decode_instr(instr) {
+        // TODO:
+        Opcode::Lui { uimm20, rd } => format!("x{rd} = 0x{:x} << 12", uimm20 >> 12),
+
+        // TODO:
+        Opcode::Auipc { uimm20, rd } => format!("x{rd} = PC + 0x{uimm20:x} << 12"),
+
+        Opcode::Branch {
+            off13,
+            rs2,
+            rs1,
+            funct3,
+        } => {
+            // let addr = instr_addr.add_i13(off13);
+            match funct3 {
+                // Branch Not Equal
+                F3_BRANCH_BNE => format!("if x{rs1} != x{rs2} then PC = PC + 0x{off13:x}"),
+                // Branch EQual
+                F3_BRANCH_BEQ => format!("if x{rs1} == x{rs2} then PC = PC + 0x{off13:x}"),
+                // Branch Less Than (signed comparison)
+                F3_BRANCH_BLT => format!("if x{rs1} < x{rs2} then PC = PC + 0x{off13:x}"),
+                _ => "Unknown BRANCH opcode".to_string(),
+            }
+        }
+
+        Opcode::Jal { imm21, rd } => {
+            format!(
+                "x{rd} = PC + 4; PC = PC + 0x{imm21:x}",
+                // instr_addr.add_i21(imm21)
+            )
+        }
+
+        Opcode::Jalr { imm12, rs1, rd } => {
+            format!("x{rd} = PC + 4; PC = x{rs1} + 0x{imm12:x}; PC[0] = 0")
+        }
+
+        Opcode::Load {
+            imm12,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            F3_OP_LOAD_LB => {
+                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:8] = x{rd}[7]")
+            }
+            F3_OP_LOAD_LBU => {
+                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:8] = 0")
+            }
+            F3_OP_LOAD_LW => {
+                format!(
+                    "x{rd}[31:0] = mem32[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:32] = x{rd}[31]"
+                )
+            }
+            _ => "Unknown LOAD opcode".to_string(),
+        },
+
+        Opcode::Store {
+            imm12,
+            rs2,
+            rs1,
+            funct3,
+        } => match funct3 {
+            F3_OP_STORE_SB => format!("mem8[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[7:0]"),
+            F3_OP_STORE_SW => format!("mem32[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[31:0]"),
+            _ => "Unknown STORE opcode".to_string(),
+        },
+
+        Opcode::OpImm {
+            imm12,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            F3_OP_IMM_ADDI => format!("x{rd} = x{rs1} + 0x{imm12:x}"),
+            _ => "Unknown OP-IMM opcode".to_string(),
+        },
+
+        Opcode::System {
+            csr,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            F3_SYSTEM_CSRRS => format!(
+                "x{rd} = {csrn}; {csrn} = {csrn} | x{rs1:b}",
+                csrn = csr_name(csr)
+            ),
+            _ => "Unknown SYSTEM opcode".to_string(),
+        },
+
+        Opcode::Uknown => "Unknown instruction".to_string(),
+    }
+}
+
 pub fn disasm(instr: u32, instr_addr: u64) -> String {
     match decode_instr(instr) {
         Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),

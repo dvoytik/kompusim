@@ -1,4 +1,6 @@
-use kompusim::rv64i_disasm::{disasm, disasm_operation_name, u32_bin4, u32_hex4};
+use kompusim::rv64i_disasm::{
+    disasm, disasm_operation_name, disasm_pseudo_code, u32_bin4, u32_hex4,
+};
 
 pub struct InstrDecoder {
     /// Is window open or not
@@ -10,6 +12,7 @@ pub struct InstrDecoder {
     cached_instr_disasm: String,
     cached_instr_binary: String,
     cached_operation_name: String,
+    cached_pseudo_code: String,
 }
 
 impl Default for InstrDecoder {
@@ -22,6 +25,7 @@ impl Default for InstrDecoder {
             cached_instr_disasm: String::new(),
             cached_instr_binary: String::new(),
             cached_operation_name: String::new(),
+            cached_pseudo_code: String::new(),
         }
     }
 }
@@ -51,6 +55,7 @@ impl InstrDecoder {
             self.cached_instr_disasm = disasm(instruction, address);
             self.cached_instr_binary = u32_bin4(instruction);
             self.cached_operation_name = disasm_operation_name(instruction);
+            self.cached_pseudo_code = disasm_pseudo_code(instruction, address);
         }
         egui::Grid::new("decode_instr_grid")
             .num_columns(2)
@@ -72,6 +77,9 @@ impl InstrDecoder {
                 ui.end_row();
                 ui.label("Operation");
                 ui.monospace(&self.cached_operation_name);
+                ui.end_row();
+                ui.label("Pseudo code");
+                ui.monospace(&self.cached_pseudo_code);
                 ui.end_row();
             });
     }
