@@ -43,6 +43,7 @@ impl StatusControl {
                         }
                         ui.add_enabled_ui(false, |ui| {
                             if ui.button("Stop").clicked() {
+                                command = Some(StatusControlCmd::Stop);
                                 // TODO:
                             }
                         });
