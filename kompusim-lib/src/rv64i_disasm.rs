@@ -165,24 +165,21 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             let addr = instr_addr.add_i13(off13);
             match funct3 {
                 // Branch Not Equal
-                F3_BRANCH_BNE => format!("bne x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
+                F3_BRANCH_BNE => format!("bne x{rs1}, x{rs2}, 0x{addr:x}"),
                 // Branch EQual
-                F3_BRANCH_BEQ => format!("beq x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
+                F3_BRANCH_BEQ => format!("beq x{rs1}, x{rs2}, 0x{addr:x}"),
                 // Branch Less Than (signed comparison)
-                F3_BRANCH_BLT => format!("blt x{rs1}, x{rs2}, 0x{addr:x} # PC + 0x{off13:x}"),
+                F3_BRANCH_BLT => format!("blt x{rs1}, x{rs2}, 0x{addr:x}"),
                 _ => "Unknown BRANCH opcode".to_string(),
             }
         }
 
         Opcode::Jal { imm21, rd } => {
-            format!(
-                "jal x{rd}, 0x{0:x} # PC + {imm21:x}",
-                instr_addr.add_i21(imm21)
-            )
+            format!("jal x{rd}, 0x{0:x}", instr_addr.add_i21(imm21))
         }
 
         Opcode::Jalr { imm12, rs1, rd } => {
-            format!("jalr x{rd}, 0x{imm12:x}(x{rs1}) # ")
+            format!("jalr x{rd}, 0x{imm12:x}(x{rs1})")
         }
 
         Opcode::Load {
@@ -214,7 +211,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x} # ({imm12})"),
+            F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
