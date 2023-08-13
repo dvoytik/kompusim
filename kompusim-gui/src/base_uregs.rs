@@ -21,43 +21,42 @@ impl BaseURegs {
     }
 
     pub fn show_if_opened(&mut self, ctx: &egui::Context, regs: &RV64IURegs) {
-        if self.window_open {
-            let mut window_opened = self.window_open;
-            egui::Window::new("Base Unprivileged Integer Registers")
-                .open(&mut window_opened)
-                .resizable(false)
-                .default_width(500.0)
-                .show(ctx, |ui| {
-                    ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
-                    ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
-                        egui::Grid::new("base_regs_grid0")
-                            .num_columns(3)
-                            //.min_col_width(600.0)
-                            .striped(true)
-                            .show(ui, |ui| {
-                                for i in 0..=15 {
-                                    grid_row_reg(ui, regs, i as u8);
-                                }
-                            });
-                        egui::Grid::new("base_regs_grid1")
-                            .num_columns(3)
-                            //.min_col_width(600.0)
-                            .striped(true)
-                            .show(ui, |ui| {
-                                for i in 16..=31 {
-                                    grid_row_reg(ui, regs, i as u8);
-                                }
-                                ui.label(format!("pc"));
-                                ui.label("");
-                                ui.label(reg_hex(regs.pc));
-                                ui.end_row();
-                            });
-                    });
-                });
-            if self.window_open {
-                self.window_open = window_opened;
-            }
+        if !self.window_open {
+            return;
         }
+        let mut window_opened = self.window_open;
+        egui::Window::new("Base Unprivileged Integer Registers")
+            .open(&mut window_opened)
+            .resizable(false)
+            .default_width(500.0)
+            .show(ctx, |ui| {
+                ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                    egui::Grid::new("base_regs_grid0")
+                        .num_columns(3)
+                        //.min_col_width(600.0)
+                        .striped(true)
+                        .show(ui, |ui| {
+                            for i in 0..=15 {
+                                grid_row_reg(ui, regs, i as u8);
+                            }
+                        });
+                    egui::Grid::new("base_regs_grid1")
+                        .num_columns(3)
+                        //.min_col_width(600.0)
+                        .striped(true)
+                        .show(ui, |ui| {
+                            for i in 16..=31 {
+                                grid_row_reg(ui, regs, i as u8);
+                            }
+                            ui.label(format!("pc"));
+                            ui.label("");
+                            ui.label(reg_hex(regs.pc));
+                            ui.end_row();
+                        });
+                });
+            });
+        self.window_open = window_opened;
     }
 }
 
