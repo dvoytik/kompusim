@@ -29,57 +29,56 @@ impl StatusControl {
         sim_state: SimState,
         num_exec_instr: u64,
     ) -> Option<StatusControlCmd> {
-        let mut command: Option<StatusControlCmd> = None;
-        if self.window_open {
-            let mut window_opened = self.window_open;
-            egui::Window::new("Simulator Status/Control")
-                .open(&mut window_opened)
-                .resizable(true)
-                .default_width(500.0)
-                .show(ctx, |ui| {
-                    ui.horizontal(|ui| {
-                        if ui.button("Run").clicked() {
-                            command = Some(StatusControlCmd::Run);
-                        }
-                        ui.add_enabled_ui(false, |ui| {
-                            if ui.button("Stop").clicked() {
-                                command = Some(StatusControlCmd::Stop);
-                                // TODO:
-                            }
-                        });
-                        let step_button_enabled = if sim_state == SimState::Stopped
-                            || sim_state == SimState::StoppedBreakpoint
-                        {
-                            true
-                        } else {
-                            false
-                        };
-                        ui.add_enabled_ui(step_button_enabled, |ui| {
-                            if ui.button("Step").clicked() {
-                                command = Some(StatusControlCmd::Step);
-                            }
-                        });
-                    });
-                    egui::Grid::new("load_demo_grid")
-                        .num_columns(2)
-                        //.min_col_width(600.0)
-                        .striped(true)
-                        .show(ui, |ui| {
-                            ui.label("Simulator state: ");
-                            ui.label(format!("{:?}", sim_state));
-                            ui.end_row();
-                            ui.label("Executed instructons: ");
-                            ui.label(format!("{num_exec_instr}"));
-                            ui.end_row();
-                            ui.label("Devices: ");
-                            ui.label("TODO");
-                            ui.end_row();
-                        });
-                });
-            if self.window_open {
-                self.window_open = window_opened;
-            }
+        if !self.window_open {
+            return None;
         }
+        let mut command: Option<StatusControlCmd> = None;
+        let mut window_opened = self.window_open;
+        egui::Window::new("Simulator Status/Control")
+            .open(&mut window_opened)
+            .resizable(true)
+            .default_width(500.0)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.button("Run").clicked() {
+                        command = Some(StatusControlCmd::Run);
+                    }
+                    ui.add_enabled_ui(false, |ui| {
+                        if ui.button("Stop").clicked() {
+                            command = Some(StatusControlCmd::Stop);
+                            // TODO:
+                        }
+                    });
+                    let step_button_enabled = if sim_state == SimState::Stopped
+                        || sim_state == SimState::StoppedBreakpoint
+                    {
+                        true
+                    } else {
+                        false
+                    };
+                    ui.add_enabled_ui(step_button_enabled, |ui| {
+                        if ui.button("Step").clicked() {
+                            command = Some(StatusControlCmd::Step);
+                        }
+                    });
+                });
+                egui::Grid::new("load_demo_grid")
+                    .num_columns(2)
+                    //.min_col_width(600.0)
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("Simulator state: ");
+                        ui.label(format!("{:?}", sim_state));
+                        ui.end_row();
+                        ui.label("Executed instructons: ");
+                        ui.label(format!("{num_exec_instr}"));
+                        ui.end_row();
+                        ui.label("Devices: ");
+                        ui.label("TODO");
+                        ui.end_row();
+                    });
+            });
+        self.window_open = window_opened;
         command
     }
 }
