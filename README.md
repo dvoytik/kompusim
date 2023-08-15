@@ -1,8 +1,9 @@
 # Kompusim
 
-Kompusim is a simple CPU / SoC ISA level simulator with focus on education and debugging functionality. Currently, it supports only `RISC-V` ISA.  
+Kompusim is a work-in-progress simple CPU / SoC ISA level simulator with focus on education and debugging functionality. Currently, it supports only `RISC-V` ISA.
+
 There are GUI and TUI (terminal user interface) versions of the simulator.
-It is still heavily under construction.
+GUI is currently the primary focus and TUI is lagging behind in debugging and learning capabilities.
 
 See [screenshots](https://github.com/dvoytik/kompusim/wiki/Screenshots).
 
