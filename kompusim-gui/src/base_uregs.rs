@@ -38,7 +38,13 @@ impl BaseURegs {
                         .striped(true)
                         .show(ui, |ui| {
                             for i in 0..=15 {
-                                grid_row_reg(ui, regs, i as u8, reg_hi_color());
+                                let reg_i = i as u8;
+                                grid_row_reg(
+                                    ui,
+                                    regs,
+                                    reg_i,
+                                    reg_hi_color(reg_i, (None, None, None)),
+                                );
                             }
                         });
                     egui::Grid::new("base_regs_grid1")
@@ -47,7 +53,13 @@ impl BaseURegs {
                         .striped(true)
                         .show(ui, |ui| {
                             for i in 16..=31 {
-                                grid_row_reg(ui, regs, i as u8, reg_hi_color());
+                                let reg_i = i as u8;
+                                grid_row_reg(
+                                    ui,
+                                    regs,
+                                    reg_i,
+                                    reg_hi_color(reg_i, (None, None, None)),
+                                );
                             }
                             ui.label(format!("pc"));
                             ui.label("");
@@ -60,8 +72,26 @@ impl BaseURegs {
     }
 }
 
-fn reg_hi_color() -> Option<egui::Color32> {
-    // TODO: input (Option<u8>, Option<u8>, Option<u8>) - (read_reg, read_reg, write_reg)
+/// input (read_reg_idx, read_reg_idx, write_reg_idx)
+fn reg_hi_color(
+    reg_idx: u8,
+    in_out_regs: (Option<u8>, Option<u8>, Option<u8>),
+) -> Option<egui::Color32> {
+    if let Some(read_reg0) = in_out_regs.0 {
+        if read_reg0 == reg_idx {
+            return Some(egui::Color32::GREEN); // TODO: configured color
+        }
+    }
+    if let Some(read_reg1) = in_out_regs.1 {
+        if read_reg1 == reg_idx {
+            return Some(egui::Color32::GREEN); // TODO: configured color
+        }
+    }
+    if let Some(write_reg) = in_out_regs.2 {
+        if write_reg == reg_idx {
+            return Some(egui::Color32::RED); // TODO: configured color
+        }
+    }
     // egui::Color32::YELLOW;
     None
 }
