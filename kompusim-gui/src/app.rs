@@ -235,14 +235,15 @@ impl eframe::App for KompusimApp {
                 sim.step();
             }
         }
-        base_uregs.show_if_opened(ctx, sim.get_regs());
+        let cur_instr = sim.get_cur_instr();
+        base_uregs.show_if_opened(ctx, sim.get_regs(), cur_instr);
         let pc = sim.get_regs().pc;
         instr_list.show_if_opened(
             ctx,
             sim.get_instructions(instr_list.get_start_addr(), instr_list.get_num_instr()),
             pc,
         );
-        decode_instr.show_if_opened(ctx, sim.get_regs().pc, sim.get_cur_instr());
+        decode_instr.show_if_opened(ctx, sim.get_regs().pc, cur_instr);
         if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
             sim.load_image(
                 demo_image.load_address,

@@ -150,6 +150,22 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
     }
 }
 
+/// Returns used registers indexes (rs1, rs2, rd)
+pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) {
+    match decode_instr(instr) {
+        Opcode::Lui { rd, .. } => (None, None, Some(rd)),
+        Opcode::Auipc { rd, .. } => (None, None, Some(rd)),
+        Opcode::Branch { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
+        Opcode::Jal { rd, .. } => (None, None, Some(rd)),
+        Opcode::Jalr { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::Load { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::Store { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
+        Opcode::OpImm { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::Uknown => (None, None, None),
+    }
+}
+
 pub fn disasm(instr: u32, instr_addr: u64) -> String {
     match decode_instr(instr) {
         Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),

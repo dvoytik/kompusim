@@ -20,10 +20,13 @@ impl BaseURegs {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context, regs: &RV64IURegs) {
+    pub fn show_if_opened(&mut self, ctx: &egui::Context, regs: &RV64IURegs, instr: u32) {
         if !self.window_open {
             return;
         }
+        // TODO: chaching?
+        let used_regs = kompusim::rv64i_disasm::disasm_get_used_regs(instr);
+
         let mut window_opened = self.window_open;
         egui::Window::new("Base Unprivileged Integer Registers")
             .open(&mut window_opened)
@@ -39,12 +42,7 @@ impl BaseURegs {
                         .show(ui, |ui| {
                             for i in 0..=15 {
                                 let reg_i = i as u8;
-                                grid_row_reg(
-                                    ui,
-                                    regs,
-                                    reg_i,
-                                    reg_hi_color(reg_i, (None, None, None)),
-                                );
+                                grid_row_reg(ui, regs, reg_i, reg_hi_color(reg_i, used_regs));
                             }
                         });
                     egui::Grid::new("base_regs_grid1")
@@ -54,12 +52,7 @@ impl BaseURegs {
                         .show(ui, |ui| {
                             for i in 16..=31 {
                                 let reg_i = i as u8;
-                                grid_row_reg(
-                                    ui,
-                                    regs,
-                                    reg_i,
-                                    reg_hi_color(reg_i, (None, None, None)),
-                                );
+                                grid_row_reg(ui, regs, reg_i, reg_hi_color(reg_i, used_regs));
                             }
                             ui.label(format!("pc"));
                             ui.label("");
