@@ -70,6 +70,11 @@ fn reg_hi_color(
     reg_idx: u8,
     in_out_regs: (Option<u8>, Option<u8>, Option<u8>),
 ) -> Option<egui::Color32> {
+    if let Some(write_reg) = in_out_regs.2 {
+        if write_reg == reg_idx {
+            return Some(egui::Color32::RED); // TODO: configured color
+        }
+    }
     if let Some(read_reg0) = in_out_regs.0 {
         if read_reg0 == reg_idx {
             return Some(egui::Color32::GREEN); // TODO: configured color
@@ -78,11 +83,6 @@ fn reg_hi_color(
     if let Some(read_reg1) = in_out_regs.1 {
         if read_reg1 == reg_idx {
             return Some(egui::Color32::GREEN); // TODO: configured color
-        }
-    }
-    if let Some(write_reg) = in_out_regs.2 {
-        if write_reg == reg_idx {
-            return Some(egui::Color32::RED); // TODO: configured color
         }
     }
     // egui::Color32::YELLOW;
