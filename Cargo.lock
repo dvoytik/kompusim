@@ -1025,6 +1025,7 @@ dependencies = [
 name = "kompusim-gui"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "console_error_panic_hook",
  "eframe",
  "egui",

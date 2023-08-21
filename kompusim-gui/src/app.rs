@@ -3,6 +3,7 @@ use egui::Modifiers;
 
 use crate::{
     base_uregs::BaseURegs,
+    cmdline::CmdLCommand,
     console::Console,
     instr_decoder::InstrDecoder,
     instr_list::InstrList,
@@ -50,16 +51,23 @@ impl Default for KompusimApp {
 
 impl KompusimApp {
     /// Called once before the first frame.
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, cmdl_args: Option<CmdLCommand>) -> Self {
         // Start simulator thread
         //thread
         // Load previous app state (if any).
-        if let Some(storage) = cc.storage {
+        let app = if let Some(storage) = cc.storage {
             let app: KompusimApp = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
             set_all_fonts_size(&cc.egui_ctx, app.font_delta as f32 * 0.5);
-            return app;
+            app
+        } else {
+            Default::default()
+        };
+
+        if let Some(cmdl_cmd) = cmdl_args {
+            let CmdLCommand::Exec { load_addr, bin, .. } = cmdl_cmd;
+            println!("Got command line: execute: execute {bin:?} @ {load_addr}");
         }
-        Default::default()
+        app
     }
 }
 
