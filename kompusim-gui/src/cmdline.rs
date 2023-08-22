@@ -7,7 +7,7 @@ use clap::{arg, Parser, Subcommand};
     author,
     version,
     about,
-    arg_required_else_help(true),
+    arg_required_else_help(false),
     hide_possible_values(true)
 )]
 pub struct Args {
