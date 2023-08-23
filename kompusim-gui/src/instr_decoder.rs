@@ -35,13 +35,13 @@ impl InstrDecoder {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context, address: u64, instruction: u32) {
+    pub fn show_if_opened(&mut self, ui_ctx: &egui::Context, address: u64, instruction: u32) {
         let mut open = self.window_open;
         egui::Window::new("Instruction decoder")
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
-            .show(ctx, |ui| {
+            .show(ui_ctx, |ui| {
                 self.show_window_content(ui, address, instruction);
             });
         self.window_open = open;

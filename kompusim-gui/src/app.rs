@@ -84,7 +84,7 @@ impl eframe::App for KompusimApp {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ui_ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
             show_settings,
             font_delta,
@@ -98,22 +98,22 @@ impl eframe::App for KompusimApp {
         } = self;
 
         // The top panel is for the menu bar:
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        egui::TopBottomPanel::top("top_panel").show(ui_ctx, |ui| {
             // Shortcuts
             let organize_windows_shortcut =
                 egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::O);
             if ui.input_mut(|i| i.consume_shortcut(&organize_windows_shortcut)) {
-                ctx.memory_mut(|mem| mem.reset_areas());
+                ui_ctx.memory_mut(|mem| mem.reset_areas());
             }
 
             let inc_fonts_shortcut =
                 egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::PlusEquals);
             if ui.input_mut(|i| i.consume_shortcut(&inc_fonts_shortcut)) {
-                increase_all_fonts(ctx, font_delta);
+                increase_all_fonts(ui_ctx, font_delta);
             }
             let dec_fonts_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Minus);
             if ui.input_mut(|i| i.consume_shortcut(&dec_fonts_shortcut)) {
-                decrease_all_fonts(ctx, font_delta);
+                decrease_all_fonts(ui_ctx, font_delta);
             }
 
             egui::menu::bar(ui, |ui| {
@@ -194,7 +194,7 @@ impl eframe::App for KompusimApp {
                         )
                         .clicked()
                     {
-                        increase_all_fonts(ctx, font_delta);
+                        increase_all_fonts(ui_ctx, font_delta);
                         ui.close_menu();
                     }
                     if ui
@@ -204,7 +204,7 @@ impl eframe::App for KompusimApp {
                         )
                         .clicked()
                     {
-                        decrease_all_fonts(ctx, font_delta);
+                        decrease_all_fonts(ui_ctx, font_delta);
                         ui.close_menu();
                     }
                     if ui
@@ -229,11 +229,11 @@ impl eframe::App for KompusimApp {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ui_ctx, |ui| {
             egui::warn_if_debug_build(ui);
         });
 
-        match status_control.show_if_opened(ctx, sim.get_state(), sim.get_num_exec_instr()) {
+        match status_control.show_if_opened(ui_ctx, sim.get_state(), sim.get_num_exec_instr()) {
             None => {}
             Some(StatusControlCmd::Run) => sim.carry_on(),
             Some(StatusControlCmd::Stop) => {
@@ -244,49 +244,51 @@ impl eframe::App for KompusimApp {
             }
         }
         let cur_instr = sim.get_cur_instr();
-        base_uregs.show_if_opened(ctx, sim.get_regs(), cur_instr);
+        base_uregs.show_if_opened(ui_ctx, sim.get_regs(), cur_instr);
         let pc = sim.get_regs().pc;
         instr_list.show_if_opened(
-            ctx,
+            ui_ctx,
             sim.get_instructions(instr_list.get_start_addr(), instr_list.get_num_instr()),
             pc,
         );
-        decode_instr.show_if_opened(ctx, sim.get_regs().pc, cur_instr);
-        if let Some(demo_image) = load_demo.show_pick_demo(ctx) {
+        decode_instr.show_if_opened(ui_ctx, sim.get_regs().pc, cur_instr);
+
+        if let Some(demo_image) = load_demo.show_pick_demo(ui_ctx) {
             sim.load_image(
                 demo_image.load_address,
                 demo_image.image,
                 demo_image.breakpoint,
             )
         }
-        console.show(ctx, sim.console_recv());
+
+        console.show(ui_ctx, sim.console_recv());
 
         egui::Window::new("Settings")
             .open(show_settings)
-            .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| ctx.settings_ui(ui));
+            .show(ui_ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| ui_ctx.settings_ui(ui));
             });
     }
 }
 
-fn increase_all_fonts(ctx: &egui::Context, font_delta: &mut i32) {
+fn increase_all_fonts(ui_ctx: &egui::Context, font_delta: &mut i32) {
     if *font_delta <= 50 {
         *font_delta += 1;
-        set_all_fonts_size(ctx, 0.5);
+        set_all_fonts_size(ui_ctx, 0.5);
     }
 }
 
-fn decrease_all_fonts(ctx: &egui::Context, font_delta: &mut i32) {
+fn decrease_all_fonts(ui_ctx: &egui::Context, font_delta: &mut i32) {
     if *font_delta >= -5 {
         *font_delta -= 1;
-        set_all_fonts_size(ctx, -0.5);
+        set_all_fonts_size(ui_ctx, -0.5);
     }
 }
 
-fn set_all_fonts_size(ctx: &egui::Context, font_delta: f32) {
-    let mut style: egui::Style = (*ctx.style()).clone();
+fn set_all_fonts_size(ui_ctx: &egui::Context, font_delta: f32) {
+    let mut style: egui::Style = (*ui_ctx.style()).clone();
     for (_, v) in style.text_styles.iter_mut() {
         v.size += font_delta;
     }
-    ctx.set_style(style);
+    ui_ctx.set_style(style);
 }

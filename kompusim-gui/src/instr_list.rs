@@ -38,13 +38,18 @@ impl InstrList {
         self.open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context, instructions: (&Vec<u32>, u64), pc: u64) {
+    pub fn show_if_opened(
+        &mut self,
+        ui_ctx: &egui::Context,
+        instructions: (&Vec<u32>, u64),
+        pc: u64,
+    ) {
         let mut open = self.open;
         egui::Window::new("Instructions")
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
-            .show(ctx, |ui| {
+            .show(ui_ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| self.show_table(ui, instructions, pc));
             });
         self.open = open;

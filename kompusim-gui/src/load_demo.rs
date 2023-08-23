@@ -45,7 +45,7 @@ impl LoadDemo {
         self.window_open = true;
     }
 
-    pub fn show_pick_demo(&mut self, ctx: &egui::Context) -> Option<DemoImage> {
+    pub fn show_pick_demo(&mut self, ui_ctx: &egui::Context) -> Option<DemoImage> {
         let mut loaded_demo = false;
         if self.window_open {
             let mut window_opened = self.window_open;
@@ -53,7 +53,7 @@ impl LoadDemo {
                 .open(&mut window_opened)
                 .resizable(true)
                 .default_width(500.0)
-                .show(ctx, |ui| {
+                .show(ui_ctx, |ui| {
                     egui::Grid::new("load_demo_grid")
                         .num_columns(1)
                         .min_col_width(600.0)

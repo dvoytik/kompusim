@@ -20,7 +20,7 @@ impl BaseURegs {
         self.window_open = true;
     }
 
-    pub fn show_if_opened(&mut self, ctx: &egui::Context, regs: &RV64IURegs, instr: u32) {
+    pub fn show_if_opened(&mut self, ui_ctx: &egui::Context, regs: &RV64IURegs, instr: u32) {
         if !self.window_open {
             return;
         }
@@ -32,7 +32,7 @@ impl BaseURegs {
             .open(&mut window_opened)
             .resizable(false)
             .default_width(500.0)
-            .show(ctx, |ui| {
+            .show(ui_ctx, |ui| {
                 ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
                 ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                     egui::Grid::new("base_regs_grid0")

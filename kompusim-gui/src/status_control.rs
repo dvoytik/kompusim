@@ -25,7 +25,7 @@ impl StatusControl {
 
     pub fn show_if_opened(
         &mut self,
-        ctx: &egui::Context,
+        ui_ctx: &egui::Context,
         sim_state: SimState,
         num_exec_instr: u64,
     ) -> Option<StatusControlCmd> {
@@ -38,7 +38,7 @@ impl StatusControl {
             .open(&mut window_opened)
             .resizable(true)
             .default_width(500.0)
-            .show(ctx, |ui| {
+            .show(ui_ctx, |ui| {
                 ui.horizontal(|ui| {
                     let step_button_enabled = if sim_state == SimState::Stopped
                         || sim_state == SimState::StoppedBreakpoint
