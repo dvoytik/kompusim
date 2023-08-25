@@ -13,7 +13,7 @@ impl Console {
         self.open = true;
     }
 
-    pub fn show(&mut self, ctx: &egui::Context, new_bytes: Option<String>) {
+    pub fn show(&mut self, ui_ctx: &egui::Context, new_bytes: Option<String>) {
         if let Some(new_bytes) = new_bytes {
             self.buffer.push_str(&new_bytes)
         }
@@ -22,7 +22,7 @@ impl Console {
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
-            .show(ctx, |ui| {
+            .show(ui_ctx, |ui| {
                 ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.add(
