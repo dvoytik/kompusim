@@ -74,15 +74,15 @@ impl Ram {
     pub fn load_bin_file(&mut self, addr: u64, fname: &PathBuf) -> Result<(), Box<dyn Error>> {
         // TODO: check if exists
         assert!(addr >= self.start && addr <= self.end);
-        let offset = addr - self.start;
-        let f_size = fs::metadata(fname)?.len();
-        if offset + f_size > self.m.len() as u64 {
+        let offset = (addr - self.start) as usize;
+        let f_size = fs::metadata(fname)?.len() as usize;
+        if offset + f_size > self.m.len() {
             return Err(Box::new(RamError {
                 details: "size is wrong".to_string(),
             }));
         }
         let mut f = File::open(fname)?;
-        f.read(&mut self.m[offset as usize..])?;
+        f.read_exact(&mut self.m[offset..offset + f_size])?;
         Ok(())
     }
 
