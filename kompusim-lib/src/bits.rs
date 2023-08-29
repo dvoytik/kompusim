@@ -10,14 +10,11 @@ pub trait BitOps {
 }
 
 impl BitOps for u16 {
+    // TODO: move to trat?
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1 << idx) == 0 {
-            false
-        } else {
-            true
-        }
+        self & (1 << idx) != 0
     }
 
     fn bits(self, end: u32, start: u32) -> Self {
@@ -42,11 +39,7 @@ impl BitOps for i16 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1 << idx) == 0 {
-            false
-        } else {
-            true
-        }
+        self & (1 << idx) != 0
     }
 
     fn bits(self, end: u32, start: u32) -> Self {
@@ -71,11 +64,7 @@ impl BitOps for u32 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1 << idx) == 0 {
-            false
-        } else {
-            true
-        }
+        self & (1 << idx) != 0
     }
 
     fn bits(self, end: u32, start: u32) -> Self {
@@ -100,11 +89,7 @@ impl BitOps for u64 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        if self & (1 << idx) == 0 {
-            false
-        } else {
-            true
-        }
+        self & (1 << idx) != 0
     }
 
     fn bits(self, end: u32, start: u32) -> Self {
