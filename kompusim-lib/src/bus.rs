@@ -22,35 +22,35 @@ impl Error for BusError {
 
 // TODO: use generics
 enum BusAgent {
-    RAM(Ram),
+    Ram(Ram),
     Device(Device),
 }
 
 impl BusAgent {
     pub fn read8(&self, addr: u64) -> u8 {
         match self {
-            BusAgent::RAM(ram) => ram.read8(addr),
+            BusAgent::Ram(ram) => ram.read8(addr),
             BusAgent::Device(dev) => dev.read8(addr),
         }
     }
 
     pub fn read32(&self, addr: u64) -> u32 {
         match self {
-            BusAgent::RAM(ram) => ram.read32(addr),
+            BusAgent::Ram(ram) => ram.read32(addr),
             BusAgent::Device(dev) => dev.read32(addr),
         }
     }
 
     pub fn write8(&mut self, addr: u64, val: u8) {
         match self {
-            BusAgent::RAM(ram) => ram.write8(addr, val),
+            BusAgent::Ram(ram) => ram.write8(addr, val),
             BusAgent::Device(dev) => dev.write8(addr, val),
         }
     }
 
     pub fn write32(&mut self, addr: u64, val: u32) {
         match self {
-            BusAgent::RAM(ram) => ram.write32(addr, val),
+            BusAgent::Ram(ram) => ram.write32(addr, val),
             BusAgent::Device(dev) => dev.write32(addr, val),
         }
     }
@@ -58,7 +58,7 @@ impl BusAgent {
     pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
         match self {
             BusAgent::Device(_) => None,
-            BusAgent::RAM(ram) => ram.get_ram(addr, size),
+            BusAgent::Ram(ram) => ram.get_ram(addr, size),
         }
     }
 }
@@ -92,7 +92,7 @@ impl Bus {
         self.regions.push(AddrRegion {
             start: ram.start,
             end: ram.end,
-            agent: BusAgent::RAM(ram),
+            agent: BusAgent::Ram(ram),
         });
     }
 
@@ -179,7 +179,7 @@ impl Bus {
 
     pub fn load_image(&mut self, addr: u64, image: &'static [u8]) -> Result<(), Box<dyn Error>> {
         if let Some(ar) = self.find_addr_region_mut(addr, image.len() as u64) {
-            if let BusAgent::RAM(ram) = &mut ar.agent {
+            if let BusAgent::Ram(ram) = &mut ar.agent {
                 return ram.load_image(addr, image);
             }
         }
