@@ -155,12 +155,11 @@ struct InstrCache {
 impl InstrCache {
     fn update_cache(&mut self, start_addr: u64, new_instructions: &Vec<u32>) {
         // compare against cached instructions
-        if new_instructions.len() == self.instructions.len() {
-            if zip(&self.instructions, new_instructions)
+        if new_instructions.len() == self.instructions.len()
+            && zip(&self.instructions, new_instructions)
                 .all(|(old_ins, new_ins)| *old_ins == *new_ins)
-            {
-                return;
-            }
+        {
+            return;
         }
         // keep it for debuggin unnecessary cache updates
         println!("Updating instruction cache");
