@@ -203,9 +203,8 @@ impl Simulator {
     }
 
     fn send_cmd(&self, cmd: SimCommand) {
-        match self.cmd_channel.send(cmd) {
-            Err(e) => println!("FAILED to send command. Error: {}", e),
-            Ok(_) => {}
+        if let Err(e) = self.cmd_channel.send(cmd) {
+            println!("FAILED to send command. Error: {}", e)
         }
     }
 
@@ -331,7 +330,7 @@ impl Simulator {
                 }
             }
         }
-        if new_bytes.len() > 0 {
+        if !new_bytes.is_empty() {
             Some(new_bytes)
         } else {
             None
