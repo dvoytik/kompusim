@@ -4,50 +4,42 @@ use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
 
 pub fn disasm_operation_name(instr: u32) -> String {
     match decode_instr(instr) {
-        Opcode::Lui { .. } => {
-            format!("Load Upper Immediate")
-        }
+        Opcode::Lui { .. } => "Load Upper Immediate".to_string(),
 
-        Opcode::Auipc { .. } => format!("Add Upper Immediate to PC"),
+        Opcode::Auipc { .. } => "Add Upper Immediate to PC".to_string(),
 
         // TODO:
         Opcode::Branch { funct3, .. } => match funct3 {
-            F3_BRANCH_BNE => format!("Branch Not Equal"),
-            F3_BRANCH_BEQ => format!("Branch EQual"),
-            F3_BRANCH_BLT => format!("Branch Less Than (signed comparison)"),
+            F3_BRANCH_BNE => "Branch Not Equal".to_string(),
+            F3_BRANCH_BEQ => "Branch EQual".to_string(),
+            F3_BRANCH_BLT => "Branch Less Than (signed comparison)".to_string(),
             _ => "Unknown BRANCH opcode".to_string(),
         },
 
-        Opcode::Jal { .. } => {
-            format!("Jump And Link")
-        }
+        Opcode::Jal { .. } => "Jump And Link".to_string(),
 
-        Opcode::Jalr { .. } => {
-            format!("Jump And Link Register")
-        }
+        Opcode::Jalr { .. } => "Jump And Link Register".to_string(),
 
         Opcode::Load { funct3, .. } => match funct3 {
-            F3_OP_LOAD_LB => format!("Load Byte (sign extend)"),
-            F3_OP_LOAD_LBU => format!("Load Byte Unsigned"),
-            F3_OP_LOAD_LW => format!("Load Word (sign extend)"),
+            F3_OP_LOAD_LB => "Load Byte (sign extend)".to_string(),
+            F3_OP_LOAD_LBU => "Load Byte Unsigned".to_string(),
+            F3_OP_LOAD_LW => "Load Word (sign extend)".to_string(),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
         Opcode::Store { funct3, .. } => match funct3 {
-            F3_OP_STORE_SB => format!("Store Byte"),
-            F3_OP_STORE_SW => format!("Store Word"),
+            F3_OP_STORE_SB => "Store Byte".to_string(),
+            F3_OP_STORE_SW => "Store Word".to_string(),
             _ => "Unknown STORE opcode".to_string(),
         },
 
         Opcode::OpImm { funct3, .. } => match funct3 {
-            F3_OP_IMM_ADDI => format!("ADD Immediate"),
+            F3_OP_IMM_ADDI => "ADD Immediate".to_string(),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
         Opcode::System { funct3, .. } => match funct3 {
-            F3_SYSTEM_CSRRS => {
-                format!("Control Status Register - Read, Set bitmask")
-            }
+            F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
