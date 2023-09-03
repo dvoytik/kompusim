@@ -98,7 +98,10 @@ impl Bus {
 
     pub fn attach_device(&mut self, dev: Device) {
         // TODO: insert in sorted order - search optimization
-        if let Some(_) = self.find_addr_region(dev.start, dev.end - dev.start) {
+        if self
+            .find_addr_region(dev.start, dev.end - dev.start)
+            .is_some()
+        {
             panic!("address region is occupied")
         }
         self.regions.push(AddrRegion {
@@ -110,25 +113,19 @@ impl Bus {
 
     fn find_addr_region(&self, start: u64, size: u64) -> Option<&AddrRegion> {
         let end = start + size;
-        for r in &self.regions {
-            // TODO: fast binary search
-            // TODO: what if it crosses two regions?
-            if start >= r.start && end <= r.end {
-                return Some(r);
-            }
-        }
-        None
+        // TODO: fast binary search
+        // TODO: what if it crosses two regions?
+        self.regions
+            .iter()
+            .find(|&r| start >= r.start && end <= r.end)
     }
 
     fn find_addr_region_mut(&mut self, start: u64, end: u64) -> Option<&mut AddrRegion> {
-        for r in &mut self.regions {
-            // TODO: fast binary search
-            // TODO: what if it crosses two regions?
-            if start >= r.start && end <= r.end {
-                return Some(r);
-            }
-        }
-        None
+        // TODO: fast binary search
+        // TODO: what if it crosses two regions?
+        self.regions
+            .iter_mut()
+            .find(|r| start >= r.start && end <= r.end)
     }
 
     /// Read byte
@@ -183,9 +180,9 @@ impl Bus {
                 return ram.load_image(addr, image);
             }
         }
-        return Err(Box::new(BusError {
+        Err(Box::new(BusError {
             details: "No suitable RAM address region".to_string(),
-        }));
+        }))
     }
 }
 
