@@ -36,7 +36,7 @@ impl Ram {
     pub fn new(start: u64, size: u64) -> Ram {
         Ram {
             start,
-            end: start + size as u64,
+            end: start + size,
             m: vec![0; size as usize],
         } // TODO: is it lazy allocation?
     }
@@ -95,8 +95,8 @@ impl Ram {
                 details: "size is wrong".to_string(),
             }));
         }
-        for i in 0..bin.len() {
-            self.m[offset as usize + i] = bin[i];
+        for (i, byte) in bin.iter().enumerate() {
+            self.m[offset as usize + i] = *byte;
         }
         Ok(())
     }
