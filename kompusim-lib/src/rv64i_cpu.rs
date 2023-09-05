@@ -101,7 +101,7 @@ impl RV64ICpu {
     // writes i8 LSB and sign extends
     fn regs_wi8(&mut self, reg_i: u8, val: u8) {
         let mut val: u64 = val as u64;
-        if val.bit(7) == true {
+        if val.bit(7) {
             // sign extend
             val |= 0xfff_ffff_ffff_ff00;
         }
@@ -141,7 +141,7 @@ impl RV64ICpu {
     }
 
     fn pc_add_i21(&mut self, off21: I21) {
-        self.regs.pc = self.regs.pc.add_i21(I21::from(off21));
+        self.regs.pc = self.regs.pc.add_i21(off21);
     }
 
     fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) {
@@ -316,7 +316,7 @@ impl RV64ICpu {
             self.execute_instr(self.fetch_instr());
             // TODO: check all breakpoints
             // TODO: optimize to use hashmap
-            if self.breakpoints.len() > 0 && self.breakpoints[0] == self.regs.pc {
+            if !self.breakpoints.is_empty() && self.breakpoints[0] == self.regs.pc {
                 return ExecEvent::Breakpoint(self.regs.pc);
             }
         }
