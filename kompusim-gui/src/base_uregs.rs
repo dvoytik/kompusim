@@ -54,7 +54,7 @@ impl BaseURegs {
                                 let reg_i = i as u8;
                                 grid_row_reg(ui, regs, reg_i, reg_hi_color(reg_i, used_regs));
                             }
-                            ui.label(format!("pc"));
+                            ui.label("pc".to_string());
                             ui.label("");
                             ui.label(reg_hex(regs.pc));
                             ui.end_row();

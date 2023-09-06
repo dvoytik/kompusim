@@ -7,22 +7,22 @@ pub struct LoadDemo {
 
 impl Default for LoadDemo {
     fn default() -> LoadDemo {
-        let mut demos = Vec::new();
-        demos.push(DemoImage {
-            name: "Hello world",
-            descriptoin: "Bare metall program printing Hello World to UART",
-            load_address: 0x0000000080000000,
-            breakpoint: 0x0000000080000014,
-            image: include_bytes!("../assets/test_bins/uart_hello_world.bin"),
-        });
-        // TODO: changes this:
-        demos.push(DemoImage {
-            name: "Hello world",
-            descriptoin: "Bare metall program printing Hello World to UART",
-            load_address: 0x0000000080000000,
-            breakpoint: 0x0000000080000014,
-            image: demos[0].image,
-        });
+        let demos = vec![
+            DemoImage {
+                name: "Hello world",
+                descriptoin: "Bare metall program printing Hello World to UART",
+                load_address: 0x0000000080000000,
+                breakpoint: 0x0000000080000014,
+                image: include_bytes!("../assets/test_bins/uart_hello_world.bin"),
+            }, // TODO: changes this:
+            DemoImage {
+                name: "Empty binary",
+                descriptoin: "One zero byte",
+                load_address: 0x0000000080000000,
+                breakpoint: 0x0000000080000014,
+                image: b"\x00",
+            },
+        ];
         LoadDemo {
             window_open: true,
             demos,
