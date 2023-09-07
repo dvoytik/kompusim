@@ -22,7 +22,7 @@ pub struct Simulator {
     /// lock-less mirrored state of the simulator
     sim_state: SimState,
     event_queue: Receiver<SimEvent>,
-    regs: RV64IURegs,
+    regs: Box<RV64IURegs>,
     /// lock-less mirrored number of executed instructions
     num_exec_instr: u64,
     /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
@@ -59,7 +59,7 @@ enum SimCommand {
 #[derive(Clone)]
 enum SimEvent {
     /// SimState, registers, number of executed instructions
-    StateChanged(SimState, RV64IURegs, u64),
+    StateChanged(SimState, Box<RV64IURegs>, u64),
     Instructions(Vec<u32>),
 }
 
@@ -97,7 +97,7 @@ impl Simulator {
             let mut sim_state = SimState::InitializedReady;
             send_event(SimEvent::StateChanged(
                 sim_state,
-                cpu0.get_regs().clone(),
+                Box::new(cpu0.get_regs().clone()),
                 0,
             ));
             loop {
@@ -127,7 +127,7 @@ impl Simulator {
                                 sim_state = SimState::StoppedBreakpoint;
                                 send_event(SimEvent::StateChanged(
                                     sim_state,
-                                    cpu0.get_regs().clone(),
+                                    Box::new(cpu0.get_regs().clone()),
                                     cpu0.get_num_exec_instr(),
                                 ));
                             }
@@ -139,7 +139,7 @@ impl Simulator {
                             sim_state = SimState::StoppedBreakpoint;
                             send_event(SimEvent::StateChanged(
                                 sim_state,
-                                cpu0.get_regs().clone(),
+                                Box::new(cpu0.get_regs().clone()),
                                 cpu0.get_num_exec_instr(),
                             ));
                         }
@@ -149,7 +149,7 @@ impl Simulator {
                         sim_state = SimState::Stopped;
                         send_event(SimEvent::StateChanged(
                             sim_state,
-                            cpu0.get_regs().clone(),
+                            Box::new(cpu0.get_regs().clone()),
                             cpu0.get_num_exec_instr(),
                         ));
                     }
@@ -163,7 +163,7 @@ impl Simulator {
                         sim_state = SimState::Stopped;
                         send_event(SimEvent::StateChanged(
                             sim_state,
-                            cpu0.get_regs().clone(),
+                            Box::new(cpu0.get_regs().clone()),
                             cpu0.get_num_exec_instr(),
                         ));
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
@@ -184,7 +184,7 @@ impl Simulator {
             cmd_channel: cmd_tx,
             uart_tx_recv,
             sim_state: SimState::Initializing,
-            regs: RV64IURegs::default(),
+            regs: Box::<kompusim::rv64i_cpu::RV64IURegs>::default(),
             num_exec_instr: 0,
             instr_cache: None,
             instr_cache_start: 0,
