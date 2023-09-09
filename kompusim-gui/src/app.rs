@@ -55,7 +55,7 @@ impl KompusimApp {
         // Start simulator thread
         //thread
         // Load previous app state (if any).
-        let app = if let Some(storage) = cc.storage {
+        let mut app = if let Some(storage) = cc.storage {
             let app: KompusimApp = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
             set_all_fonts_size(&cc.egui_ctx, app.font_delta as f32 * 0.5);
             app
@@ -66,6 +66,9 @@ impl KompusimApp {
         if let Some(cmdl_cmd) = cmdl_args {
             let CmdLCommand::Exec { load_addr, bin, .. } = cmdl_cmd;
             println!("Got command line: execute: execute {bin:?} @ {load_addr}");
+            let load_addr = u64::from_str_radix(load_addr.trim_start_matches("0x"), 16)
+                .expect("Load address is wrong format");
+            app.sim.load_bin_file(load_addr, bin);
         }
         app
     }

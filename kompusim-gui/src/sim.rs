@@ -1,4 +1,5 @@
 use std::{
+    path::PathBuf,
     sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError},
     thread,
     time::Duration,
@@ -11,6 +12,9 @@ use kompusim::{
     rv64i_cpu::{ExecEvent, RV64ICpu, RV64IURegs},
     uart::Uart,
 };
+
+// TODO: setting
+const EXE_INSTRUCTIONS_THEN_POLL: u64 = 102400;
 
 pub const DEFAULT_START_ADDRESS: u64 = 0x8000_0000;
 
@@ -43,6 +47,10 @@ pub enum SimState {
     Running,
 }
 
+enum LoadImageType {
+    File(PathBuf),
+    StaticMem(&'static [u8]),
+}
 enum SimCommand {
     //Reset,
     //Init,
@@ -51,7 +59,7 @@ enum SimCommand {
     Continue,
     Step,
     Stop,
-    LoadImage((u64, &'static [u8], u64)),
+    LoadImage((u64, LoadImageType, u64)),
     /// Disasm(starting_address, number_of_instruction)
     Disasm(u64, usize),
 }
@@ -109,7 +117,10 @@ impl Simulator {
                     match cmd_rx.try_recv() {
                         Err(TryRecvError::Empty) => {
                             // TODO: state machine
-                            println!("no commands");
+                            println!(
+                                "executed {EXE_INSTRUCTIONS_THEN_POLL} instructions. \
+                                Polling new commands. Tip: set a breakpoint to stop simulator."
+                            );
                             SimCommand::NoCmd
                         }
                         Err(TryRecvError::Disconnected) => {
@@ -123,7 +134,9 @@ impl Simulator {
                     SimCommand::NoCmd => {
                         if sim_state == SimState::Running {
                             // TODO: move to settings
-                            if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
+                            if let ExecEvent::Breakpoint(_) =
+                                cpu0.exec_continue(EXE_INSTRUCTIONS_THEN_POLL)
+                            {
                                 sim_state = SimState::StoppedBreakpoint;
                                 send_event(SimEvent::StateChanged(
                                     sim_state,
@@ -135,7 +148,9 @@ impl Simulator {
                     }
                     SimCommand::Continue => {
                         sim_state = SimState::Running;
-                        if let ExecEvent::Breakpoint(_) = cpu0.exec_continue(102400) {
+                        if let ExecEvent::Breakpoint(_) =
+                            cpu0.exec_continue(EXE_INSTRUCTIONS_THEN_POLL)
+                        {
                             sim_state = SimState::StoppedBreakpoint;
                             send_event(SimEvent::StateChanged(
                                 sim_state,
@@ -158,7 +173,14 @@ impl Simulator {
                     // }
                     // SimCommand::Init => {}
                     SimCommand::LoadImage((load_addr, image, breakpoint)) => {
-                        cpu0.bus.load_image(load_addr, image).unwrap();
+                        match image {
+                            LoadImageType::File(file_path) => {
+                                cpu0.bus.load_file(load_addr, &file_path).unwrap();
+                            }
+                            LoadImageType::StaticMem(mem_buf) => {
+                                cpu0.bus.load_image(load_addr, mem_buf).unwrap();
+                            }
+                        }
                         cpu0.add_breakpoint(breakpoint);
                         sim_state = SimState::Stopped;
                         send_event(SimEvent::StateChanged(
@@ -209,7 +231,21 @@ impl Simulator {
     }
 
     pub fn load_image(&mut self, addr: u64, image: &'static [u8], breakpoint: u64) {
-        self.send_cmd(SimCommand::LoadImage((addr, image, breakpoint)));
+        self.send_cmd(SimCommand::LoadImage((
+            addr,
+            LoadImageType::StaticMem(image),
+            breakpoint,
+        )));
+        // clear disassembler cache - force loading instructions
+        self.instr_cache.take();
+    }
+
+    pub fn load_bin_file(&mut self, addr: u64, image: PathBuf) {
+        self.send_cmd(SimCommand::LoadImage((
+            addr,
+            LoadImageType::File(image),
+            0x0,
+        )));
         // clear disassembler cache - force loading instructions
         self.instr_cache.take();
     }

@@ -184,6 +184,22 @@ impl Bus {
             details: "No suitable RAM address region".to_string(),
         }))
     }
+
+    /// Loads a binary file image into ram
+    pub fn load_file(
+        &mut self,
+        addr: u64,
+        file_path: &std::path::PathBuf,
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(ar) = self.find_addr_region_mut(addr, 8) {
+            if let BusAgent::Ram(ram) = &mut ar.agent {
+                return ram.load_bin_file(addr, file_path);
+            }
+        }
+        Err(Box::new(BusError {
+            details: "No suitable RAM address region".to_string(),
+        }))
+    }
 }
 
 #[test]
