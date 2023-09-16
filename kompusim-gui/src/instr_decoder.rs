@@ -1,5 +1,5 @@
 use kompusim::rv64i_disasm::{
-    disasm, disasm_operation_name, disasm_pseudo_code, u32_bin4, u32_hex4,
+    disasm, disasm_operation_name, disasm_pseudo_code, u32_bin4, u32_hex4, u64_hex4,
 };
 
 pub struct InstrDecoder {
@@ -7,6 +7,7 @@ pub struct InstrDecoder {
     window_open: bool,
 
     cached_address: u64,
+    cached_address_hex: String,
     cached_instruction: u32,
     cached_instr_hex: String,
     cached_instr_disasm: String,
@@ -20,6 +21,7 @@ impl Default for InstrDecoder {
         InstrDecoder {
             window_open: true,
             cached_address: 0,
+            cached_address_hex: String::new(),
             cached_instruction: 0,
             cached_instr_hex: String::new(),
             cached_instr_disasm: String::new(),
@@ -50,6 +52,7 @@ impl InstrDecoder {
     fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {
         if address != self.cached_address || instruction != self.cached_instruction {
             self.cached_address = address;
+            self.cached_address_hex = u64_hex4(address);
             self.cached_instruction = instruction;
             self.cached_instr_hex = u32_hex4(instruction);
             self.cached_instr_disasm = disasm(instruction, address);
@@ -64,6 +67,9 @@ impl InstrDecoder {
             .show(ui, |ui| {
                 ui.label("Instruction");
                 ui.add(egui::TextEdit::singleline(&mut self.cached_instr_hex));
+                ui.end_row();
+                ui.label("Its address");
+                ui.add(egui::TextEdit::singleline(&mut self.cached_address_hex));
                 ui.end_row();
                 ui.label("Binary");
                 ui.vertical(|ui| {
