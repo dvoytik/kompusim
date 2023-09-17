@@ -6,6 +6,7 @@ pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
 
+    sync_with_sumulator: bool,
     cached_address: u64,
     cached_address_hex: String,
     cached_instruction: u32,
@@ -20,6 +21,7 @@ impl Default for InstrDecoder {
     fn default() -> InstrDecoder {
         InstrDecoder {
             window_open: true,
+            sync_with_sumulator: true,
             cached_address: 0,
             cached_address_hex: String::new(),
             cached_instruction: 0,
@@ -49,17 +51,27 @@ impl InstrDecoder {
         self.window_open = open;
     }
 
+    fn update_disasm_cache(&mut self, address: u64, instruction: u32) {
+        self.cached_address = address;
+        self.cached_address_hex = u64_hex4(address);
+        self.cached_instruction = instruction;
+        self.cached_instr_hex = u32_hex4(instruction);
+        self.cached_instr_disasm = disasm(instruction, address);
+        self.cached_instr_binary = u32_bin4(instruction);
+        self.cached_operation_name = disasm_operation_name(instruction);
+        self.cached_pseudo_code = disasm_pseudo_code(instruction, address);
+    }
+
     fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {
-        if address != self.cached_address || instruction != self.cached_instruction {
-            self.cached_address = address;
-            self.cached_address_hex = u64_hex4(address);
-            self.cached_instruction = instruction;
-            self.cached_instr_hex = u32_hex4(instruction);
-            self.cached_instr_disasm = disasm(instruction, address);
-            self.cached_instr_binary = u32_bin4(instruction);
-            self.cached_operation_name = disasm_operation_name(instruction);
-            self.cached_pseudo_code = disasm_pseudo_code(instruction, address);
+        if self.sync_with_sumulator {
+            if address != self.cached_address || instruction != self.cached_instruction {
+                self.update_disasm_cache(address, instruction);
+            }
         }
+        ui.add(egui::Checkbox::new(
+            &mut self.sync_with_sumulator,
+            "Sync with simulator",
+        ));
         egui::Grid::new("decode_instr_grid")
             .num_columns(2)
             .spacing([40.0, 4.0])
