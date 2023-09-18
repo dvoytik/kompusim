@@ -1,6 +1,7 @@
 mod tui;
 
 use clap::{arg, Parser, Subcommand};
+use kompusim::rv64i_disasm::hex_to_u64;
 use std::path::PathBuf;
 
 use kompusim::bus;
@@ -54,11 +55,6 @@ enum Commands {
     },
 }
 
-/// Convert hex str (e.g, "0x9393") to u64
-fn hex_to_u64(hex_str: &str, err_msg: &str) -> u64 {
-    u64::from_str_radix(hex_str.trim_start_matches("0x"), 16).expect(err_msg)
-}
-
 fn uart_out_to_console(octet: u8) {
     let char_ascii = octet as char;
     print!("{char_ascii}");
@@ -82,14 +78,14 @@ fn main() {
             let mut break_point: Option<u64> = None;
             if let Some(breakpoint) = breakpoint {
                 if breakpoint.find("auto").is_none() {
-                    break_point = Some(hex_to_u64(breakpoint, "wrong hex in --breakpoint"));
+                    break_point = Some(hex_to_u64(breakpoint).expect("wrong hex in --breakpoint"));
                 }
                 // TODO: handel auto breakpoint case
             }
 
             let ram_sz = ram.unwrap_or(4) * 1024;
 
-            let addr = hex_to_u64(load_addr, "wrong hex in --load_addr");
+            let addr = hex_to_u64(load_addr).expect("wrong hex in --load_addr");
             let mut ram = ram::Ram::new(addr, ram_sz);
             ram.load_bin_file(addr, bin).unwrap();
             println!("Loaded {bin:?} at 0x{addr:x}");

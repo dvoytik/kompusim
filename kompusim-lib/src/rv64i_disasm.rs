@@ -1,5 +1,7 @@
 // Disassembler
 
+use std::num::ParseIntError;
+
 use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
 
 pub fn disasm_operation_name(instr: u32) -> String {
@@ -316,6 +318,30 @@ pub fn reg_hex(v: u64) -> String {
     u64_hex4(v)
 }
 
+/// Convert a hex string (e.g, "0x1234_9393") to u32
+pub fn hex_to_u32(hex_str: &str) -> Result<u32, ParseIntError> {
+    let no_prefix = hex_str.trim_start_matches("0x");
+    if no_prefix.find('_').is_some() {
+        // allocate new String and remove '_'
+        let mut str = no_prefix.to_owned();
+        str.retain(|c| c != '_');
+        return u32::from_str_radix(&str, 16);
+    }
+    u32::from_str_radix(no_prefix, 16)
+}
+
+/// Convert a hex string (e.g, "0x1234_9393") to u64
+pub fn hex_to_u64(hex_str: &str) -> Result<u64, ParseIntError> {
+    let no_prefix = hex_str.trim_start_matches("0x");
+    if no_prefix.find('_').is_some() {
+        // allocate new String and remove '_'
+        let mut str = no_prefix.to_owned();
+        str.retain(|c| c != '_');
+        return u64::from_str_radix(&str, 16);
+    }
+    u64::from_str_radix(no_prefix, 16)
+}
+
 #[test]
 fn test_u32_bin4() {
     assert_eq!(
@@ -325,5 +351,12 @@ fn test_u32_bin4() {
     assert_eq!(
         u32_bin4(0x_ffff_a5a5),
         "1111_1111_1111_1111_1010_0101_1010_0101".to_string()
-    )
+    );
+    assert_eq!(hex_to_u64("0x1234abcd").unwrap(), 0x1234_abcd);
+    assert_eq!(hex_to_u64("0x1234_abcd").unwrap(), 0x1234_abcd);
+    assert_eq!(
+        hex_to_u64("0x0101_1234_abcd0000").unwrap(),
+        0x0101_1234_abcd_0000
+    );
+    assert_eq!(hex_to_u64("__1__").unwrap(), 0x0000_0000_0000_0001);
 }
