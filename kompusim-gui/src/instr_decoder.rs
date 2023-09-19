@@ -1,7 +1,9 @@
 use kompusim::rv64i_disasm::{
-    disasm, disasm_operation_name, disasm_pseudo_code, u32_bin4, u32_hex4, u64_hex4,
+    disasm, disasm_operation_name, disasm_pseudo_code, hex_to_u32, hex_to_u64, u32_bin4, u32_hex4,
+    u64_hex4,
 };
 
+// #[derive(Debug)]
 pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
@@ -15,6 +17,9 @@ pub struct InstrDecoder {
     cached_instr_binary: String,
     cached_operation_name: String,
     cached_pseudo_code: String,
+
+    edited_address_hex: String,
+    edited_instr_hex: String,
 }
 
 impl Default for InstrDecoder {
@@ -30,6 +35,8 @@ impl Default for InstrDecoder {
             cached_instr_binary: String::new(),
             cached_operation_name: String::new(),
             cached_pseudo_code: String::new(),
+            edited_address_hex: String::new(),
+            edited_instr_hex: String::new(),
         }
     }
 }
@@ -66,22 +73,34 @@ impl InstrDecoder {
         if self.sync_with_sumulator {
             if address != self.cached_address || instruction != self.cached_instruction {
                 self.update_disasm_cache(address, instruction);
+                self.edited_instr_hex = self.cached_instr_hex.clone();
+                self.edited_address_hex = self.cached_address_hex.clone();
             }
         }
         ui.add(egui::Checkbox::new(
             &mut self.sync_with_sumulator,
             "Sync with simulator",
         ));
+        if !self.sync_with_sumulator {
+            // Manual instruction decoding mode
+            if ui.add(egui::Button::new("Decode instruction")).clicked() {
+                let instruction: u32 = hex_to_u32(&self.edited_instr_hex).unwrap_or(0);
+                let address: u64 = hex_to_u64(&self.edited_address_hex).unwrap_or(0);
+                self.update_disasm_cache(address, instruction);
+                self.edited_instr_hex = self.cached_instr_hex.clone();
+                self.edited_address_hex = self.cached_address_hex.clone();
+            }
+        }
         egui::Grid::new("decode_instr_grid")
             .num_columns(2)
             .spacing([40.0, 4.0])
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Instruction");
-                ui.add(egui::TextEdit::singleline(&mut self.cached_instr_hex));
+                ui.add(egui::TextEdit::singleline(&mut self.edited_instr_hex));
                 ui.end_row();
-                ui.label("Its address");
-                ui.add(egui::TextEdit::singleline(&mut self.cached_address_hex));
+                ui.label("Instr address");
+                ui.add(egui::TextEdit::singleline(&mut self.edited_address_hex));
                 ui.end_row();
                 ui.label("Binary");
                 ui.vertical(|ui| {
