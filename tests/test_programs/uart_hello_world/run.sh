@@ -1,6 +1,6 @@
 set -e
 
-cargo build --release
+cargo build --release --package kompusim
 
 # optional switches:
 # --trace - print cpu/devices state
