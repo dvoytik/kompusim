@@ -1032,6 +1032,7 @@ dependencies = [
  "egui_extras",
  "kompusim",
  "log",
+ "nom",
  "serde",
  "tracing-subscriber",
  "tracing-wasm",
