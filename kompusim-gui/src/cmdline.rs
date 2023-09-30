@@ -36,8 +36,8 @@ pub enum CmdLCommand {
         bin: PathBuf,
 
         /// RAM size in KiBytes (defult 4)
-        #[arg(short, long)]
-        ram: Option<u64>,
+        #[arg(long)]
+        ram: Option<String>,
 
         /// Breakpont - "auto" or address in hex (e.g. 0x0000000080000014)
         #[arg(short, long)]

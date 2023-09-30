@@ -3,12 +3,12 @@ use egui::Modifiers;
 
 use crate::{
     base_uregs::BaseURegs,
-    cmdline::CmdLCommand,
+    cmdline::{parse_size_with_suffix, CmdLCommand},
     console::Console,
     instr_decoder::InstrDecoder,
     instr_list::InstrList,
     load_demo::LoadDemo,
-    sim::Simulator,
+    sim::{Simulator, DEFAULT_MEM_SZ},
     status_control::{StatusControl, StatusControlCmd},
 };
 
@@ -64,8 +64,23 @@ impl KompusimApp {
         };
 
         if let Some(cmdl_cmd) = cmdl_args {
-            let CmdLCommand::Exec { load_addr, bin, .. } = cmdl_cmd;
-            println!("Got command line: execute: execute {bin:?} @ {load_addr}");
+            let CmdLCommand::Exec {
+                load_addr,
+                bin,
+                ram,
+                ..
+            } = cmdl_cmd;
+            if let Some(ref ram) = ram {
+                if let Some(ram_sz) = parse_size_with_suffix(&ram) {
+                    app.sim.set_ram_sz(ram_sz);
+                } else {
+                    eprintln!(
+                        "Ram size is wrong format. Using default size: {}",
+                        DEFAULT_MEM_SZ
+                    );
+                }
+            }
+            println!("Got command line: execute: execute {bin:?} @ {load_addr}, RAM: {ram:?}");
             let load_addr = u64::from_str_radix(load_addr.trim_start_matches("0x"), 16)
                 .expect("Load address is wrong format");
             app.sim.load_bin_file(load_addr, bin);

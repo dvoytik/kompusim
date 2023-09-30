@@ -16,6 +16,7 @@ use kompusim::{
 // TODO: setting
 const EXE_INSTRUCTIONS_THEN_POLL: u64 = 102400;
 
+pub const DEFAULT_MEM_SZ: u64 = 1024 * 1024;
 pub const DEFAULT_START_ADDRESS: u64 = 0x8000_0000;
 
 pub struct Simulator {
@@ -85,8 +86,8 @@ impl Simulator {
                     eprintln!("Simulator: failed to send event: {}", err);
                 }
             };
-            let addr = 0x0000000080000000; // TODO: remove
-            let ram_sz = 4 * 1024; // TODO: remove
+            let addr = DEFAULT_START_ADDRESS;
+            let ram_sz = DEFAULT_MEM_SZ;
             let ram = ram::Ram::new(addr, ram_sz);
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
@@ -214,6 +215,8 @@ impl Simulator {
             event_queue: event_recv,
         }
     }
+
+    pub fn set_ram_sz(&mut self, _ram_sz: u64) {}
 
     pub fn stop(&mut self) {
         if self.sim_thread.is_some() {
