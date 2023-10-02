@@ -102,35 +102,40 @@ pub fn parse_size_with_suffix(input: &str) -> Option<u64> {
     None
 }
 
-#[test]
-fn test_parse_size_in_bytes() {
-    assert_eq!(parse_size_with_suffix("1"), Some(1));
-    assert_eq!(parse_size_with_suffix("9999"), Some(9999));
-    // Kilobyte
-    assert_eq!(parse_size_with_suffix("333k"), Some(333 * 1024));
-    // Megabyte
-    assert_eq!(parse_size_with_suffix("1mb"), Some(1024 * 1024));
-    assert_eq!(parse_size_with_suffix("100Mib"), Some(100 * 1024 * 1024));
-    assert_eq!(parse_size_with_suffix("100MiB"), Some(100 * 1024 * 1024));
-    // Gigabyte
-    assert_eq!(
-        parse_size_with_suffix("100gb"),
-        Some(100 * 1024 * 1024 * 1024)
-    );
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    // assert_eq!(parse_size_with_suffix("1_0"), Some(10)); // TODO
+    #[test]
+    fn test_parse_size_in_bytes() {
+        assert_eq!(parse_size_with_suffix("1"), Some(1));
+        assert_eq!(parse_size_with_suffix("9999"), Some(9999));
+        // Kilobyte
+        assert_eq!(parse_size_with_suffix("333k"), Some(333 * 1024));
+        // Megabyte
+        assert_eq!(parse_size_with_suffix("1mb"), Some(1024 * 1024));
+        assert_eq!(parse_size_with_suffix("100Mib"), Some(100 * 1024 * 1024));
+        assert_eq!(parse_size_with_suffix("100MiB"), Some(100 * 1024 * 1024));
+        // Gigabyte
+        assert_eq!(
+            parse_size_with_suffix("100gb"),
+            Some(100 * 1024 * 1024 * 1024)
+        );
 
-    // Negative
-    assert!(parse_size_with_suffix("-1").is_none());
-    assert!(parse_size_with_suffix("-1+MiB").is_none());
-    assert!(parse_size_with_suffix("1+MiB").is_none());
-    assert!(parse_size_with_suffix("1Megs").is_none());
-    assert!(parse_size_with_suffix("1gi").is_none());
-    assert!(parse_size_with_suffix("MiB1").is_none());
-    assert!(parse_size_with_suffix(".1M").is_none());
-    assert!(parse_size_with_suffix("0.001M").is_none());
-    assert_ne!(parse_size_with_suffix("1mb"), Some(1024 * 1025));
+        // assert_eq!(parse_size_with_suffix("1_0"), Some(10)); // TODO
 
-    // Overflow is handled
-    assert!(parse_size_with_suffix("100000000000000GB").is_none())
+        // Negative
+        assert!(parse_size_with_suffix("-1").is_none());
+        assert!(parse_size_with_suffix("-1+MiB").is_none());
+        assert!(parse_size_with_suffix("1+MiB").is_none());
+        assert!(parse_size_with_suffix("1Megs").is_none());
+        assert!(parse_size_with_suffix("1gi").is_none());
+        assert!(parse_size_with_suffix("MiB1").is_none());
+        assert!(parse_size_with_suffix(".1M").is_none());
+        assert!(parse_size_with_suffix("0.001M").is_none());
+        assert_ne!(parse_size_with_suffix("1mb"), Some(1024 * 1025));
+
+        // Overflow is handled
+        assert!(parse_size_with_suffix("100000000000000GB").is_none())
+    }
 }
