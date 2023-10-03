@@ -48,10 +48,13 @@ pub enum SimState {
     Running,
 }
 
+#[derive(Debug, Clone)]
 enum LoadImageType {
     File(PathBuf),
     StaticMem(&'static [u8]),
 }
+
+#[derive(Debug, Clone)]
 enum SimCommand {
     //Reset,
     //Init,
@@ -216,20 +219,21 @@ impl Simulator {
         }
     }
 
-    pub fn set_ram_sz(&mut self, _ram_sz: u64) {}
+    pub fn set_ram_sz(&mut self, _ram_sz: u64) {
+        // todo
+    }
 
     pub fn stop(&mut self) {
         if self.sim_thread.is_some() {
-            if let Err(err) = self.cmd_channel.send(SimCommand::Stop) {
-                println!("Simulator: failed to send command: {}", err);
-            }
+            self.send_cmd(SimCommand::Stop);
             self.sim_thread.take().unwrap().join().unwrap();
         }
     }
 
     fn send_cmd(&self, cmd: SimCommand) {
-        if let Err(e) = self.cmd_channel.send(cmd) {
-            println!("FAILED to send command. Error: {}", e)
+        // SimCommand is cheap to clone
+        if let Err(e) = self.cmd_channel.send(cmd.clone()) {
+            println!("Simulator: FAILED to send command {cmd:?}. Error: {e}")
         }
     }
 
