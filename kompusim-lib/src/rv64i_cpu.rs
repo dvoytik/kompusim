@@ -71,6 +71,10 @@ impl RV64ICpu {
         self.regs.pc
     }
 
+    pub fn set_ram_sz(&mut self, ram_sz: u64) {
+        self.bus.set_ram_sz(ram_sz);
+    }
+
     pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
         self.bus.get_ram(addr, size)
     }

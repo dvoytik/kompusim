@@ -41,6 +41,10 @@ impl Ram {
         } // TODO: is it lazy allocation?
     }
 
+    pub fn resize(&mut self, new_size: u64) {
+        self.m.resize(new_size as usize, 0);
+    }
+
     pub fn read8(&self, addr: u64) -> u8 {
         let offs = (addr - self.start) as usize;
         self.m[offs]

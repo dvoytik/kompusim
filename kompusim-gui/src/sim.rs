@@ -66,6 +66,8 @@ enum SimCommand {
     LoadImage((u64, LoadImageType, u64)),
     /// Disasm(starting_address, number_of_instruction)
     Disasm(u64, usize),
+    // Set RAM size
+    SetRamSz(u64),
 }
 
 #[derive(Clone)]
@@ -198,6 +200,9 @@ impl Simulator {
                         let instructions = cpu0.get_n_instr(addr, n_instr);
                         send_event(SimEvent::Instructions(instructions));
                     }
+                    SimCommand::SetRamSz(ram_sz) => {
+                        cpu0.set_ram_sz(ram_sz);
+                    }
                     SimCommand::Stop => break,
                 }
                 //thread::sleep(time::Duration::from_secs(1));
@@ -219,8 +224,8 @@ impl Simulator {
         }
     }
 
-    pub fn set_ram_sz(&mut self, _ram_sz: u64) {
-        // todo
+    pub fn set_ram_sz(&mut self, ram_sz: u64) {
+        self.send_cmd(SimCommand::SetRamSz(ram_sz));
     }
 
     pub fn stop(&mut self) {

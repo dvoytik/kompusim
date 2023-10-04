@@ -72,6 +72,7 @@ struct AddrRegion {
 #[derive(Default)]
 pub struct Bus {
     regions: Vec<AddrRegion>, // TODO: should be sorted
+    ram_start: u64,
 }
 
 impl Bus {
@@ -88,7 +89,9 @@ impl Bus {
     }
 
     pub fn attach_ram(&mut self, ram: Ram) {
-        // TODO: insert in sorted order - search optimization
+        // for now and for simplicyt let's support only one RAM region
+        assert!(self.ram_start == 0);
+        self.ram_start = ram.start;
         self.regions.push(AddrRegion {
             start: ram.start,
             end: ram.end,
@@ -172,6 +175,17 @@ impl Bus {
         } else {
             None
         }
+    }
+
+    pub fn set_ram_sz(&mut self, ram_sz: u64) {
+        // find RAM region
+        if let Some(ar) = self.find_addr_region_mut(self.ram_start, 4) {
+            if let BusAgent::Ram(ram) = &mut ar.agent {
+                ram.resize(ram_sz);
+                return;
+            }
+        }
+        panic!("Could not find RAM region")
     }
 
     pub fn load_image(&mut self, addr: u64, image: &'static [u8]) -> Result<(), Box<dyn Error>> {
