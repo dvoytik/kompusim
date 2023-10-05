@@ -59,15 +59,22 @@ pub enum Opcode {
 // enum Opcodes {
 //
 // }
-pub const OPC_SYSTEM: u8 = 0b11_100_11;
-pub const OPC_BRANCH: u8 = 0b11_000_11;
-pub const OPC_AUIPC: u8 = 0b00_101_11;
-pub const OPC_OP_IMM: u8 = 0b00_100_11;
-pub const OPC_JALR: u8 = 0b11_001_11;
-pub const OPC_JAL: u8 = 0b11_011_11;
-pub const OPC_LUI: u8 = 0b01_101_11;
-pub const OPC_LOAD: u8 = 0b00_000_11;
-pub const OPC_STORE: u8 = 0b01_000_11;
+
+// Use mod to disable auto-formatting for all definitions
+/// RV32/RV64 instruction opcodes (inst[6:0])
+#[rustfmt::skip]
+mod opc {
+pub const OPC_SYSTEM: u8 = 0b_11_100_11;
+pub const OPC_BRANCH: u8 = 0b_11_000_11;
+pub const OPC_AUIPC:  u8 = 0b_00_101_11;
+pub const OPC_OP_IMM: u8 = 0b_00_100_11;
+pub const OPC_JALR:   u8 = 0b_11_001_11;
+pub const OPC_JAL:    u8 = 0b_11_011_11;
+pub const OPC_LUI:    u8 = 0b_01_101_11;
+pub const OPC_LOAD:   u8 = 0b_00_000_11;
+pub const OPC_STORE:  u8 = 0b_01_000_11;
+}
+use opc::*;
 
 pub const F3_BRANCH_BEQ: u8 = 0b000;
 pub const F3_BRANCH_BNE: u8 = 0b001;
