@@ -40,6 +40,10 @@ pub fn disasm_operation_name(instr: u32) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
+        Opcode::Op { funct3, .. } => match funct3 {
+            _ => "Unknown OP instruction".to_string(),
+        },
+
         Opcode::System { funct3, .. } => match funct3 {
             F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
             _ => "Unknown SYSTEM opcode".to_string(),
@@ -127,6 +131,10 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
+        Opcode::Op { funct3, .. } => match funct3 {
+            _ => "Unknown OP instruction".to_string(),
+        },
+
         Opcode::System {
             csr,
             rs1,
@@ -155,6 +163,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         Opcode::Load { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Store { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
         Opcode::OpImm { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::Op { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Uknown => (None, None, None),
     }
@@ -223,6 +232,16 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM opcode".to_string(),
+        },
+
+        Opcode::Op {
+            funct7,
+            rs2,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            _ => "Unknown OP instruction".to_string(),
         },
 
         Opcode::System {

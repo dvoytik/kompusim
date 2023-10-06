@@ -26,6 +26,13 @@ pub enum Opcode {
         funct3: u8,
         rd: u8,
     },
+    Op {
+        funct7: u8,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
     Jal {
         imm21: I21,
         rd: u8,
@@ -68,6 +75,7 @@ pub const OPC_SYSTEM: u8 = 0b_11_100_11;
 pub const OPC_BRANCH: u8 = 0b_11_000_11;
 pub const OPC_AUIPC:  u8 = 0b_00_101_11;
 pub const OPC_OP_IMM: u8 = 0b_00_100_11;
+pub const OPC_OP:     u8 = 0b_01_100_11;
 pub const OPC_JALR:   u8 = 0b_11_001_11;
 pub const OPC_JAL:    u8 = 0b_11_011_11;
 pub const OPC_LUI:    u8 = 0b_01_101_11;
@@ -143,6 +151,12 @@ pub fn i_i_type_imm12(ins: u32) -> I12 {
     I12::from(ins.bits(31, 20) as u16)
 }
 
+// Decode funct7 field (inst[31:25]) from the R-type instruction
+#[inline(always)]
+pub fn i_r_type_funct7(ins: u32) -> u8 {
+    ins.bits(31, 25) as u8
+}
+
 // Decode signed 12-bit immidiate from S-type instruction
 #[inline(always)]
 pub fn i_s_type_imm12(ins: u32) -> I12 {
@@ -192,6 +206,17 @@ pub fn dec_opc_op_imm(instr: u32) -> Opcode {
         rs1,
         funct3,
         rd,
+    }
+}
+
+// R-type instructions: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+pub fn dec_opc_op(instr: u32) -> Opcode {
+    Opcode::Op {
+        funct7: i_r_type_funct7(instr),
+        rs2: i_rs2(instr),
+        rs1: i_rs1(instr),
+        funct3: i_funct3(instr),
+        rd: i_rd(instr),
     }
 }
 
@@ -254,6 +279,7 @@ pub fn decode_instr(instr: u32) -> Opcode {
         OPC_LOAD => dec_opc_load(instr),
         OPC_STORE => dec_opc_store(instr),
         OPC_OP_IMM => dec_opc_op_imm(instr),
+        OPC_OP => dec_opc_op(instr),
         OPC_SYSTEM => dec_opc_system(instr),
         _ => Opcode::Uknown,
     }
