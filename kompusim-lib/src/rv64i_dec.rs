@@ -92,12 +92,18 @@ pub const F3_SYSTEM_CSRRS: u8 = 0b010;
 
 pub const F3_OP_IMM_ADDI: u8 = 0b000;
 
+pub const F3_OP_ADD_SUB: u8 = 0b_000;
+
 pub const F3_OP_LOAD_LB: u8 = 0b000;
 pub const F3_OP_LOAD_LBU: u8 = 0b100;
 pub const F3_OP_LOAD_LW: u8 = 0b010;
 
 pub const F3_OP_STORE_SB: u8 = 0b000;
 pub const F3_OP_STORE_SW: u8 = 0b010;
+
+// funct7 field of R-type instruction
+pub const F7_OP_ADD: u8 = 0b_000_0000;
+pub const F7_OP_SUB: u8 = 0b_010_0000;
 
 #[inline(always)]
 pub fn i_opcode(ins: u32) -> u8 {
@@ -151,7 +157,7 @@ pub fn i_i_type_imm12(ins: u32) -> I12 {
     I12::from(ins.bits(31, 20) as u16)
 }
 
-// Decode funct7 field (inst[31:25]) from the R-type instruction
+// Decode funct7 field (inst[31:25]) from the R-type (integer register-register) instruction
 #[inline(always)]
 pub fn i_r_type_funct7(ins: u32) -> u8 {
     ins.bits(31, 25) as u8

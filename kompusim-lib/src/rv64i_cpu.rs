@@ -225,8 +225,19 @@ impl RV64ICpu {
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
     fn exe_opc_op(&mut self, funct7: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
         match funct3 {
+            F3_OP_ADD_SUB => {
+                if funct7 == F7_OP_ADD {
+                    // ignore overflow with wrapping_add()
+                    self.regs_w64(rd, self.regs_r64(rs1).wrapping_add(self.regs_r64(rs2)))
+                } else if funct7 == F7_OP_SUB {
+                    // ignore overflow with wrapping_sub()
+                    self.regs_w64(rd, self.regs_r64(rs1).wrapping_sub(self.regs_r64(rs2)))
+                } else {
+                    eprintln!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}")
+                }
+            }
             _ => {
-                println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
+                println!("ERROR: unsupported OP instr, funct7: 0b{funct7:b}, funct3: 0b{funct3:b}");
             }
         }
         self.pc_inc()
