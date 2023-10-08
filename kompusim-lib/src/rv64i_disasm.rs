@@ -40,8 +40,10 @@ pub fn disasm_operation_name(instr: u32) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
-        Opcode::Op { funct3, .. } => match funct3 {
-            _ => "Unknown OP instruction".to_string(),
+        Opcode::Op { funct7, funct3, .. } => match (funct7, funct3) {
+            (F7_OP_ADD, F3_OP_ADD_SUB) => format!("Add register to register"),
+            (F7_OP_SUB, F3_OP_ADD_SUB) => format!("Subtract register from regiser"),
+            _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
         Opcode::System { funct3, .. } => match funct3 {
@@ -131,8 +133,16 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
-        Opcode::Op { funct3, .. } => match funct3 {
-            _ => "Unknown OP instruction".to_string(),
+        Opcode::Op {
+            funct7,
+            rs2,
+            rs1,
+            funct3,
+            rd,
+        } => match (funct7, funct3) {
+            (F7_OP_ADD, F3_OP_ADD_SUB) => format!("x{rd} = x{rs1} + x{rs2}"),
+            (F7_OP_SUB, F3_OP_ADD_SUB) => format!("x{rd} = x{rs1} - x{rs2}"),
+            _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
         Opcode::System {
@@ -240,8 +250,10 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rs1,
             funct3,
             rd,
-        } => match funct3 {
-            _ => "Unknown OP instruction".to_string(),
+        } => match (funct7, funct3) {
+            (F7_OP_ADD, F3_OP_ADD_SUB) => format!("add x{rd}, x{rs1}, x{rs2}"),
+            (F7_OP_SUB, F3_OP_ADD_SUB) => format!("sub x{rd}, x{rs1}, x{rs2}"),
+            _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
         Opcode::System {
