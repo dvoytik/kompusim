@@ -24,6 +24,39 @@ impl Imm for u64 {
     }
 }
 
+/// Immidiate signed 6 bit
+#[derive(Copy, Clone)]
+pub struct I6(pub i8);
+
+impl From<u16> for I6 {
+    fn from(v: u16) -> I6 {
+        if v.bit(5) {
+            I6((u16::MAX.xor(4, 0) | v.bits(4, 0)) as i8)
+        } else {
+            I6(v as i8)
+        }
+    }
+}
+
+impl From<I6> for i8 {
+    fn from(v: I6) -> i8 {
+        v.0
+    }
+}
+
+impl Display for I6 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// Used for format!()
+impl LowerHex for I6 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// Immidiate signed 12 bit
 #[derive(Copy, Clone)]
 pub struct I12(pub i16);
@@ -166,4 +199,12 @@ fn test_imm21() {
     assert!(5000_000_u64.add_i21(I21::from(-1024_i32 * 1024)) == 5000_000 - 1024 * 1024);
 
     assert!(5000_000_u64.add_i21(I21::from(0x7ff)) == 5000_000 + 2047);
+}
+
+#[test]
+fn test_imm6() {
+    let a = u16::MAX;
+    let b: I6 = a.into();
+    let c: i8 = b.into();
+    assert_eq!(c, -1);
 }
