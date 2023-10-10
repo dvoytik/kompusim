@@ -9,6 +9,32 @@ pub trait BitOps {
     fn rst_bits(self, end: u32, start: u32) -> Self;
 }
 
+impl BitOps for u8 {
+    // TODO: move to trait?
+    #[inline(always)]
+    fn bit(self, idx: u32) -> bool {
+        assert!(idx < Self::BITS);
+        self & (1 << idx) != 0
+    }
+
+    fn bits(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        (self >> start) & (Self::MAX >> (7 - (end - start)))
+    }
+
+    fn xor(self, end: u32, start: u32) -> Self {
+        assert!(end < Self::BITS && start < Self::BITS && end >= start);
+        let m = Self::MAX >> start << start << (Self::BITS - end - 1) >> (Self::BITS - end - 1);
+        self ^ m
+    }
+
+    // Clean bits [end:start]
+    fn rst_bits(self, end: u32, start: u32) -> Self {
+        let mask = Self::MAX.xor(end, start);
+        self & mask
+    }
+}
+
 impl BitOps for u16 {
     // TODO: move to trat?
     #[inline(always)]
@@ -115,6 +141,11 @@ impl BitOps for u64 {
 fn test_bit_ops() {
     // test keyword 'as'
     assert!(-1_i32 as u32 == u32::MAX);
+
+    // u8
+    assert!(0b_0000_1100_u8.bits(3, 2) == 0x3_u8);
+    assert!(0b_0000_1100_u8.bits(7, 0) == 0xc_u8);
+    assert!(0b_1111_1111_u8.bits(7, 7) == 0x1_u8);
 
     // .bit()
     assert!(0b_0001_u16.bit(0) == true);
