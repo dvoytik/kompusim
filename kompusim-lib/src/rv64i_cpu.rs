@@ -31,11 +31,6 @@ pub struct RV64ICpu {
     num_exec_instr: u64,
 }
 
-fn bad_instr(ins: u32) {
-    let opc = i_opcode(ins);
-    panic!("ERROR: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})");
-}
-
 impl RV64ICpu {
     pub fn new(bus: Bus) -> RV64ICpu {
         RV64ICpu {
@@ -102,6 +97,18 @@ impl RV64ICpu {
         self.regs_w64(reg_i, val_u64)
     }
 
+    fn bad_32b_instr(&self, ins: u32) {
+        let opc = i_opcode(ins);
+        panic!("ERROR: PC=0x{:x}: bad 32b instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
+               self.get_pc());
+    }
+
+    fn bad_16b_instr(&self, c_ins: u16) {
+        let opc = c_i_opcode(c_ins);
+        panic!("ERROR: PC=0x{:x}: bad 16b instr: 0x{c_ins:x} (0b_{c_ins:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
+               self.get_pc());
+    }
+
     // writes i8 LSB and sign extends
     fn regs_wi8(&mut self, reg_i: u8, val: u8) {
         let mut val: u64 = val as u64;
@@ -131,7 +138,8 @@ impl RV64ICpu {
         self.regs.x[reg_i as usize] as i64
     }
 
-    fn pc_inc(&mut self) {
+    /// common 32 bit instruction executed
+    fn pc_inc32b(&mut self) {
         self.regs.pc += 4;
     }
 
@@ -161,7 +169,7 @@ impl RV64ICpu {
                 println!("wrong SYSTEM instr (funct3: {funct3:x})");
             }
         }
-        self.pc_inc();
+        self.pc_inc32b();
     }
 
     // BRANCH opcodes: BEQ, BNE, BLT, ...
@@ -172,7 +180,7 @@ impl RV64ICpu {
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc32b()
                 }
             }
             // Branch EQual
@@ -180,7 +188,7 @@ impl RV64ICpu {
                 if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc32b()
                 }
             }
             // Branch Less Than (signed comparison)
@@ -188,7 +196,7 @@ impl RV64ICpu {
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc32b()
                 }
             }
             _ => {
@@ -200,13 +208,13 @@ impl RV64ICpu {
     // LUI - Load Upper Immidiate
     fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, uimm20);
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, self.regs.pc + uimm20);
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
@@ -219,7 +227,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
@@ -240,7 +248,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP instr, funct7: 0b{funct7:b}, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     // Only one instrucitn JAL - Jump and Link
@@ -276,7 +284,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) {
@@ -290,7 +298,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported STORE instruction, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        self.pc_inc32b()
     }
 
     pub fn execute_instr(&mut self, instr: u32) {
