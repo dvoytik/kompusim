@@ -1,4 +1,4 @@
-// RV64i decoder
+// RV64i 32-bit instruction decoder
 
 use crate::alu::{I12, I13, I21};
 use crate::bits::BitOps;

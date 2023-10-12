@@ -1,7 +1,8 @@
-use crate::alu::{Imm, I12, I13, I21};
+use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
+use crate::rv64i_16b_dec::{c_i_opcode, decode_c_instr, instr_is_16b, COpcode};
 use crate::rv64i_dec::*;
 
 /// exec_continue() returns:
@@ -141,6 +142,11 @@ impl RV64ICpu {
     /// common 32 bit instruction executed
     fn pc_inc32b(&mut self) {
         self.regs.pc += 4;
+    }
+
+    /// compressed 16-bit instruction executed
+    fn pc_inc16b(&mut self) {
+        self.regs.pc += 2;
     }
 
     // set PC to new_addr
@@ -344,19 +350,45 @@ impl RV64ICpu {
                 funct3,
                 rd,
             } => self.exe_opc_system(csr, rs1, funct3, rd),
-            Opcode::Uknown => bad_instr(instr),
+            Opcode::Uknown => self.bad_32b_instr(instr),
         }
 
         self.num_exec_instr += 1;
     }
 
+    /// C.LI compressed instruction
+    pub fn exe_opc_c_li(&mut self, imm6: I6, rd: u8) {
+        let imm6: i8 = imm6.into();
+        self.regs_wi8(rd, imm6 as u8);
+        self.pc_inc16b();
+    }
+
+    /// Execute a compressed instruction
+    pub fn execute_16b_instr(&mut self, c_instr: u16) {
+        match decode_c_instr(c_instr) {
+            COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
+            COpcode::Uknown => self.bad_16b_instr(c_instr),
+        }
+
+        self.num_exec_instr += 1;
+    }
+
+    fn check_break_points(&self, addr: u64) -> bool {
+        // TODO: check all breakpoints
+        // TODO: optimize to use hashmap
+        !self.breakpoints.is_empty() && self.breakpoints[0] == addr
+    }
+
     /// Returns PC (i.e. where stopped)
     pub fn exec_continue(&mut self, max_instr: u64) -> ExecEvent {
         for _ in 0..max_instr {
-            self.execute_instr(self.fetch_instr());
-            // TODO: check all breakpoints
-            // TODO: optimize to use hashmap
-            if !self.breakpoints.is_empty() && self.breakpoints[0] == self.regs.pc {
+            let instr = self.fetch_instr();
+            if instr_is_16b(instr) {
+                self.execute_16b_instr(instr.bits(15, 0) as u16);
+            } else {
+                self.execute_instr(instr);
+            }
+            if self.check_break_points(self.regs.pc) {
                 return ExecEvent::Breakpoint(self.regs.pc);
             }
         }
