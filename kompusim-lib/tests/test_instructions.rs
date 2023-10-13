@@ -151,3 +151,9 @@ fn registers_writes() {
     cpu.regs_wi32(1, 0x_8000_0000);
     assert!(cpu.regs_r64(1) == 0xffff_ffff_8000_0000);
 }
+
+// #[test]
+// fn test_intermixed_instruction {
+//     // TODO:
+//     // compressed, 32-bit, compressed
+// }
