@@ -154,6 +154,15 @@ fn test_instruction_add() {
 }
 
 #[test]
+// sub x1, x1, x1
+fn test_instruction_sub() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[1] = 0x123;
+    cpu.execute_instr(0x_4010_80b3);
+    assert!(cpu.regs.x[1] == 0);
+}
+
+#[test]
 fn registers_writes() {
     let mut cpu = RV64ICpu::default();
     // test sign extension
