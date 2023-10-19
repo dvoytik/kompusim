@@ -26,7 +26,7 @@ pub fn instr_is_16b(instr: u32) -> bool {
 #[inline(always)]
 pub fn c_i_opcode(c_instr: u16) -> u8 {
     // 5-bit opcode
-    c_instr.bits(15, 13) as u8 | c_instr.bits(1, 0) as u8
+    (c_instr.bits(15, 13) << 2 | c_instr.bits(1, 0)) as u8
 }
 
 // Decode signed 6-bit immidiate from CI instruction format
