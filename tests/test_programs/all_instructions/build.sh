@@ -9,9 +9,10 @@ OBJCOPY=
 
 mkdir -p out
 
+# -Os - optimize for size
+# -mno-shorten-memrefs - do not attempt to make more use of compressed load/store instructions
 $CC \
-    -Os \
-    -march=rv64g -mabi=lp64 -static -mcmodel=medany \
+    -march=rv64gc -mabi=lp64 -static -mcmodel=medany \
     -fvisibility=hidden -nostdlib -nostartfiles \
     -T$P.ld -I. \
     $P.s -o out/$P

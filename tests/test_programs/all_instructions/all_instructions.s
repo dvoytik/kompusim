@@ -9,6 +9,8 @@ _start:
     addi  x1, x0, 1
     add   x1, x1, x1
     sub   x1, x1, x1
+    # 16-bit compressed
+    c.li  x2, -1
     csrr  t0, mhartid   # read hardware thread id (i.e., CPU ID)
     bnez  t0, halt      # halt other CPUs except first (with CPU ID == 0)
 
