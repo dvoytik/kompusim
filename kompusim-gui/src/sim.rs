@@ -33,8 +33,9 @@ pub struct Simulator {
     /// cached mirror of last received instructions; must be always updated with SimCommand::Disasm
     /// TODO: move to general memory cache - no need to diffirentiate instruction cache from memory
     /// cache
-    instr_cache: Option<Vec<u32>>,
-    instr_cache_len: usize,
+    instr_cache: Option<Vec<u8>>,
+    // instruction cache size in bytes
+    instr_cache_sz: u64,
     instr_cache_start: u64,
 }
 
@@ -64,8 +65,8 @@ enum SimCommand {
     Step,
     Stop,
     LoadImage((u64, LoadImageType, u64)),
-    /// Disasm(starting_address, number_of_instruction)
-    Disasm(u64, usize),
+    /// Disasm(starting_address, number_of_bytes)
+    Disasm(u64, u64),
     // Set RAM size
     SetRamSz(u64),
 }
@@ -74,7 +75,7 @@ enum SimCommand {
 enum SimEvent {
     /// SimState, registers, number of executed instructions
     StateChanged(SimState, Box<RV64IURegs>, u64),
-    Instructions(Vec<u32>),
+    Instructions(Option<Vec<u8>>),
 }
 
 impl Simulator {
@@ -196,8 +197,10 @@ impl Simulator {
                         ));
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
-                    SimCommand::Disasm(addr, n_instr) => {
-                        let instructions = cpu0.get_n_instr(addr, n_instr);
+                    SimCommand::Disasm(addr, n_bytes) => {
+                        let instructions = cpu0
+                            .get_ram(addr, n_bytes)
+                            .map(|mem_area| mem_area.to_owned());
                         send_event(SimEvent::Instructions(instructions));
                     }
                     SimCommand::SetRamSz(ram_sz) => {
@@ -219,7 +222,7 @@ impl Simulator {
             num_exec_instr: 0,
             instr_cache: None,
             instr_cache_start: 0,
-            instr_cache_len: 0,
+            instr_cache_sz: 0,
             event_queue: event_recv,
         }
     }
@@ -282,7 +285,7 @@ impl Simulator {
                 self.instr_cache.take();
             }
             SimEvent::Instructions(instructions) => {
-                self.instr_cache.replace(instructions);
+                self.instr_cache = instructions;
             }
         }
     }
@@ -337,27 +340,35 @@ impl Simulator {
         let pc = self.regs.pc;
         if self.instr_cache.is_none()
             || pc < self.instr_cache_start
-            || pc >= self.instr_cache_start + self.instr_cache_len as u64 * 4
+            || pc >= self.instr_cache_start + self.instr_cache_sz as u64
         {
             // update cache if needed
             let _ = self.get_instructions(pc, 4);
         }
-        let offset = (pc - self.instr_cache_start) / 4;
-        self.instr_cache.as_ref().unwrap()[offset as usize]
+        let offset = (pc - self.instr_cache_start) as usize;
+        let instr0 = self.instr_cache.as_ref().unwrap()[offset];
+        let instr1 = self.instr_cache.as_ref().unwrap()[offset + 1];
+        let instr2 = self.instr_cache.as_ref().unwrap()[offset + 2];
+        let instr3 = self.instr_cache.as_ref().unwrap()[offset + 3];
+        (instr0 as u32) | (instr1 as u32) << 8 | (instr2 as u32) << 16 | (instr3 as u32) << 24
     }
 
-    /// Returns (instructions_array, start_address)
-    pub fn get_instructions(&mut self, start_addr: u64, num_instr: usize) -> (&Vec<u32>, u64) {
+    /// Returns memory area state (bytes_array, start_address)
+    // pub fn get_mem_area(&mut self, start_addr: u64, size: usize) -> (&Vec<u32>, u64) {
+    // }
+
+    // TODO: remove and replace with get_mem_area()
+    /// Returns (bytes_array, start_address)
+    pub fn get_instructions(&mut self, start_addr: u64, size: u64) -> (&Vec<u8>, u64) {
         if self.instr_cache.is_none()
             || start_addr < self.instr_cache_start
-            || start_addr + num_instr as u64 * 4
-                > self.instr_cache_start + self.instr_cache_len as u64 * 4
+            || start_addr + size as u64 > self.instr_cache_start + self.instr_cache_sz as u64
         {
             println!("Updating instruction cache"); // keep it for debuggin unnecessary cache updates
-            self.send_cmd(SimCommand::Disasm(start_addr, num_instr));
-            self.wait_for_event(SimEvent::Instructions(Vec::default()));
+            self.send_cmd(SimCommand::Disasm(start_addr, size));
+            self.wait_for_event(SimEvent::Instructions(Some(Vec::default())));
             self.instr_cache_start = start_addr;
-            self.instr_cache_len = num_instr;
+            self.instr_cache_sz = size;
         }
         (self.instr_cache.as_ref().unwrap(), self.instr_cache_start)
     }
