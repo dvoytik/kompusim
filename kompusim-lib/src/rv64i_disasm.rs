@@ -2,7 +2,9 @@
 
 use std::num::ParseIntError;
 
-use crate::{alu::Imm, bits::BitOps, rv64i_dec::*};
+use crate::{
+    alu::Imm, bits::BitOps, rv64i_16b_dec::instr_is_16b, rv64i_16b_disasm::disasm_16b, rv64i_dec::*,
+};
 
 pub fn disasm_operation_name(instr: u32) -> String {
     match decode_instr(instr) {
@@ -180,6 +182,9 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
 }
 
 pub fn disasm(instr: u32, instr_addr: u64) -> String {
+    if instr_is_16b(instr) {
+        return disasm_16b(instr as u16, instr_addr);
+    }
     match decode_instr(instr) {
         Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
 

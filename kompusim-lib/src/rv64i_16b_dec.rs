@@ -40,8 +40,8 @@ pub fn c_i_rd(c_instr: u16) -> u8 {
     c_instr.bits(11, 7) as u8
 }
 
-/// Decode the compressed (16 bit) instruction
-pub fn decode_c_instr(c_instr: u16) -> COpcode {
+/// Decode a compressed (16 bit) instruction
+pub fn decode_16b_instr(c_instr: u16) -> COpcode {
     let rd = c_i_rd(c_instr); // rd also encodes instruction
     match c_i_opcode(c_instr) {
         OPC_C_LI if rd != 0 => COpcode::CLI {

@@ -5,6 +5,7 @@ mod csr;
 pub mod device;
 pub mod ram;
 pub mod rv64i_16b_dec;
+pub mod rv64i_16b_disasm;
 pub mod rv64i_cpu;
 /// RV64I decoder
 #[allow(clippy::unusual_byte_groupings)]

@@ -2,7 +2,7 @@ use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
-use crate::rv64i_16b_dec::{c_i_opcode, decode_c_instr, instr_is_16b, COpcode};
+use crate::rv64i_16b_dec::{c_i_opcode, decode_16b_instr, instr_is_16b, COpcode};
 use crate::rv64i_dec::*;
 
 /// exec_continue() returns:
@@ -55,6 +55,7 @@ impl RV64ICpu {
         self.bus.read32(addr)
     }
 
+    // TODO: remove it because it doesn't support compressed instructions
     pub fn get_n_instr(&self, addr: u64, n_instr: usize) -> Vec<u32> {
         let mut instructions = Vec::with_capacity(n_instr);
         for i in 0..n_instr {
@@ -365,7 +366,7 @@ impl RV64ICpu {
 
     /// Execute a compressed instruction
     pub fn execute_16b_instr(&mut self, c_instr: u16) {
-        match decode_c_instr(c_instr) {
+        match decode_16b_instr(c_instr) {
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             COpcode::Uknown => self.bad_16b_instr(c_instr),
         }
