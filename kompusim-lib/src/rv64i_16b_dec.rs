@@ -32,7 +32,7 @@ pub fn c_i_opcode(c_instr: u16) -> u8 {
 // Decode signed 6-bit immidiate from CI instruction format
 #[inline(always)]
 pub fn c_i_imm6(c_instr: u16) -> I6 {
-    I6::from(c_instr.bits(12, 12) | c_instr.bits(6, 2))
+    I6::from(c_instr.bits(12, 12) << 5 | c_instr.bits(6, 2))
 }
 
 #[inline(always)]
