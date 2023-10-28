@@ -1,5 +1,13 @@
 use crate::rv64i_16b_dec::{decode_16b_instr, COpcode};
 
+pub fn disasm_16b_operation_name(instr: u16) -> String {
+    match decode_16b_instr(instr) {
+        COpcode::CLI { .. } => "Compressed Load Immediate".to_string(),
+
+        COpcode::Uknown => "Unknown Operation".to_string(),
+    }
+}
+
 pub fn disasm_16b(c_instr: u16, _instr_addr: u64) -> String {
     match decode_16b_instr(c_instr) {
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),

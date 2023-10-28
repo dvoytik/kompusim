@@ -3,10 +3,17 @@
 use std::num::ParseIntError;
 
 use crate::{
-    alu::Imm, bits::BitOps, rv64i_16b_dec::instr_is_16b, rv64i_16b_disasm::disasm_16b, rv64i_dec::*,
+    alu::Imm,
+    bits::BitOps,
+    rv64i_16b_dec::instr_is_16b,
+    rv64i_16b_disasm::{disasm_16b, disasm_16b_operation_name},
+    rv64i_dec::*,
 };
 
 pub fn disasm_operation_name(instr: u32) -> String {
+    if instr_is_16b(instr) {
+        return disasm_16b_operation_name(instr as u16);
+    }
     match decode_instr(instr) {
         Opcode::Lui { .. } => "Load Upper Immediate".to_string(),
 
