@@ -4,7 +4,15 @@ pub fn disasm_16b_operation_name(instr: u16) -> String {
     match decode_16b_instr(instr) {
         COpcode::CLI { .. } => "Compressed Load Immediate".to_string(),
 
-        COpcode::Uknown => "Unknown Operation".to_string(),
+        COpcode::Uknown => "Unknown 16b Compressed Operation".to_string(),
+    }
+}
+
+pub fn disasm_16b_pseudo_code(instr: u16) -> String {
+    match decode_16b_instr(instr) {
+        COpcode::CLI { imm6, rd } => format!("x{rd} = {}", imm6),
+
+        COpcode::Uknown => "Unknown 16b compressed instruction".to_string(),
     }
 }
 
