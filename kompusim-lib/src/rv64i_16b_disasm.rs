@@ -16,6 +16,14 @@ pub fn disasm_16b_pseudo_code(instr: u16) -> String {
     }
 }
 
+/// Returns used registers indexes of a 16 compressed instruction (rs1, rs2, rd)
+pub fn disasm_16b_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u8>) {
+    match decode_16b_instr(instr) {
+        COpcode::CLI { rd, .. } => (None, None, Some(rd)),
+        COpcode::Uknown => (None, None, None),
+    }
+}
+
 pub fn disasm_16b(c_instr: u16, _instr_addr: u64) -> String {
     match decode_16b_instr(c_instr) {
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),

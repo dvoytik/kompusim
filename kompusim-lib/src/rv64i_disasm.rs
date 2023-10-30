@@ -6,7 +6,9 @@ use crate::{
     alu::Imm,
     bits::BitOps,
     rv64i_16b_dec::instr_is_16b,
-    rv64i_16b_disasm::{disasm_16b, disasm_16b_operation_name, disasm_16b_pseudo_code},
+    rv64i_16b_disasm::{
+        disasm_16b, disasm_16b_get_used_regs, disasm_16b_operation_name, disasm_16b_pseudo_code,
+    },
     rv64i_dec::*,
 };
 
@@ -176,6 +178,9 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
 
 /// Returns used registers indexes (rs1, rs2, rd)
 pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) {
+    if instr_is_16b(instr) {
+        return disasm_16b_get_used_regs(instr as u16);
+    }
     match decode_instr(instr) {
         Opcode::Lui { rd, .. } => (None, None, Some(rd)),
         Opcode::Auipc { rd, .. } => (None, None, Some(rd)),
