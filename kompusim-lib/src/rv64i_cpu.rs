@@ -368,6 +368,8 @@ impl RV64ICpu {
     pub fn execute_16b_instr(&mut self, c_instr: u16) {
         match decode_16b_instr(c_instr) {
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
+            // C.JR expands to jalr x0, 0(rs1)
+            COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::Uknown => self.bad_16b_instr(c_instr),
         }
 
