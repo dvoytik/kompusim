@@ -40,6 +40,6 @@ pub fn disasm_16b(c_instr: u16, _instr_addr: u64) -> String {
 #[test]
 fn test_disasm_16b_cli() {
     assert_eq!(disasm_16b(0x_4085, 0x0), "c.li x1, 1".to_owned());
-    assert_eq!(disasm_16b(0x_517d, 0x0), "c.li x2, -1".to_owned())
-    // TODO: c.jr
+    assert_eq!(disasm_16b(0x_517d, 0x0), "c.li x2, -1".to_string());
+    assert_eq!(disasm_16b(0x_8082, 0x0), "c.jr x1".to_string());
 }
