@@ -1,4 +1,4 @@
-use crate::rv64i_16b_dec::{decode_16b_instr, COpcode};
+use crate::rvc_dec::{decode_16b_instr, COpcode};
 
 pub fn disasm_16b_operation_name(instr: u16) -> String {
     match decode_16b_instr(instr) {

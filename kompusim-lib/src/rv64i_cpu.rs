@@ -2,8 +2,8 @@ use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
-use crate::rv64i_16b_dec::{c_i_opcode, decode_16b_instr, instr_is_16b, COpcode};
 use crate::rv64i_dec::*;
+use crate::rvc_dec::{c_i_opcode, decode_16b_instr, instr_is_16b, COpcode};
 
 /// exec_continue() returns:
 pub enum ExecEvent {

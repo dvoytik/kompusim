@@ -4,7 +4,6 @@ pub mod bus;
 mod csr;
 pub mod device;
 pub mod ram;
-pub mod rv64i_16b_dec;
 pub mod rv64i_16b_disasm;
 pub mod rv64i_cpu;
 /// RV64I decoder
@@ -12,4 +11,5 @@ pub mod rv64i_cpu;
 pub mod rv64i_dec;
 /// RV64I disassembler
 pub mod rv64i_disasm;
+pub mod rvc_dec;
 pub mod uart;

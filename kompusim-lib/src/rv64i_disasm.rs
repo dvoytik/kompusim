@@ -5,11 +5,11 @@ use std::num::ParseIntError;
 use crate::{
     alu::Imm,
     bits::BitOps,
-    rv64i_16b_dec::instr_is_16b,
     rv64i_16b_disasm::{
         disasm_16b, disasm_16b_get_used_regs, disasm_16b_operation_name, disasm_16b_pseudo_code,
     },
     rv64i_dec::*,
+    rvc_dec::instr_is_16b,
 };
 
 pub fn disasm_operation_name(instr: u32) -> String {

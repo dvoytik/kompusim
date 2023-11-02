@@ -3,8 +3,8 @@ use std::iter::zip;
 use egui::Color32;
 use egui_extras::TableRow;
 use egui_extras::{Column, TableBuilder};
-use kompusim::rv64i_16b_dec::instr_is_16b;
 use kompusim::rv64i_disasm::{disasm, u32_hex4, u64_hex4};
+use kompusim::rvc_dec::instr_is_16b;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
