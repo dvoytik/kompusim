@@ -4,7 +4,7 @@ use egui::Color32;
 use egui_extras::TableRow;
 use egui_extras::{Column, TableBuilder};
 use kompusim::rv64i_disasm::{disasm, u32_hex4, u64_hex4};
-use kompusim::rvc_dec::instr_is_16b;
+use kompusim::rvc_dec::instr_is_rvc;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -154,7 +154,7 @@ struct InstrCache {
 }
 
 pub fn instr_hex(instr: u32) -> String {
-    if instr_is_16b(instr) {
+    if instr_is_rvc(instr) {
         format!("{:04x}", instr as u16)
     } else {
         u32_hex4(instr)
@@ -241,6 +241,6 @@ impl<'a> InstrCacheIterator<'a> {
     }
 
     fn instr_is_32b(&self) -> bool {
-        !instr_is_16b(self.instr_bytes[self.curr_byte] as u32)
+        !instr_is_rvc(self.instr_bytes[self.curr_byte] as u32)
     }
 }

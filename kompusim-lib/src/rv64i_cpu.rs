@@ -3,7 +3,7 @@ use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
 use crate::rv64i_dec::*;
-use crate::rvc_dec::{c_i_opcode, decode_16b_instr, instr_is_16b, COpcode};
+use crate::rvc_dec::{c_i_opcode, decode_16b_instr, instr_is_rvc, COpcode};
 
 /// exec_continue() returns:
 pub enum ExecEvent {
@@ -386,7 +386,7 @@ impl RV64ICpu {
     pub fn exec_continue(&mut self, max_instr: u64) -> ExecEvent {
         for _ in 0..max_instr {
             let instr = self.fetch_instr();
-            if instr_is_16b(instr) {
+            if instr_is_rvc(instr) {
                 self.execute_16b_instr(instr.bits(15, 0) as u16);
             } else {
                 self.execute_instr(instr);
