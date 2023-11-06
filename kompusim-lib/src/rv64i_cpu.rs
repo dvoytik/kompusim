@@ -3,7 +3,7 @@ use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr;
 use crate::rv64i_dec::*;
-use crate::rvc_dec::{c_i_opcode, decode_16b_instr, instr_is_rvc, COpcode};
+use crate::rvc_dec::{c_i_opcode, decode_rvc_instr, instr_is_rvc, COpcode};
 
 /// exec_continue() returns:
 pub enum ExecEvent {
@@ -366,7 +366,7 @@ impl RV64ICpu {
 
     /// Execute a compressed instruction
     pub fn execute_16b_instr(&mut self, c_instr: u16) {
-        match decode_16b_instr(c_instr) {
+        match decode_rvc_instr(c_instr) {
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to jalr x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),

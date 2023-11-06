@@ -1,7 +1,7 @@
-use crate::rvc_dec::{decode_16b_instr, COpcode};
+use crate::rvc_dec::{decode_rvc_instr, COpcode};
 
 pub fn disasm_16b_operation_name(instr: u16) -> String {
-    match decode_16b_instr(instr) {
+    match decode_rvc_instr(instr) {
         COpcode::CLI { .. } => "Compressed Load Immediate".to_string(),
         COpcode::CJR { .. } => "Compressed Jump Register".to_string(),
 
@@ -10,7 +10,7 @@ pub fn disasm_16b_operation_name(instr: u16) -> String {
 }
 
 pub fn disasm_16b_pseudo_code(instr: u16) -> String {
-    match decode_16b_instr(instr) {
+    match decode_rvc_instr(instr) {
         COpcode::CLI { imm6, rd } => format!("x{rd} = {}", imm6),
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
 
@@ -20,7 +20,7 @@ pub fn disasm_16b_pseudo_code(instr: u16) -> String {
 
 /// Returns used registers indexes of a 16 compressed instruction (rs1, rs2, rd)
 pub fn disasm_16b_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u8>) {
-    match decode_16b_instr(instr) {
+    match decode_rvc_instr(instr) {
         COpcode::CLI { rd, .. } => (None, None, Some(rd)),
         COpcode::CJR { rs1 } => (Some(rs1), None, None),
 
@@ -29,7 +29,7 @@ pub fn disasm_16b_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
 }
 
 pub fn disasm_16b(c_instr: u16, _instr_addr: u64) -> String {
-    match decode_16b_instr(c_instr) {
+    match decode_rvc_instr(c_instr) {
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
 
