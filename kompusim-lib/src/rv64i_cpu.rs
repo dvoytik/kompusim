@@ -101,13 +101,15 @@ impl RV64ICpu {
 
     fn bad_instr(&self, ins: u32) {
         let opc = i_opcode(ins);
-        panic!("ERROR: PC=0x{:x}: bad 32b instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
-               self.get_pc());
+        panic!(
+            "ERROR: PC=0x{:x}: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
+            self.get_pc()
+        );
     }
 
     fn bad_rvc_instr(&self, c_ins: u16) {
         let opc = c_i_opcode(c_ins);
-        panic!("ERROR: PC=0x{:x}: bad 16b instr: 0x{c_ins:x} (0b_{c_ins:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
+        panic!("ERROR: PC=0x{:x}: bad RVC instr: 0x{c_ins:x} (0b_{c_ins:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
                self.get_pc());
     }
 
@@ -141,12 +143,12 @@ impl RV64ICpu {
     }
 
     /// common 32 bit instruction executed
-    fn pc_inc32b(&mut self) {
+    fn pc_inc(&mut self) {
         self.regs.pc += 4;
     }
 
     /// compressed 16-bit instruction executed
-    fn pc_inc16b(&mut self) {
+    fn pc_inc_rvc(&mut self) {
         self.regs.pc += 2;
     }
 
@@ -176,7 +178,7 @@ impl RV64ICpu {
                 println!("wrong SYSTEM instr (funct3: {funct3:x})");
             }
         }
-        self.pc_inc32b();
+        self.pc_inc();
     }
 
     // BRANCH opcodes: BEQ, BNE, BLT, ...
@@ -187,7 +189,7 @@ impl RV64ICpu {
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc32b()
+                    self.pc_inc()
                 }
             }
             // Branch EQual
@@ -195,7 +197,7 @@ impl RV64ICpu {
                 if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc32b()
+                    self.pc_inc()
                 }
             }
             // Branch Less Than (signed comparison)
@@ -203,7 +205,7 @@ impl RV64ICpu {
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc32b()
+                    self.pc_inc()
                 }
             }
             _ => {
@@ -215,13 +217,13 @@ impl RV64ICpu {
     // LUI - Load Upper Immidiate
     fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, uimm20);
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, self.regs.pc + uimm20);
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
@@ -234,7 +236,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
@@ -255,7 +257,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP instr, funct7: 0b{funct7:b}, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     // Only one instrucitn JAL - Jump and Link
@@ -291,7 +293,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) {
@@ -305,7 +307,7 @@ impl RV64ICpu {
                 println!("ERROR: unsupported STORE instruction, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc32b()
+        self.pc_inc()
     }
 
     pub fn execute_instr(&mut self, instr: u32) {
@@ -361,14 +363,14 @@ impl RV64ICpu {
     pub fn exe_opc_c_li(&mut self, imm6: I6, rd: u8) {
         let imm6: i8 = imm6.into();
         self.regs_wi8(rd, imm6 as u8);
-        self.pc_inc16b();
+        self.pc_inc_rvc();
     }
 
     /// Execute a compressed instruction
-    pub fn execute_16b_instr(&mut self, c_instr: u16) {
+    pub fn execute_rvc_instr(&mut self, c_instr: u16) {
         match decode_rvc_instr(c_instr) {
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
-            // C.JR expands to jalr x0, 0(rs1)
+            // C.JR expands to JALR x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::Uknown => self.bad_rvc_instr(c_instr),
         }
@@ -387,7 +389,7 @@ impl RV64ICpu {
         for _ in 0..max_instr {
             let instr = self.fetch_instr();
             if instr_is_rvc(instr) {
-                self.execute_16b_instr(instr.bits(15, 0) as u16);
+                self.execute_rvc_instr(instr.bits(15, 0) as u16);
             } else {
                 self.execute_instr(instr);
             }
