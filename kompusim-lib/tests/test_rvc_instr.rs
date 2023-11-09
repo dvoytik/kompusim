@@ -14,6 +14,6 @@ fn test_16b_instr_c_li() {
 fn test_16b_instr_c_jr() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_w64(1, 0x54);
-    cpu.execute_16b_instr(0x_8082);
+    cpu.execute_rvc_instr(0x_8082);
     assert!(cpu.regs.pc == 0x54);
 }
