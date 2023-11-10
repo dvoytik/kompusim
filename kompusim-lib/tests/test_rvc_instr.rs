@@ -17,3 +17,15 @@ fn test_16b_instr_c_jr() {
     cpu.execute_rvc_instr(0x_8082);
     assert!(cpu.regs.pc == 0x54);
 }
+
+#[test]
+/// Check all non-jumping RVC instructions increment PC by 2
+fn test_all_rvc_instr_incr_pc_2() {
+    let mut cpu = RV64ICpu::default();
+    // c.jr x1
+    cpu.execute_rvc_instr(0x_8082);
+    // c.li x1, 1
+    cpu.execute_rvc_instr(0x_4085);
+    assert!(cpu.regs.pc == 0x_02);
+    // TODO: add all instructions
+}
