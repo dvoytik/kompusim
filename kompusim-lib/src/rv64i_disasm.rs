@@ -44,8 +44,8 @@ pub fn disasm_operation_name(instr: u32) -> String {
         },
 
         Opcode::Op { funct7, funct3, .. } => match (funct7, funct3) {
-            (F7_OP_ADD, F3_OP_ADD_SUB) => format!("Add register to register"),
-            (F7_OP_SUB, F3_OP_ADD_SUB) => format!("Subtract register from regiser"),
+            (F7_OP_ADD, F3_OP_ADD_SUB) => "Add register to register".to_string(),
+            (F7_OP_SUB, F3_OP_ADD_SUB) => "Subtract register from regiser".to_string(),
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 

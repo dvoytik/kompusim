@@ -22,7 +22,7 @@ use c_opcodes::*;
 /// Check whether the instruction is in compressed format (16-bit)
 #[inline(always)]
 pub fn instr_is_rvc(instr: u32) -> bool {
-    !(instr & 0x3 == 0x3)
+    instr & 0x3 != 0x3
 }
 
 /// Get opcode of the compressed (16 bit) instruction

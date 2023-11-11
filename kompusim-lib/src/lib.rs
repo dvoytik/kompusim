@@ -10,6 +10,7 @@ pub mod rv64i_cpu;
 pub mod rv64i_dec;
 /// RV64I disassembler
 pub mod rv64i_disasm;
+#[allow(clippy::unusual_byte_groupings)]
 pub mod rvc_dec;
 pub mod rvc_disasm;
 pub mod uart;
