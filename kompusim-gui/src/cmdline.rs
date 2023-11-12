@@ -93,10 +93,8 @@ pub fn parse_size_with_suffix(input: &str) -> Option<u64> {
         };
         if suffix_alpha.is_empty() {
             return Some(number);
-        } else {
-            if let Some(multiplier) = suffix_to_multiplier(suffix_alpha) {
-                return number.checked_mul(multiplier);
-            }
+        } else if let Some(multiplier) = suffix_to_multiplier(suffix_alpha) {
+            return number.checked_mul(multiplier);
         }
     }
     None
