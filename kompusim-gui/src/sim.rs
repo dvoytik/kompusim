@@ -340,7 +340,7 @@ impl Simulator {
         let pc = self.regs.pc;
         if self.instr_cache.is_none()
             || pc < self.instr_cache_start
-            || pc >= self.instr_cache_start + self.instr_cache_sz as u64
+            || pc >= self.instr_cache_start + self.instr_cache_sz
         {
             // update cache if needed
             let _ = self.get_instructions(pc, 4);
@@ -362,7 +362,7 @@ impl Simulator {
     pub fn get_instructions(&mut self, start_addr: u64, size: u64) -> (&Vec<u8>, u64) {
         if self.instr_cache.is_none()
             || start_addr < self.instr_cache_start
-            || start_addr + size as u64 > self.instr_cache_start + self.instr_cache_sz as u64
+            || start_addr + size > self.instr_cache_start + self.instr_cache_sz
         {
             println!("Updating instruction cache"); // keep it for debuggin unnecessary cache updates
             self.send_cmd(SimCommand::Disasm(start_addr, size));
