@@ -127,7 +127,7 @@ impl InstrList {
     }
 }
 
-fn highlight_col<'a, 'b>(row: &mut TableRow<'a, 'b>, s1: &str, s2: &str, s3: &str, s4: &str) {
+fn highlight_col(row: &mut TableRow<'_, '_>, s1: &str, s2: &str, s3: &str, s4: &str) {
     // TODO: change for white background
     let color = Color32::YELLOW;
     row.col(|ui| {
@@ -178,7 +178,7 @@ impl InstrCache {
         self.disasm = Vec::with_capacity(new_instructions.len());
 
         let instr_iter = InstrCacheIterator {
-            instr_bytes: &new_instructions,
+            instr_bytes: new_instructions,
             curr_addr: start_addr,
             curr_byte: 0,
         };
@@ -215,13 +215,13 @@ impl<'a> Iterator for InstrCacheIterator<'a> {
             let ret_val = (self.curr_addr, self.get_32b_instr());
             self.curr_addr += 4;
             self.curr_byte += 4;
-            return Some(ret_val);
+            Some(ret_val)
         } else {
             // 16b compressed instruction
             let ret_val = (self.curr_addr, self.get_16b_instr());
             self.curr_addr += 2;
             self.curr_byte += 2;
-            return Some(ret_val);
+            Some(ret_val)
         }
     }
 }
