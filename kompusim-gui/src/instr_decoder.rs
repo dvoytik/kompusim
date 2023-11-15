@@ -70,12 +70,12 @@ impl InstrDecoder {
     }
 
     fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {
-        if self.sync_with_sumulator {
-            if address != self.cached_address || instruction != self.cached_instruction {
-                self.update_disasm_cache(address, instruction);
-                self.edited_instr_hex = self.cached_instr_hex.clone();
-                self.edited_address_hex = self.cached_address_hex.clone();
-            }
+        if self.sync_with_sumulator
+            && (address != self.cached_address || instruction != self.cached_instruction)
+        {
+            self.update_disasm_cache(address, instruction);
+            self.edited_instr_hex = self.cached_instr_hex.clone();
+            self.edited_address_hex = self.cached_address_hex.clone();
         }
         ui.add(egui::Checkbox::new(
             &mut self.sync_with_sumulator,

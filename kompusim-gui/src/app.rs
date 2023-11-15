@@ -71,7 +71,7 @@ impl KompusimApp {
                 ..
             } = cmdl_cmd;
             if let Some(ref ram) = ram {
-                if let Some(ram_sz) = parse_size_with_suffix(&ram) {
+                if let Some(ram_sz) = parse_size_with_suffix(ram) {
                     app.sim.set_ram_sz(ram_sz);
                 } else {
                     eprintln!(
