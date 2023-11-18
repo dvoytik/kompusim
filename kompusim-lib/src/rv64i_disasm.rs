@@ -6,7 +6,7 @@ use crate::{alu::Imm, bits::BitOps, rv64i_dec::*, rvc_dec::instr_is_rvc, rvc_dis
 
 pub fn disasm_operation_name(instr: u32) -> String {
     if instr_is_rvc(instr) {
-        return disasm_16b_operation_name(instr as u16);
+        return disasm_rvc_operation_name(instr as u16);
     }
     match decode_instr(instr) {
         Opcode::Lui { .. } => "Load Upper Immediate".to_string(),
@@ -60,7 +60,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
 pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
     if instr_is_rvc(instr) {
-        return disasm_16b_pseudo_code(instr as u16);
+        return disasm_rvc_pseudo_code(instr as u16);
     }
     match decode_instr(instr) {
         // TODO:
@@ -171,7 +171,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
 /// Returns used registers indexes (rs1, rs2, rd)
 pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) {
     if instr_is_rvc(instr) {
-        return disasm_16b_get_used_regs(instr as u16);
+        return disasm_rvc_get_used_regs(instr as u16);
     }
     match decode_instr(instr) {
         Opcode::Lui { rd, .. } => (None, None, Some(rd)),
@@ -190,7 +190,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
 
 pub fn disasm(instr: u32, instr_addr: u64) -> String {
     if instr_is_rvc(instr) {
-        return disasm_16b(instr as u16, instr_addr);
+        return disasm_rvc(instr as u16, instr_addr);
     }
     match decode_instr(instr) {
         Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
