@@ -212,13 +212,13 @@ impl<'a> Iterator for InstrCacheIterator<'a> {
             if self.curr_byte + 4 >= self.instr_bytes.len() {
                 return None;
             }
-            let ret_val = (self.curr_addr, self.get_32b_instr());
+            let ret_val = (self.curr_addr, self.get_instr());
             self.curr_addr += 4;
             self.curr_byte += 4;
             Some(ret_val)
         } else {
             // 16b compressed instruction
-            let ret_val = (self.curr_addr, self.get_16b_instr());
+            let ret_val = (self.curr_addr, self.get_rvc_instr());
             self.curr_addr += 2;
             self.curr_byte += 2;
             Some(ret_val)
@@ -227,7 +227,7 @@ impl<'a> Iterator for InstrCacheIterator<'a> {
 }
 
 impl<'a> InstrCacheIterator<'a> {
-    fn get_32b_instr(&self) -> u32 {
+    fn get_instr(&self) -> u32 {
         // TODO: this might fail due to cut 32b instruction
         (self.instr_bytes[self.curr_byte] as u32)
             | (self.instr_bytes[self.curr_byte + 1] as u32) << 8
@@ -235,7 +235,8 @@ impl<'a> InstrCacheIterator<'a> {
             | (self.instr_bytes[self.curr_byte + 3] as u32) << 24
     }
 
-    fn get_16b_instr(&self) -> u32 {
+    // 16-bit compressed
+    fn get_rvc_instr(&self) -> u32 {
         (self.instr_bytes[self.curr_byte] as u32)
             | (self.instr_bytes[self.curr_byte + 1] as u32) << 8
     }
