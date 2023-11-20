@@ -3,7 +3,7 @@ use std::iter::zip;
 use egui::Color32;
 use egui_extras::TableRow;
 use egui_extras::{Column, TableBuilder};
-use kompusim::rv64i_disasm::{disasm, u32_hex4, u64_hex4};
+use kompusim::rv64i_disasm::{disasm, instr_hex, u64_hex4};
 use kompusim::rvc_dec::instr_is_rvc;
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -151,14 +151,6 @@ struct InstrCache {
     instructions: Vec<u8>,
     start_address: u64,
     disasm: Vec<(String, String, String)>,
-}
-
-pub fn instr_hex(instr: u32) -> String {
-    if instr_is_rvc(instr) {
-        format!("{:04x}", instr as u16)
-    } else {
-        u32_hex4(instr)
-    }
 }
 
 impl InstrCache {

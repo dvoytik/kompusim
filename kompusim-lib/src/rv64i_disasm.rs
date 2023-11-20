@@ -4,6 +4,14 @@ use std::num::ParseIntError;
 
 use crate::{alu::Imm, bits::BitOps, rv64i_dec::*, rvc_dec::instr_is_rvc, rvc_disasm::*};
 
+pub fn instr_hex(instr: u32) -> String {
+    if instr_is_rvc(instr) {
+        format!("{:04x}", instr as u16)
+    } else {
+        u32_hex4(instr)
+    }
+}
+
 pub fn disasm_operation_name(instr: u32) -> String {
     if instr_is_rvc(instr) {
         return disasm_rvc_operation_name(instr as u16);

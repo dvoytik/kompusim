@@ -1,5 +1,5 @@
 use kompusim::rv64i_disasm::{
-    disasm, disasm_operation_name, disasm_pseudo_code, hex_to_u32, hex_to_u64, u32_bin4, u32_hex4,
+    disasm, disasm_operation_name, disasm_pseudo_code, hex_to_u32, hex_to_u64, instr_hex, u32_bin4,
     u64_hex4,
 };
 
@@ -62,7 +62,7 @@ impl InstrDecoder {
         self.cached_address = address;
         self.cached_address_hex = u64_hex4(address);
         self.cached_instruction = instruction;
-        self.cached_instr_hex = u32_hex4(instruction);
+        self.cached_instr_hex = instr_hex(instruction);
         self.cached_instr_disasm = disasm(instruction, address);
         self.cached_instr_binary = u32_bin4(instruction);
         self.cached_operation_name = disasm_operation_name(instruction);
