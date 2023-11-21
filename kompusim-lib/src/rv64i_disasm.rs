@@ -351,6 +351,25 @@ pub fn u32_bin4(v: u32) -> String {
     )
 }
 
+/// Converts u16 to binary string. E.g.: 0x_abcd to "1010_1011_1100_1101"
+pub fn u16_bin4(v: u16) -> String {
+    format!(
+        "{:04b}_{:04b}_{:04b}_{:04b}",
+        v.bits(15, 12),
+        v.bits(11, 8),
+        v.bits(7, 4),
+        v.bits(3, 0)
+    )
+}
+
+pub fn instr_bin4(instr: u32) -> String {
+    if instr_is_rvc(instr) {
+        u16_bin4(instr as u16)
+    } else {
+        u32_bin4(instr)
+    }
+}
+
 pub fn u32_hex4(v: u32) -> String {
     format!("{:04x}_{:04x}", v.bits(31, 16), v.bits(15, 0))
 }
