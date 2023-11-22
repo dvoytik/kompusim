@@ -7,6 +7,7 @@ use crate::{alu::I6, bits::BitOps};
 pub enum COpcode {
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
+    CADD { rd: u8, rs2: u8 },
     Uknown,
 }
 
@@ -14,8 +15,8 @@ pub enum COpcode {
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
-pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_LI: u8 =                    0b_010_01;
+pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 }
 use c_opcodes::*;
 
@@ -64,12 +65,14 @@ pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
         },
         OPC_C_JR_MV_EBREAK_JALR_ADD => {
             let rs2 = c_i_rs2(c_instr);
-            let rs1 = c_i_rs1(c_instr);
-            match (c_instr.bits(12, 12), rs2) {
+            let rs1 = c_i_rs1(c_instr); // also rd for C.MV and C.ADD
+            let bit12 = c_instr.bits(12, 12);
+            match (bit12, rs1, rs2) {
                 //  C.JR (jump register) performs an unconditional control transfer to the address in
                 //  register rs1. C.JR expands to jalr x0, 0(rs1). C.JR is only valid when rs!=x0;
                 //  the code point with rs1=x0 is reserved.
-                (0, 0) if rs1 != 0 => COpcode::CJR { rs1 },
+                (0, rs1, 0) if rs1 != 0 => COpcode::CJR { rs1 },
+                (1, rd, rs2) if rd != 0 && rs2 != 0 => COpcode::CADD { rd, rs2 },
                 _ => COpcode::Uknown,
             }
         }

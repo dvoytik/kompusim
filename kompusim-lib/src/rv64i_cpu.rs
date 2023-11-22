@@ -240,7 +240,7 @@ impl RV64ICpu {
     }
 
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-    fn exe_opc_op(&mut self, funct7: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
+    fn exe_opc_op(&mut self, funct7: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8, rvc: bool) {
         match funct3 {
             F3_OP_ADD_SUB => {
                 if funct7 == F7_OP_ADD {
@@ -257,7 +257,11 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP instr, funct7: 0b{funct7:b}, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        if rvc {
+            self.pc_inc_rvc()
+        } else {
+            self.pc_inc();
+        }
     }
 
     // Only one instrucitn JAL - Jump and Link
@@ -346,7 +350,7 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd),
+            } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd, /* rvc = */ false),
             Opcode::System {
                 csr,
                 rs1,
@@ -372,6 +376,9 @@ impl RV64ICpu {
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to JALR x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
+            COpcode::CADD { rd, rs2 } => {
+                self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd, /* rvc = */ true)
+            }
             COpcode::Uknown => self.bad_rvc_instr(c_instr),
         }
 
