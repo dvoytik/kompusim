@@ -61,7 +61,6 @@ impl InstrList {
         self.instr_cache
             .update_cache(instructions.1, instructions.0);
         assert!(pc >= self.instr_cache.start_address);
-        let highlight_instr_idx = (pc - self.instr_cache.start_address) / 4;
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
         ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
@@ -95,9 +94,9 @@ impl InstrList {
                     text_height,
                     self.instr_cache.disasm.len(),
                     |row_index, mut row| {
-                        let (addr_hex, instr_hex, instr_mnemonic) =
+                        let (instr_addr, addr_hex, instr_hex, instr_mnemonic) =
                             self.instr_cache.get_disasm(row_index);
-                        if row_index == highlight_instr_idx as usize {
+                        if pc == instr_addr {
                             highlight_col(&mut row, "➡", addr_hex, instr_hex, instr_mnemonic);
                         } else {
                             row.col(|ui| {
@@ -147,10 +146,10 @@ fn highlight_col(row: &mut TableRow<'_, '_>, s1: &str, s2: &str, s3: &str, s4: &
 /// Instruction Cache to optimizing rendering the instruction list
 #[derive(Default)]
 struct InstrCache {
-    /// (start_address, array_of_instructions, array_of_dissassembled_strings)
     instructions: Vec<u8>,
     start_address: u64,
-    disasm: Vec<(String, String, String)>,
+    /// (instr_addr, instr_addr_hex_str, instr_hex_str, instr_mnemonic_str)
+    disasm: Vec<(u64, String, String, String)>,
 }
 
 impl InstrCache {
@@ -178,13 +177,14 @@ impl InstrCache {
             let addr_hex = u64_hex4(instr_addr);
             let instr_hex = instr_hex(instr);
             let instr_mnemonic = disasm(instr, instr_addr);
-            self.disasm.push((addr_hex, instr_hex, instr_mnemonic));
+            self.disasm
+                .push((instr_addr, addr_hex, instr_hex, instr_mnemonic));
         }
     }
 
-    fn get_disasm(&self, index: usize) -> (&str, &str, &str) {
-        let (ref addr_hex, ref instr_hex, ref instr_mnemonic) = self.disasm[index];
-        (addr_hex, instr_hex, instr_mnemonic)
+    fn get_disasm(&self, index: usize) -> (u64, &str, &str, &str) {
+        let (instr_addr, ref addr_hex, ref instr_hex, ref instr_mnemonic) = self.disasm[index];
+        (instr_addr, addr_hex, instr_hex, instr_mnemonic)
     }
 }
 
