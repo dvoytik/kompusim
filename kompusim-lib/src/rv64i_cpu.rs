@@ -379,6 +379,8 @@ impl RV64ICpu {
             COpcode::CADD { rd, rs2 } => {
                 self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd, /* rvc = */ true)
             }
+            // C.J expands to jal x0, offset[11:1].
+            COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
             COpcode::Uknown => self.bad_rvc_instr(c_instr),
         }
 

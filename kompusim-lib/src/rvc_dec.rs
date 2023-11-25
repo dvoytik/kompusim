@@ -2,12 +2,16 @@
 
 // TODO: rename 16b to rvc everywhere
 
-use crate::{alu::I6, bits::BitOps};
+use crate::{
+    alu::{I12, I6},
+    bits::BitOps,
+};
 
 pub enum COpcode {
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
+    CJ { imm12: I12 },
     Uknown,
 }
 
@@ -16,6 +20,7 @@ pub enum COpcode {
 #[rustfmt::skip]
 mod c_opcodes {
 pub const OPC_C_LI: u8 =                    0b_010_01;
+pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 }
 use c_opcodes::*;
@@ -37,6 +42,21 @@ pub fn c_i_opcode(c_instr: u16) -> u8 {
 #[inline(always)]
 pub fn c_i_imm6(c_instr: u16) -> I6 {
     I6::from(c_instr.bits(12, 12) << 5 | c_instr.bits(6, 2))
+}
+
+// Decode signed 12-bit immidiate from C.J and C.JAL instruction format
+#[inline(always)]
+pub fn c_i_imm12(c_instr: u16) -> I12 {
+    I12::from(
+        c_instr.bits(12, 12) << 11
+            | c_instr.bits(11, 11) << 4
+            | c_instr.bits(10, 9) << 8
+            | c_instr.bits(8, 8) << 10
+            | c_instr.bits(7, 7) << 6
+            | c_instr.bits(6, 6) << 7
+            | c_instr.bits(5, 3) << 1
+            | c_instr.bits(2, 2) << 5,
+    )
 }
 
 #[inline(always)]
@@ -62,6 +82,9 @@ pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
         OPC_C_LI if rd != 0 => COpcode::CLI {
             imm6: c_i_imm6(c_instr),
             rd: c_i_rd(c_instr),
+        },
+        OPC_C_J => COpcode::CJ {
+            imm12: c_i_imm12(c_instr),
         },
         OPC_C_JR_MV_EBREAK_JALR_ADD => {
             let rs2 = c_i_rs2(c_instr);
