@@ -58,6 +58,17 @@ fn test_instruction_jal() {
     assert!(cpu.regs.pc == 0x80000018);
 }
 
+// 80000034:  fe9ff06f  jal  zero,8000001c
+#[test]
+// jal ra, 80000018
+fn test_instruction_jal_2() {
+    let mut cpu = RV64ICpu::default();
+    // cpu.regs.x[5] = 1;
+    cpu.regs.pc = 0x80000034;
+    cpu.execute_instr(0xfe9ff06f);
+    assert!(cpu.regs.pc == 0x8000001c);
+}
+
 #[test]
 // jalr x0, 0x0(x1)
 fn test_instruction_jalr() {

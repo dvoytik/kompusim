@@ -212,6 +212,10 @@ fn test_imm21() {
     assert!(5000_000_u64.add_i21(I21::from(-1024_i32 * 1024)) == 5000_000 - 1024 * 1024);
 
     assert!(5000_000_u64.add_i21(I21::from(0x7ff)) == 5000_000 + 2047);
+
+    // convert I12 to I21
+    let imm21: I21 = I12(-22).into();
+    assert!(imm21.0 == -22);
 }
 
 #[test]
