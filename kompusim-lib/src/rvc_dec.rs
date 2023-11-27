@@ -8,6 +8,8 @@ use crate::{
 };
 
 pub enum COpcode {
+    CNOP,
+    CADDI { imm6: I6, rd: u8 },
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
@@ -15,10 +17,12 @@ pub enum COpcode {
     Uknown,
 }
 
+// TODO: do we need these const defines or should I move it to match?
 // Use mod to disable auto-formatting for all definitions
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
+pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
 pub const OPC_C_LI: u8 =                    0b_010_01;
 pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
@@ -79,6 +83,14 @@ pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
     let rd = c_i_rd(c_instr);
 
     match c_i_opcode(c_instr) {
+        OPC_C_NOP_ADDI => {
+            let imm6 = c_i_imm6(c_instr);
+            if rd == 0 {
+                COpcode::CNOP
+            } else {
+                COpcode::CADDI { imm6, rd }
+            }
+        }
         OPC_C_LI if rd != 0 => COpcode::CLI {
             imm6: c_i_imm6(c_instr),
             rd: c_i_rd(c_instr),

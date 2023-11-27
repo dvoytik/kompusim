@@ -226,7 +226,7 @@ impl RV64ICpu {
         self.pc_inc()
     }
 
-    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
+    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8, rvc: bool) {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
@@ -236,7 +236,11 @@ impl RV64ICpu {
                 println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
             }
         }
-        self.pc_inc()
+        if rvc {
+            self.pc_inc_rvc()
+        } else {
+            self.pc_inc()
+        }
     }
 
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
@@ -343,7 +347,7 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op_imm(imm12, rs1, funct3, rd),
+            } => self.exe_opc_op_imm(imm12, rs1, funct3, rd, /* rvc = */ false),
             Opcode::Op {
                 funct7,
                 rs2,
@@ -373,6 +377,11 @@ impl RV64ICpu {
     /// Execute a compressed instruction
     pub fn execute_rvc_instr(&mut self, c_instr: u16) {
         match decode_rvc_instr(c_instr) {
+            COpcode::CNOP => self.pc_inc_rvc(),
+            // C.ADDI expands into addi rd, rd, nzimm[5:0]
+            COpcode::CADDI { imm6, rd } => {
+                self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
+            }
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to JALR x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),

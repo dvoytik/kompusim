@@ -77,6 +77,12 @@ impl From<i16> for I12 {
     }
 }
 
+impl From<I6> for I12 {
+    fn from(v: I6) -> I12 {
+        I12(v.0 as i16)
+    }
+}
+
 impl Display for I12 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
