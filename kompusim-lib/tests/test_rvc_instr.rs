@@ -28,14 +28,21 @@ fn test_rvc_add() {
 }
 
 #[test]
-// c.j 8000001e
 // 8000003a:  b7ed  c.j 80000024
 fn test_rvc_instr_c_j() {
     let mut cpu = RV64ICpu::default();
     cpu.regs.pc = 0x_8000_003a;
     cpu.execute_rvc_instr(0x_b7ed);
-    println!("{:x}", cpu.regs.pc);
     assert!(cpu.regs.pc == 0x_8000_0024);
+}
+
+// c.addi a0,1
+#[test]
+fn test_rvc_instr_todo() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs_w64(10, 0x1122_3344);
+    cpu.execute_rvc_instr(0x_0505);
+    assert!(cpu.regs.x[10] == 0x1122_3345);
 }
 
 #[test]
@@ -48,6 +55,8 @@ fn test_all_rvc_instr_incr_pc_2() {
     cpu.execute_rvc_instr(0x_4085);
     // c.add x1, x1
     cpu.execute_rvc_instr(0x_9086);
-    assert!(cpu.regs.pc == 0x_04);
+    // c.addi a0,1
+    cpu.execute_rvc_instr(0x_0505);
+    assert!(cpu.regs.pc == 0x_06);
     // TODO: add all instructions
 }

@@ -64,4 +64,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_9086, 0x0), "c.add x1, x1".to_string());
     assert_eq!(disasm_rvc(0x_a001, 0x0), "c.j 0".to_string());
     assert_eq!(disasm_rvc(0x_b7ed, 0x8000003a), "c.j 80000024".to_string());
+    assert_eq!(disasm_rvc(0x_0505, 0x0), "c.addi x10, 1".to_string());
 }
