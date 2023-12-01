@@ -82,11 +82,11 @@ fn test_instruction_jalr() {
 // lbu x6, 0x0(x10)
 fn test_instruction_lbu() {
     let mut bus = Bus::new_with_ram(0x0000_0000_8000_0000, 4 * 1024);
-    bus.write8(0x00000000_8000_003c, 0x48);
+    bus.write8(0x0000_0000_8000_003c, 0x48);
     let mut cpu = RV64ICpu::new(bus);
 
-    cpu.regs_w64(6, 0xa5a5a5a5_a5a5_a5a5);
-    cpu.regs_w64(10, 0x00000000_8000_003c);
+    cpu.regs_w64(6, 0xa5a5_a5a5_a5a5_a5a5);
+    cpu.regs_w64(10, 0x0000_0000_8000_003c);
     cpu.execute_instr(0x00054303);
     assert!(cpu.regs_r64(6) == 0x48);
 }
@@ -98,8 +98,8 @@ fn test_instruction_lb() {}
 #[test]
 // lw x7, 0x0(x5)
 fn test_instruction_lw() {
-    let mut bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
-    bus.write32(0x00000000_0000_0000, 0xa5a5_a5a5);
+    let mut bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    bus.write32(0x0000_0000_0000_0000, 0xa5a5_a5a5);
     let mut cpu = RV64ICpu::new(bus);
     cpu.regs_w64(7, 0xdead_beef_dead_beef);
     cpu.execute_instr(0x0002a383);
@@ -110,7 +110,7 @@ fn test_instruction_lw() {
 #[test]
 // sw x6, 0x0(x5)
 fn test_instruction_sw() {
-    let bus = Bus::new_with_ram(0x00000000_0000_0000, 4 * 1024);
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
     cpu.regs_w64(5, 0x10); // address
     cpu.regs_w64(6, 0xdead_beef); // what to store
