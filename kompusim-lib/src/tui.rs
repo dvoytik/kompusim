@@ -32,9 +32,9 @@ fn print_green_line() {
 /// Parses string "dm <addr> <size>"
 /// "dm 0x10000 1024" to (0x10000, 1024)
 fn parse_dm(s: &str) -> Option<(u64, u64)> {
-    if let Some(addr_i) = s.trim().find(" ") {
+    if let Some(addr_i) = s.trim().find(' ') {
         let s = &s[addr_i + 1..].trim();
-        if let Some(size_i) = s.find(" ") {
+        if let Some(size_i) = s.find(' ') {
             let addr_str = &s[..size_i].trim();
             let size_str = &s[size_i + 1..].trim();
             if let Ok(addr) = u64::from_str_radix(addr_str.trim_start_matches("0x"), 16) {
@@ -52,39 +52,46 @@ fn parse_pr(s: &str) -> Option<u8> {
     if let Some(reg_s_i) = s.trim().find(|c: char| c.is_ascii_whitespace()) {
         let reg_s = &s[reg_s_i..].trim();
         if reg_s.starts_with('x') {
-            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("x"), 10) {
+            if let Ok(reg_i) = reg_s.trim_start_matches('x').parse::<u8>() {
                 if reg_i <= 31 {
                     return Some(reg_i);
                 }
             }
         } else if reg_s.starts_with("ra") {
             return Some(1);
-        } else if reg_s.starts_with("sp") {
+        }
+        if reg_s.starts_with("sp") {
             return Some(2);
-        } else if reg_s.starts_with("gp") {
+        }
+        if reg_s.starts_with("gp") {
             return Some(3);
-        } else if reg_s.starts_with("tp") {
+        }
+        if reg_s.starts_with("tp") {
             return Some(4);
-        } else if reg_s.starts_with('t') {
+        }
+        if reg_s.starts_with('t') {
             // t0 ... t6
-            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("t"), 10) {
+            if let Ok(reg_i) = reg_s.trim_start_matches('t').parse::<u8>() {
                 if reg_i < 3 {
-                    return Some(reg_i as u8 + 5);
-                } else if reg_i >= 3 && reg_i <= 6 {
+                    return Some(reg_i + 5);
+                }
+                if (3..=6).contains(&reg_i) {
+                    // if reg_i >= 3 && reg_i <= 6 {
                     return Some(reg_i + 25);
                 }
             }
         } else if reg_s.starts_with('a') {
             // a0 ... 07
-            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("a"), 10) {
-                return Some(reg_i as u8 + 10);
+            if let Ok(reg_i) = reg_s.trim_start_matches('a').parse::<u8>() {
+                return Some(reg_i + 10);
             }
         } else if reg_s.starts_with('s') {
             // s0, s1, s2 ... s11
-            if let Ok(reg_i) = u8::from_str_radix(reg_s.trim_start_matches("s"), 10) {
+            if let Ok(reg_i) = reg_s.trim_start_matches('s').parse::<u8>() {
                 if reg_i <= 1 {
-                    return Some(reg_i as u8 + 8);
-                } else if reg_i >= 2 && reg_i <= 11 {
+                    return Some(reg_i + 8);
+                }
+                if (2..=11).contains(&reg_i) {
                     return Some(reg_i + 16);
                 }
             }
@@ -133,7 +140,7 @@ fn print_help() {
 }
 
 fn parse_command(l: String) -> Option<TuiMenuCmd> {
-    if l.len() == 0 {
+    if l.is_empty() {
         return None;
     }
     const MAX_CMD_SZ: usize = 2;
@@ -143,36 +150,36 @@ fn parse_command(l: String) -> Option<TuiMenuCmd> {
         MAX_CMD_SZ
     };
     let cmd = &l[..cmd_sz];
-    if l.starts_with("h") {
+    if l.starts_with('h') {
         print_help();
-    } else if cmd.starts_with("q") {
+    } else if cmd.starts_with('q') {
         return Some(TuiMenuCmd::Quit);
-    } else if cmd.starts_with("c") {
+    }
+    if cmd.starts_with('c') {
         return Some(TuiMenuCmd::Continue);
-    } else if cmd.starts_with("s") {
+    }
+    if cmd.starts_with('s') {
         if let Some(n_steps) = parse_cmd_with_number(&l) {
             return Some(TuiMenuCmd::Step(n_steps));
-        } else {
-            return Some(TuiMenuCmd::Step(1));
         }
-    } else if cmd.starts_with("pr") {
+        return Some(TuiMenuCmd::Step(1));
+    }
+    if cmd.starts_with("pr") {
         if let Some(reg_i) = parse_pr(&l) {
             return Some(TuiMenuCmd::PrintRegister(reg_i));
-        } else {
-            return Some(TuiMenuCmd::PrintAllRegisters);
         }
-    } else if cmd.starts_with("dm") {
+        return Some(TuiMenuCmd::PrintAllRegisters);
+    }
+    if cmd.starts_with("dm") {
         if let Some((addr, size)) = parse_dm(&l) {
             return Some(TuiMenuCmd::DumpMem(align16(addr), align16_nonzero(size)));
-        } else {
-            println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
         }
+        println!("format shoud be: dm <hex_addr> <size>. Example:\ndm 0x00001234 1024");
     } else if cmd.starts_with("di") {
         let (pc_offset, n_instr) = parse_cmd_di(&l);
         return Some(TuiMenuCmd::Disasm(pc_offset, n_instr));
-    } else {
-        println!("unrecognized command");
     }
+    println!("unrecognized command");
     None
 }
 
@@ -391,7 +398,7 @@ pub fn dump_mem(m: Option<&[u8]>, addr: u64, size: u64) {
 }
 
 fn __dump_mem(m: Option<&[u8]>, addr: u64, size: u64) -> String {
-    if let None = m {
+    if m.is_none() {
         return "Wrong address or size".to_string();
     }
     let m = m.unwrap();
@@ -418,7 +425,7 @@ fn __dump_mem(m: Option<&[u8]>, addr: u64, size: u64) -> String {
             pr_str.clear();
         }
         if i % 8 == 0 {
-            line.push_str(" ");
+            line.push(' ');
         }
         line.push_str(&format!("{:02x} ", b));
         pr_str.push(if *b >= 0x20 && *b <= 0x7e {
@@ -451,16 +458,16 @@ fn test_tui_commands() {
     assert!(parse_pr("pr x1") == Some(1));
     assert!(parse_pr("pr s11") == Some(27));
     assert!(parse_pr("pr	    x15 ") == Some(15));
-    assert!(parse_pr("pr x32") == None);
+    assert!(parse_pr("pr x32").is_none());
 
-    assert!(parse_command("".to_string()) == None);
+    assert!(parse_command("".to_string()).is_none());
     assert!(parse_command("c".to_string()) == Some(TuiMenuCmd::Continue));
     assert!(
         parse_command("dm 0x800000c0 16".to_string()) == Some(TuiMenuCmd::DumpMem(0x800000c0, 16))
     );
     assert!(parse_command("di 16".to_string()) == Some(TuiMenuCmd::Disasm(-4, 16)));
 
-    assert!(reg_hex(0x1234_5678_9abc_def0) == "1234_5678_9abc_def0".to_string());
-    assert!(reg_hex(0x1234) == "0000_0000_0000_1234".to_string());
-    assert!(reg_hex(0xF234_0000_0000_0000) == "f234_0000_0000_0000".to_string());
+    assert!(reg_hex(0x1234_5678_9abc_def0) == *"1234_5678_9abc_def0");
+    assert!(reg_hex(0x1234) == *"0000_0000_0000_1234");
+    assert!(reg_hex(0xF234_0000_0000_0000) == *"f234_0000_0000_0000");
 }
