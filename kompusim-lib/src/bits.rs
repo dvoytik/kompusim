@@ -148,9 +148,9 @@ fn test_bit_ops() {
     assert!(0b_1111_1111_u8.bits(7, 7) == 0x1_u8);
 
     // .bit()
-    assert!(0b_0001_u16.bit(0) == true);
-    assert!(0b_0001_u16.bit(1) == false);
-    assert!(0b_0001_u16.bit(15) == false);
+    assert!(0b_0001_u16.bit(0));
+    assert!(!0b_0001_u16.bit(1));
+    assert!(!0b_0001_u16.bit(15));
 
     // u16
     assert!(0b_00000000_00000111_u16.bits(2, 0) == 0b_111_u16);
