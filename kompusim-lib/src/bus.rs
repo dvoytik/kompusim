@@ -247,7 +247,7 @@ pub fn test_write32_le() {
 
 #[test]
 fn test_load_image_from_static() {
-    static BIN: &'static [u8] = &[0x55; 1024];
+    static BIN: &[u8] = &[0x55; 1024];
     let mut bus = Bus::new_with_ram(0, 4 * 1024);
     bus.load_image(0x4, BIN).unwrap();
     assert!(bus.read32(0x4) == 0x5555_5555);

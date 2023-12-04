@@ -77,7 +77,7 @@ fn main() {
 
             let mut break_point: Option<u64> = None;
             if let Some(breakpoint) = breakpoint {
-                if breakpoint.find("auto").is_none() {
+                if !breakpoint.contains("auto") {
                     break_point = Some(hex_to_u64(breakpoint).expect("wrong hex in --breakpoint"));
                 }
                 // TODO: handel auto breakpoint case
