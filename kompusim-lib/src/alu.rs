@@ -187,7 +187,7 @@ fn test_imm12() {
     assert!(5000_u64.add_i12(I12::from(0x800_u16)) == 5000 - 2048);
     assert!(5000_u64.add_i12(I12::from(-2048_i16)) == 5000 - 2048);
 
-    assert!(5000_000_u64.add_i12(I12::from(0x7ff_u16)) == 5000_000 + 2047);
+    assert!(500_0000_u64.add_i12(I12::from(0x7ff_u16)) == 500_0000 + 2047);
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_imm13() {
     assert!(5000_u64.add_i13(I13::from(0x1000_u16)) == 5000 - 4096);
     assert!(5000_u64.add_i13(I13::from(-4096_i16)) == 5000 - 4096);
 
-    assert!(5000_000_u64.add_i13(I13::from(0xfff_u16)) == 5000_000 + 4095);
+    assert!(500_0000_u64.add_i13(I13::from(0xfff_u16)) == 500_0000 + 4095);
 }
 
 #[test]
@@ -214,10 +214,10 @@ fn test_imm21() {
     assert!((u64::MAX).add_i21(I21::from(-1_i32)) == u64::MAX - 1);
     assert!((u64::MAX).add_i21(I21::from(0x1f_ffff_u32)) == u64::MAX - 1);
 
-    assert!(5000_000_u64.add_i21(I21::from(0x10_0000_u32)) == 5000_000 - 1024 * 1024);
-    assert!(5000_000_u64.add_i21(I21::from(-1024_i32 * 1024)) == 5000_000 - 1024 * 1024);
+    assert!(500_0000_u64.add_i21(I21::from(0x10_0000_u32)) == 500_0000 - 1024 * 1024);
+    assert!(500_0000_u64.add_i21(I21::from(-1024_i32 * 1024)) == 500_0000 - 1024 * 1024);
 
-    assert!(5000_000_u64.add_i21(I21::from(0x7ff)) == 5000_000 + 2047);
+    assert!(500_0000_u64.add_i21(I21::from(0x7ff)) == 500_0000 + 2047);
 
     // convert I12 to I21
     let imm21: I21 = I12(-22).into();
