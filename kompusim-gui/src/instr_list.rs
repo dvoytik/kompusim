@@ -60,7 +60,13 @@ impl InstrList {
     fn show_table(&mut self, ui: &mut egui::Ui, instructions: (&Vec<u8>, u64), pc: u64) {
         self.instr_cache
             .update_cache(instructions.1, instructions.0);
-        assert!(pc >= self.instr_cache.start_address);
+        // update view window of instructions:
+        if pc > 8 + self.instr_cache.start_address + self.instr_cache.instructions.len() as u64 {
+            self.user_start_addr = pc - 8;
+        }
+        if pc < self.instr_cache.start_address {
+            self.user_start_addr = pc - 8;
+        }
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
         ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
@@ -162,7 +168,7 @@ impl InstrCache {
             return;
         }
         // keep it for debuggin unnecessary cache updates
-        println!("Updating instruction cache");
+        println!("UI: Updating instruction cache");
         self.start_address = start_addr;
         self.instructions.resize(new_instructions.len(), 0);
         self.instructions.copy_from_slice(new_instructions);

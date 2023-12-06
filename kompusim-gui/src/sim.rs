@@ -364,7 +364,7 @@ impl Simulator {
             || start_addr < self.instr_cache_start
             || start_addr + size > self.instr_cache_start + self.instr_cache_sz
         {
-            println!("Updating instruction cache"); // keep it for debuggin unnecessary cache updates
+            println!("sim: Updating instruction cache"); // keep it for debuggin unnecessary cache updates
             self.send_cmd(SimCommand::Disasm(start_addr, size));
             self.wait_for_event(SimEvent::Instructions(Some(Vec::default())));
             self.instr_cache_start = start_addr;
