@@ -318,6 +318,18 @@ impl RV64ICpu {
         self.pc_inc()
     }
 
+    fn exe_opc_amo(&mut self, funct5: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
+        match (funct5, funct3) {
+            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
+                self.regs_wi32(rd, self.bus.read32(self.regs_r64(rs1)));
+                // registers a reservation set — a set of bytes that subsumes the bytes in the addressed word.
+                // TODO
+            }
+            _ => println!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+        }
+        self.pc_inc()
+    }
+
     pub fn execute_instr(&mut self, instr: u32) {
         match decode_instr(instr) {
             Opcode::Lui { uimm20, rd } => self.exe_opc_lui(uimm20, rd),
@@ -355,6 +367,13 @@ impl RV64ICpu {
                 funct3,
                 rd,
             } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd, /* rvc = */ false),
+            Opcode::Amo {
+                funct5,
+                rs2,
+                rs1,
+                funct3,
+                rd,
+            } => self.exe_opc_amo(funct5, rs2, rs1, funct3, rd),
             Opcode::System {
                 csr,
                 rs1,

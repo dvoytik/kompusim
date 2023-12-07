@@ -58,6 +58,15 @@ pub enum Opcode {
         rs1: u8,
         funct3: u8,
     },
+    /// Atomic Memory Operations
+    Amo {
+        funct5: u8,
+        // aq, rl fields are ignored for now
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
     Uknown,
 }
 
@@ -77,6 +86,7 @@ pub const OPC_AUIPC:  u8 = 0b_00_101_11;
 pub const OPC_OP_IMM: u8 = 0b_00_100_11;
 pub const OPC_OP:     u8 = 0b_01_100_11;
 pub const OPC_JALR:   u8 = 0b_11_001_11;
+pub const OPC_AMO:    u8 = 0b_01_011_11;
 pub const OPC_JAL:    u8 = 0b_11_011_11;
 pub const OPC_LUI:    u8 = 0b_01_101_11;
 pub const OPC_LOAD:   u8 = 0b_00_000_11;
@@ -104,6 +114,11 @@ pub const F3_OP_STORE_SW: u8 = 0b010;
 // funct7 field of R-type instruction
 pub const F7_OP_ADD: u8 = 0b_000_0000;
 pub const F7_OP_SUB: u8 = 0b_010_0000;
+
+// func5 field of AMO instructions
+pub const F5_OP_AMO_LRW: u8 = 0b_00010;
+pub const F3_OP_AMO_WORD: u8 = 0b_010;
+pub const F3_OP_AMO_DWORD: u8 = 0b_011;
 
 #[inline(always)]
 pub fn i_opcode(ins: u32) -> u8 {
@@ -287,6 +302,14 @@ pub fn decode_instr(instr: u32) -> Opcode {
         OPC_OP_IMM => dec_opc_op_imm(instr),
         OPC_OP => dec_opc_op(instr),
         OPC_SYSTEM => dec_opc_system(instr),
+        OPC_AMO => Opcode::Amo {
+            funct5: instr.bits(31, 27) as u8,
+            // aq, rl ingonred for now
+            rs2: i_rs2(instr),
+            rs1: i_rs1(instr),
+            funct3: i_funct3(instr),
+            rd: i_rd(instr),
+        },
         _ => Opcode::Uknown,
     }
 }

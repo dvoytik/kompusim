@@ -57,6 +57,11 @@ pub fn disasm_operation_name(instr: u32) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
+        Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
+            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => "Load Reserve Word".to_string(),
+            _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+        },
+
         Opcode::System { funct3, .. } => match funct3 {
             F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
             _ => "Unknown SYSTEM opcode".to_string(),
@@ -159,6 +164,11 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
+        Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
+            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("LR.W todo"),
+            _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+        },
+
         Opcode::System {
             csr,
             rs1,
@@ -191,6 +201,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         Opcode::Store { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
         Opcode::OpImm { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Op { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
+        Opcode::Amo { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Uknown => (None, None, None),
     }
@@ -274,6 +285,11 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             (F7_OP_ADD, F3_OP_ADD_SUB) => format!("add x{rd}, x{rs1}, x{rs2}"),
             (F7_OP_SUB, F3_OP_ADD_SUB) => format!("sub x{rd}, x{rs1}, x{rs2}"),
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
+        },
+
+        Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
+            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("LR.W todo"),
+            _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
         Opcode::System {
