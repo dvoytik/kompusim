@@ -50,15 +50,17 @@ Contents of section .riscv.attributes:
 Disassembly of section .text:
 
 0000000080000000 <_start>:
-    80000000:	4085                	c.li	ra,1
-    80000002:	9086                	c.add	ra,ra
-    80000004:	401080b3          	sub	ra,ra,ra
-    80000008:	517d                	c.li	sp,-1
-    8000000a:	f14022f3          	csrrs	t0,mhartid,zero
-    8000000e:	00029863          	bne	t0,zero,8000001e <halt>
-    80000012:	00000517          	auipc	a0,0x0
-    80000016:	02c50513          	addi	a0,a0,44 # 8000003e <msg>
-    8000001a:	006000ef          	jal	ra,80000020 <print>
+    80000000:	100020af          	lr.w	ra,(zero)
+    80000004:	0001                	c.addi	zero,0
+    80000006:	4085                	c.li	ra,1
+    80000008:	9086                	c.add	ra,ra
+    8000000a:	401080b3          	sub	ra,ra,ra
+    8000000e:	517d                	c.li	sp,-1
+    80000010:	f14022f3          	csrrs	t0,mhartid,zero
+    80000014:	00029863          	bne	t0,zero,80000024 <halt>
+    80000018:	00000517          	auipc	a0,0x0
+    8000001c:	02e50513          	addi	a0,a0,46 # 80000046 <msg>
+    80000020:	006000ef          	jal	ra,80000026 <print>
 
 000000008000001e <halt>:
     8000001e:	a001                	c.j	8000001e <halt>

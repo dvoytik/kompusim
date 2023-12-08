@@ -6,6 +6,9 @@
 .globl _start
 
 _start:
+    lr.w x1, (x0)
+    # lr.w.aq x1, (x0)
+    c.nop
     addi  x1, x0, 1
     add   x1, x1, x1
     sub   x1, x1, x1
