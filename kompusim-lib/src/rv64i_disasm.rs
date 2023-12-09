@@ -58,7 +58,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         },
 
         Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
-            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => "Load Reserve Word".to_string(),
+            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => "Load Reserve Word".to_string(),
             _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
@@ -164,8 +164,14 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
-        Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
-            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("LR.W todo"),
+        Opcode::Amo {
+            funct5,
+            funct3,
+            rs1,
+            rd,
+            ..
+        } => match (funct5, funct3) {
+            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("x{rd} = mem[x{rs1}] ; todo"),
             _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
@@ -287,8 +293,14 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
-        Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
-            // (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("LR.W todo"),
+        Opcode::Amo {
+            funct5,
+            funct3,
+            rs1,
+            rd,
+            ..
+        } => match (funct5, funct3) {
+            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("lr.w x{rd}, (x{rs1})"),
             _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
