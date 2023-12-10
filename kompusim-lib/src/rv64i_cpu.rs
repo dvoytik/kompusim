@@ -25,6 +25,7 @@ pub struct RV64IURegs {
 #[derive(Default)]
 pub struct RV64ICpu {
     pub regs: RV64IURegs,
+    lr_sc_reservation: u64,
     pub bus: Bus,
     // TODO: optimize - use hashmap:
     breakpoints: Vec<u64>,
@@ -37,6 +38,7 @@ impl RV64ICpu {
         RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
+            lr_sc_reservation: 0,
             breakpoints: Vec::with_capacity(2),
             num_exec_instr: 0,
         }
@@ -321,9 +323,11 @@ impl RV64ICpu {
     fn exe_opc_amo(&mut self, funct5: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
         match (funct5, funct3) {
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
-                self.regs_wi32(rd, self.bus.read32(self.regs_r64(rs1)));
+                let addressed_word = self.bus.read32(self.regs_r64(rs1));
+                self.regs_wi32(rd, addressed_word);
                 // registers a reservation set — a set of bytes that subsumes the bytes in the addressed word.
-                // TODO
+                self.lr_sc_reservation = addressed_word as u64;
+                // TODO: check lr_sc_reservation in sc.w
             }
             _ => println!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         }
