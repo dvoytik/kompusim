@@ -174,6 +174,16 @@ fn test_instruction_sub() {
 }
 
 #[test]
+// lr.w x1, (x0)
+fn test_instruction_lrw() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.bus.write32(0x0, 0x0000_beef);
+    cpu.execute_instr(0x_1000_20af);
+    assert!(cpu.regs.x[1] == 0x0000_beef);
+}
+
+#[test]
 fn registers_writes() {
     let mut cpu = RV64ICpu::default();
     // test sign extension

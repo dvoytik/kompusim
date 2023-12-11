@@ -322,6 +322,7 @@ impl RV64ICpu {
 
     fn exe_opc_amo(&mut self, funct5: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
         match (funct5, funct3) {
+            // lr.w
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
                 let addressed_word = self.bus.read32(self.regs_r64(rs1));
                 self.regs_wi32(rd, addressed_word);
