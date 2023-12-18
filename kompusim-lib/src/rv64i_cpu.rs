@@ -330,7 +330,7 @@ impl RV64ICpu {
                 self.lr_sc_reservation = addressed_word as u64;
                 // TODO: check lr_sc_reservation in sc.w
             }
-            _ => println!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+            _ => println!("ERROR: Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         }
         self.pc_inc()
     }

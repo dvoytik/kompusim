@@ -91,8 +91,6 @@ pub const OPC_JAL:    u8 = 0b_11_011_11;
 pub const OPC_LUI:    u8 = 0b_01_101_11;
 pub const OPC_LOAD:   u8 = 0b_00_000_11;
 pub const OPC_STORE:  u8 = 0b_01_000_11;
-}
-use opc::*;
 
 pub const F3_BRANCH_BEQ: u8 = 0b000;
 pub const F3_BRANCH_BNE: u8 = 0b001;
@@ -104,9 +102,9 @@ pub const F3_OP_IMM_ADDI: u8 = 0b000;
 
 pub const F3_OP_ADD_SUB: u8 = 0b_000;
 
-pub const F3_OP_LOAD_LB: u8 = 0b000;
+pub const F3_OP_LOAD_LB:  u8 = 0b000;
 pub const F3_OP_LOAD_LBU: u8 = 0b100;
-pub const F3_OP_LOAD_LW: u8 = 0b010;
+pub const F3_OP_LOAD_LW:  u8 = 0b010;
 
 pub const F3_OP_STORE_SB: u8 = 0b000;
 pub const F3_OP_STORE_SW: u8 = 0b010;
@@ -116,9 +114,11 @@ pub const F7_OP_ADD: u8 = 0b_000_0000;
 pub const F7_OP_SUB: u8 = 0b_010_0000;
 
 // func5 field of AMO instructions
-pub const F5_OP_AMO_LRW: u8 = 0b_00010;
-pub const F3_OP_AMO_WORD: u8 = 0b_010;
+pub const F5_OP_AMO_LRW: u8   = 0b_00010;
+pub const F3_OP_AMO_WORD: u8  = 0b_010;
 pub const F3_OP_AMO_DWORD: u8 = 0b_011;
+}
+pub use opc::*;
 
 #[inline(always)]
 pub fn i_opcode(ins: u32) -> u8 {
