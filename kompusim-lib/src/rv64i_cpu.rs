@@ -101,20 +101,6 @@ impl RV64ICpu {
         self.regs_w64(reg_i, val_u64)
     }
 
-    fn bad_instr(&self, ins: u32) {
-        let opc = i_opcode(ins);
-        panic!(
-            "ERROR: PC=0x{:x}: bad instr: 0x{ins:x} (0b_{ins:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
-            self.get_pc()
-        );
-    }
-
-    fn bad_rvc_instr(&self, c_ins: u16) {
-        let opc = c_i_opcode(c_ins);
-        panic!("ERROR: PC=0x{:x}: bad RVC instr: 0x{c_ins:x} (0b_{c_ins:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
-               self.get_pc());
-    }
-
     // writes i8 LSB and sign extends
     fn regs_wi8(&mut self, reg_i: u8, val: u8) {
         let mut val: u64 = val as u64;
@@ -167,7 +153,7 @@ impl RV64ICpu {
         self.regs.pc = self.regs.pc.add_i21(off21);
     }
 
-    fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) {
+    fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         match funct3 {
             F3_SYSTEM_CSRRS => {
                 let mut csr_v = csr::csr_r64(csr);
@@ -176,15 +162,15 @@ impl RV64ICpu {
                 csr::csr_w64(csr, csr_v);
             }
             _ => {
-                // TODO: generate exception
-                println!("wrong SYSTEM instr (funct3: {funct3:x})");
+                return Err(format!("SYSTEM, funct3: {funct3:x}"));
             }
         }
         self.pc_inc();
+        Ok(())
     }
 
     // BRANCH opcodes: BEQ, BNE, BLT, ...
-    fn exe_opc_branch(&mut self, off13: I13, rs2: u8, rs1: u8, funct3: u8) {
+    fn exe_opc_branch(&mut self, off13: I13, rs2: u8, rs1: u8, funct3: u8) -> Result<(), String> {
         match funct3 {
             // Branch Not Equal
             F3_BRANCH_BNE => {
@@ -211,31 +197,41 @@ impl RV64ICpu {
                 }
             }
             _ => {
-                println!("ERROR: unsupported BRACH instr, funct3: 0b{funct3:b}");
+                return Err(format!("BRANCH, funct3: 0b{funct3:b}"));
             }
         }
+        Ok(())
     }
 
     // LUI - Load Upper Immidiate
-    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
+    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
         self.regs_w64(rd, uimm20);
-        self.pc_inc()
+        self.pc_inc();
+        Ok(())
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
-    fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) {
+    fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
         self.regs_w64(rd, self.regs.pc + uimm20);
-        self.pc_inc()
+        self.pc_inc();
+        Ok(())
     }
 
-    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8, rvc: bool) {
+    fn exe_opc_op_imm(
+        &mut self,
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+        rvc: bool,
+    ) -> Result<(), String> {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
             }
             _ => {
-                println!("ERROR: unsupported OP_IMM instr, funct3: 0b{funct3:b}");
+                return Err(format!("OP_IMM, funct3: 0b{funct3:b}"));
             }
         }
         if rvc {
@@ -243,10 +239,20 @@ impl RV64ICpu {
         } else {
             self.pc_inc()
         }
+        Ok(())
     }
 
     // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-    fn exe_opc_op(&mut self, funct7: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8, rvc: bool) {
+    fn exe_opc_op(
+        &mut self,
+        funct7: u8,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+        rvc: bool,
+    ) -> Result<(), String> {
+        // TODO: refactor to use only match
         match funct3 {
             F3_OP_ADD_SUB => {
                 if funct7 == F7_OP_ADD {
@@ -256,11 +262,11 @@ impl RV64ICpu {
                     // ignore overflow with wrapping_sub()
                     self.regs_w64(rd, self.regs_r64(rs1).wrapping_sub(self.regs_r64(rs2)))
                 } else {
-                    eprintln!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}")
+                    return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}"));
                 }
             }
             _ => {
-                println!("ERROR: unsupported OP instr, funct7: 0b{funct7:b}, funct3: 0b{funct3:b}");
+                return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}"));
             }
         }
         if rvc {
@@ -268,23 +274,26 @@ impl RV64ICpu {
         } else {
             self.pc_inc();
         }
+        Ok(())
     }
 
     // Only one instrucitn JAL - Jump and Link
-    fn exe_opc_jal(&mut self, imm21: I21, rd: u8) {
+    fn exe_opc_jal(&mut self, imm21: I21, rd: u8) -> Result<(), String> {
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_add_i21(imm21);
+        Ok(())
     }
 
     // JALR - Jump and Link Register
-    fn exe_opc_jalr(&mut self, imm12: I12, rs1: u8, rd: u8) {
+    fn exe_opc_jalr(&mut self, imm12: I12, rs1: u8, rd: u8) -> Result<(), String> {
         let new_addr = self.regs_r64(rs1).add_i12(imm12).rst_bits(0, 0);
         self.regs_w64(rd, self.regs.pc + 4);
         self.pc_jump(new_addr);
+        Ok(())
     }
 
     // LOAD instructions: LB, LBU, LW, ...
-    fn exe_opc_load(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) {
+    fn exe_opc_load(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_LOAD_LB => {
@@ -300,13 +309,14 @@ impl RV64ICpu {
                 self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
-                println!("ERROR: unsupported LOAD instruction, funct3: 0b{funct3:b}");
+                return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc()
+        self.pc_inc();
+        Ok(())
     }
 
-    fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) {
+    fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_STORE_SB => {
@@ -314,13 +324,21 @@ impl RV64ICpu {
             }
             F3_OP_STORE_SW => self.bus.write32(addr, self.regs_r32(rs2)),
             _ => {
-                println!("ERROR: unsupported STORE instruction, funct3: 0b{funct3:b}");
+                return Err(format!("STORE, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc()
+        self.pc_inc();
+        Ok(())
     }
 
-    fn exe_opc_amo(&mut self, funct5: u8, rs2: u8, rs1: u8, funct3: u8, rd: u8) {
+    fn exe_opc_amo(
+        &mut self,
+        funct5: u8,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    ) -> Result<(), String> {
         match (funct5, funct3) {
             // lr.w
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
@@ -330,13 +348,16 @@ impl RV64ICpu {
                 self.lr_sc_reservation = addressed_word as u64;
                 // TODO: check lr_sc_reservation in sc.w
             }
-            _ => println!("ERROR: Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+            _ => {
+                return Err(format!("AMO, funct5: {funct5:x}, funct3: {funct3:x}"));
+            }
         }
-        self.pc_inc()
+        self.pc_inc();
+        Ok(())
     }
 
     pub fn execute_instr(&mut self, instr: u32) {
-        match decode_instr(instr) {
+        if let Err(e) = match decode_instr(instr) {
             Opcode::Lui { uimm20, rd } => self.exe_opc_lui(uimm20, rd),
             Opcode::Auipc { uimm20, rd } => self.exe_opc_auipc(uimm20, rd),
             Opcode::Branch {
@@ -385,23 +406,32 @@ impl RV64ICpu {
                 funct3,
                 rd,
             } => self.exe_opc_system(csr, rs1, funct3, rd),
-            Opcode::Uknown => self.bad_instr(instr),
+            Opcode::Uknown => Err(String::new()),
+        } {
+            let opc = i_opcode(instr);
+            eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:x} (0b_{instr:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
+            self.get_pc());
+            // TODO: remove panic and trigger CPU exception
+            panic!();
         }
-
         self.num_exec_instr += 1;
     }
 
     /// C.LI compressed instruction
-    pub fn exe_opc_c_li(&mut self, imm6: I6, rd: u8) {
+    pub fn exe_opc_c_li(&mut self, imm6: I6, rd: u8) -> Result<(), String> {
         let imm6: i8 = imm6.into();
         self.regs_wi8(rd, imm6 as u8);
         self.pc_inc_rvc();
+        Ok(())
     }
 
     /// Execute a compressed instruction
     pub fn execute_rvc_instr(&mut self, c_instr: u16) {
-        match decode_rvc_instr(c_instr) {
-            COpcode::CNOP => self.pc_inc_rvc(),
+        if let Err(e) = match decode_rvc_instr(c_instr) {
+            COpcode::CNOP => {
+                self.pc_inc_rvc();
+                Ok(())
+            }
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
                 self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
@@ -414,7 +444,13 @@ impl RV64ICpu {
             }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
-            COpcode::Uknown => self.bad_rvc_instr(c_instr),
+            COpcode::Uknown => Err(String::new()),
+        } {
+            let opc = c_i_opcode(c_instr);
+            eprintln!("ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:x} (0b_{c_instr:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
+            self.get_pc());
+            // TODO: remove panic and trigger CPU exception
+            panic!();
         }
 
         self.num_exec_instr += 1;
