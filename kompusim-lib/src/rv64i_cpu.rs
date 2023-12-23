@@ -252,22 +252,16 @@ impl RV64ICpu {
         rd: u8,
         rvc: bool,
     ) -> Result<(), String> {
-        // TODO: refactor to use only match
-        match funct3 {
-            F3_OP_ADD_SUB => {
-                if funct7 == F7_OP_ADD {
-                    // ignore overflow with wrapping_add()
-                    self.regs_w64(rd, self.regs_r64(rs1).wrapping_add(self.regs_r64(rs2)))
-                } else if funct7 == F7_OP_SUB {
-                    // ignore overflow with wrapping_sub()
-                    self.regs_w64(rd, self.regs_r64(rs1).wrapping_sub(self.regs_r64(rs2)))
-                } else {
-                    return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}"));
-                }
+        match (funct7, funct3) {
+            (F7_OP_ADD, F3_OP_ADD_SUB) => {
+                // ignore overflow with wrapping_add()
+                self.regs_w64(rd, self.regs_r64(rs1).wrapping_add(self.regs_r64(rs2)))
             }
-            _ => {
-                return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}"));
+            (F7_OP_SUB, F3_OP_ADD_SUB) => {
+                // ignore overflow with wrapping_sub()
+                self.regs_w64(rd, self.regs_r64(rs1).wrapping_sub(self.regs_r64(rs2)))
             }
+            (_, _) => return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}")),
         }
         if rvc {
             self.pc_inc_rvc()
@@ -305,7 +299,7 @@ impl RV64ICpu {
             }
             // Load Word
             F3_OP_LOAD_LW => {
-                // TODO raise fault if returnx 0xffff_ffff?
+                // TODO raise fault if returns 0xffff_ffff?
                 self.regs_wi32(rd, self.bus.read32(addr));
             }
             _ => {
