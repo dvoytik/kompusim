@@ -6,6 +6,12 @@
 .globl _start
 
 _start:
+    li t1, 1 # x6 <= 1
+    # store value form t0 to address a0; if succeeded t1 will contain 0;
+    # otherwise t1 will contain 1
+    amoswap.w.aq t1, t0, (a0)
+    # amoswap.w.aq  x6, x5, (x10)
+
     lr.w x1, (x0)
     # lr.w.aq x1, (x0)
     c.nop
