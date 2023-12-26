@@ -9,8 +9,8 @@ use kompusim_gui::cmdline::Args;
 fn main() -> eframe::Result<()> {
     let args = Args::parse();
 
-    // Log to stdout (if you run with `RUST_LOG=debug`).
-    tracing_subscriber::fmt::init();
+    // Log to stderr (if you run with `RUST_LOG=debug`).
+    env_logger::init();
 
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(

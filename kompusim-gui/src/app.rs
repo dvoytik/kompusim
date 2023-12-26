@@ -57,7 +57,6 @@ impl KompusimApp {
         // Load previous app state (if any).
         let mut app = if let Some(storage) = cc.storage {
             let app: KompusimApp = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
-            set_all_fonts_size(&cc.egui_ctx, app.font_delta as f32 * 0.5);
             app
         } else {
             Default::default()
@@ -124,16 +123,6 @@ impl eframe::App for KompusimApp {
                 ui_ctx.memory_mut(|mem| mem.reset_areas());
             }
 
-            let inc_fonts_shortcut =
-                egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::PlusEquals);
-            if ui.input_mut(|i| i.consume_shortcut(&inc_fonts_shortcut)) {
-                increase_all_fonts(ui_ctx, font_delta);
-            }
-            let dec_fonts_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Minus);
-            if ui.input_mut(|i| i.consume_shortcut(&dec_fonts_shortcut)) {
-                decrease_all_fonts(ui_ctx, font_delta);
-            }
-
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     // hack to make menus oneliners
@@ -154,8 +143,9 @@ impl eframe::App for KompusimApp {
                         }
                     });
                     if ui.button("Quit").clicked() {
-                        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-                        _frame.close();
+                        // TODO
+                        // #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
+                        // _frame.close();
                     }
                 });
                 ui.menu_button("Run", |ui| {
@@ -206,23 +196,17 @@ impl eframe::App for KompusimApp {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
                     if ui
-                        .add(
-                            egui::Button::new("Increase font")
-                                .shortcut_text(ui.ctx().format_shortcut(&inc_fonts_shortcut)),
-                        )
+                        .add(egui::Button::new("Increase font").shortcut_text("Control +"))
                         .clicked()
                     {
-                        increase_all_fonts(ui_ctx, font_delta);
+                        // TODO:
                         ui.close_menu();
                     }
                     if ui
-                        .add(
-                            egui::Button::new("Decrease font")
-                                .shortcut_text(ui.ctx().format_shortcut(&dec_fonts_shortcut)),
-                        )
+                        .add(egui::Button::new("Decrease font").shortcut_text("Control -"))
                         .clicked()
                     {
-                        decrease_all_fonts(ui_ctx, font_delta);
+                        // TODO:
                         ui.close_menu();
                     }
                     if ui
@@ -287,26 +271,4 @@ impl eframe::App for KompusimApp {
                 egui::ScrollArea::vertical().show(ui, |ui| ui_ctx.settings_ui(ui));
             });
     }
-}
-
-fn increase_all_fonts(ui_ctx: &egui::Context, font_delta: &mut i32) {
-    if *font_delta <= 50 {
-        *font_delta += 1;
-        set_all_fonts_size(ui_ctx, 0.5);
-    }
-}
-
-fn decrease_all_fonts(ui_ctx: &egui::Context, font_delta: &mut i32) {
-    if *font_delta >= -5 {
-        *font_delta -= 1;
-        set_all_fonts_size(ui_ctx, -0.5);
-    }
-}
-
-fn set_all_fonts_size(ui_ctx: &egui::Context, font_delta: f32) {
-    let mut style: egui::Style = (*ui_ctx.style()).clone();
-    for (_, v) in style.text_styles.iter_mut() {
-        v.size += font_delta;
-    }
-    ui_ctx.set_style(style);
 }

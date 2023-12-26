@@ -96,30 +96,27 @@ impl InstrList {
                 });
             })
             .body(|body| {
-                body.rows(
-                    text_height,
-                    self.instr_cache.disasm.len(),
-                    |row_index, mut row| {
-                        let (instr_addr, addr_hex, instr_hex, instr_mnemonic) =
-                            self.instr_cache.get_disasm(row_index);
-                        if pc == instr_addr {
-                            highlight_col(&mut row, "➡", addr_hex, instr_hex, instr_mnemonic);
-                        } else {
-                            row.col(|ui| {
-                                ui.label("");
-                            });
-                            row.col(|ui| {
-                                ui.label(addr_hex);
-                            });
-                            row.col(|ui| {
-                                ui.label(instr_hex);
-                            });
-                            row.col(|ui| {
-                                ui.label(instr_mnemonic);
-                            });
-                        }
-                    },
-                )
+                body.rows(text_height, self.instr_cache.disasm.len(), |mut row| {
+                    let row_index = row.index();
+                    let (instr_addr, addr_hex, instr_hex, instr_mnemonic) =
+                        self.instr_cache.get_disasm(row_index);
+                    if pc == instr_addr {
+                        highlight_col(&mut row, "➡", addr_hex, instr_hex, instr_mnemonic);
+                    } else {
+                        row.col(|ui| {
+                            ui.label("");
+                        });
+                        row.col(|ui| {
+                            ui.label(addr_hex);
+                        });
+                        row.col(|ui| {
+                            ui.label(instr_hex);
+                        });
+                        row.col(|ui| {
+                            ui.label(instr_mnemonic);
+                        });
+                    }
+                })
             });
     }
 
