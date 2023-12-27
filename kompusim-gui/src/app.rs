@@ -143,9 +143,7 @@ impl eframe::App for KompusimApp {
                         }
                     });
                     if ui.button("Quit").clicked() {
-                        // TODO
-                        // #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-                        // _frame.close();
+                        ui_ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
                 });
                 ui.menu_button("Run", |ui| {
