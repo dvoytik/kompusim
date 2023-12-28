@@ -191,22 +191,6 @@ impl eframe::App for KompusimApp {
                     });
                 });
                 ui.menu_button("View", |ui| {
-                    // hack to make menus oneliners
-                    ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
-                    if ui
-                        .add(egui::Button::new("Increase font").shortcut_text("Control +"))
-                        .clicked()
-                    {
-                        // TODO:
-                        ui.close_menu();
-                    }
-                    if ui
-                        .add(egui::Button::new("Decrease font").shortcut_text("Control -"))
-                        .clicked()
-                    {
-                        // TODO:
-                        ui.close_menu();
-                    }
                     if ui
                         .add(
                             egui::Button::new("Organize windows").shortcut_text(
@@ -218,6 +202,7 @@ impl eframe::App for KompusimApp {
                         ui.ctx().memory_mut(|mem| mem.reset_areas());
                         ui.close_menu();
                     }
+                    egui::gui_zoom::zoom_menu_buttons(ui);
                 });
                 ui.menu_button("Help", |ui| {
                     ui.add_enabled_ui(false, |ui| {
