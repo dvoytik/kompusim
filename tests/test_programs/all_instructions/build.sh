@@ -19,11 +19,12 @@ $CC \
 
 #riscv64-unknown-elf-objcopy --info
 riscv64-unknown-elf-objcopy -O binary out/$P out/$P.bin
+rm out/$P
 
-$READELF -a out/$P > out/$P.readelf
-$OBJDUMP -a -f -h -p -r -t -d -s out/$P > out/$P.objdump
+# $READELF -a out/$P > out/$P.readelf
+# $OBJDUMP -a -f -h -p -r -t -d -s out/$P > out/$P.objdump
 $OBJDUMP -a -f -h -p -r -t -d -s -M no-aliases out/$P > out/$P.objdump_no_aliases
-hexdump -C out/$P.bin > out/$P.bin_hexdump
+# hexdump -C out/$P.bin > out/$P.bin_hexdump
 # -d - disassemble
 # -F - disaplay file offset of the region of data
 # -f
