@@ -333,6 +333,8 @@ impl RV64ICpu {
         funct3: u8,
         rd: u8,
     ) -> Result<(), String> {
+        // TODO: check whether rs1 value (address) is 8-byte aligned. If not aligned then generate
+        // an address misalgined exception.
         match (funct5, funct3) {
             // lr.w
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
@@ -403,7 +405,7 @@ impl RV64ICpu {
             Opcode::Uknown => Err(String::new()),
         } {
             let opc = i_opcode(instr);
-            eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:x} (0b_{instr:b}), opcode: 0x{opc:x} (0b_{opc:07b})",
+            eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:x} (0b_{instr:032b}), opcode: 0x{opc:x} (0b_{opc:07b})",
             self.get_pc());
             // TODO: remove panic and trigger CPU exception
             panic!();
@@ -441,7 +443,7 @@ impl RV64ICpu {
             COpcode::Uknown => Err(String::new()),
         } {
             let opc = c_i_opcode(c_instr);
-            eprintln!("ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:x} (0b_{c_instr:b}), opcode: 0x{opc:x} (0b_{opc:05b})",
+            eprintln!("ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:x} (0b_{c_instr:016b}), opcode: 0x{opc:x} (0b_{opc:05b})",
             self.get_pc());
             // TODO: remove panic and trigger CPU exception
             panic!();
