@@ -336,6 +336,14 @@ impl RV64ICpu {
         // TODO: check whether rs1 value (address) is 8-byte aligned. If not aligned then generate
         // an address misalgined exception.
         match (funct5, funct3) {
+            // amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
+            (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => {
+                // TODO: use native atomic swap
+                let addressed_word = self.bus.read32(self.regs_r64(rs1));
+                self.regs_wi32(rd, addressed_word);
+                self.bus
+                    .write32(self.regs_r64(rs1), self.regs_r64(rs2) as u32);
+            }
             // lr.w
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) if rs2 == 0 => {
                 let addressed_word = self.bus.read32(self.regs_r64(rs1));

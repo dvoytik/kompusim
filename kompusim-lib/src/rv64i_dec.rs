@@ -114,6 +114,7 @@ pub const F7_OP_ADD: u8 = 0b_000_0000;
 pub const F7_OP_SUB: u8 = 0b_010_0000;
 
 // func5 field of AMO instructions
+pub const F5_OP_AMO_SWAP: u8   = 0b_00001;
 pub const F5_OP_AMO_LRW: u8   = 0b_00010;
 pub const F3_OP_AMO_WORD: u8  = 0b_010;
 pub const F3_OP_AMO_DWORD: u8 = 0b_011;
@@ -304,7 +305,14 @@ pub fn decode_instr(instr: u32) -> Opcode {
         OPC_SYSTEM => dec_opc_system(instr),
         OPC_AMO => Opcode::Amo {
             funct5: instr.bits(31, 27) as u8,
-            // aq, rl ingonred for now
+            // If the aq bit is set, then no later memory operations in this RISC-V hart can be
+            // observed to take place before the AMO.
+            // If the rl bit is set, then other RISC-V harts will not observe the AMO before
+            // memory accesses preceding the AMO in this RISC-V hart.
+            // Setting both the aq and the rl bit on an AMO makes the sequence sequentially
+            // consistent, meaning that it cannot be reordered with earlier or later memory
+            // operations from the same hart.
+            // TODO: aq, rl ingonred for now
             rs2: i_rs2(instr),
             rs1: i_rs1(instr),
             funct3: i_funct3(instr),

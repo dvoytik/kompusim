@@ -176,6 +176,13 @@ impl Display for I21 {
 }
 
 #[test]
+fn test_rust_type_conversion() {
+    // u64 to u32 conversion
+    let u64_val = 0x_1234_5678_90ab_cdef_u64;
+    assert_eq!(u64_val as u32, 0x_90ab_cdef_u32);
+}
+
+#[test]
 fn test_imm12() {
     assert!((u64::MAX).add_i12(I12::from(0_i16)) == u64::MAX);
     // overflow
