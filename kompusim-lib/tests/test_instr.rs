@@ -184,6 +184,20 @@ fn test_instruction_lrw() {
 }
 
 #[test]
+// amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
+fn test_amoswap() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.bus.write32(0x0, 0x0000_beef);
+    assert!(cpu.bus.read32(0x0) == 0x0000_beef);
+    cpu.regs_w64(5, 0xc0fe);
+    // amoswap.w.aq  x6, x5, (x10) # x6 <= mem[x10]; mem[x10] <= x5
+    cpu.execute_instr(0x_0c55_232f);
+    assert_eq!(cpu.regs.x[6], 0x0000_beef);
+    assert_eq!(cpu.bus.read32(0x0), 0xc0fe);
+}
+
+#[test]
 fn registers_writes() {
     let mut cpu = RV64ICpu::default();
     // test sign extension
