@@ -1,29 +1,38 @@
 #!/usr/bin/env bash
 
+set -e
+# set -x
+
 P=all_instructions
 
-CC=riscv64-unknown-elf-gcc
-READELF=riscv64-unknown-elf-readelf
-OBJDUMP=riscv64-unknown-elf-objdump
-OBJCOPY=
+PREFIX=riscv64-unknown-elf-
+CC=${PREFIX}gcc
+READELF=${PREFIX}readelf
+OBJDUMP=${PREFIX}objdump
+OBJCOPY=${PREFIX}objcopy
 
-mkdir -p out
+cd $(dirname $(realpath -s $0))
+
+mkdir -p ./out
 
 # -Os - optimize for size
 # -mno-shorten-memrefs - do not attempt to make more use of compressed load/store instructions
-$CC \
+${CC} \
     -march=rv64gc -mabi=lp64 -static -mcmodel=medany \
     -fvisibility=hidden -nostdlib -nostartfiles \
-    -T$P.ld -I. \
-    $P.s -o out/$P
+    -T${P}.ld \
+    -I. \
+    ${P}.s \
+    -o ./out/${P}.elf
 
-#riscv64-unknown-elf-objcopy --info
-riscv64-unknown-elf-objcopy -O binary out/$P out/$P.bin
-rm out/$P
+#${OBJCOPY} --info
+${OBJCOPY} -O binary ./out/${P}.elf ./out/${P}.bin
 
-# $READELF -a out/$P > out/$P.readelf
-# $OBJDUMP -a -f -h -p -r -t -d -s out/$P > out/$P.objdump
-$OBJDUMP -a -f -h -p -r -t -d -s -M no-aliases out/$P > out/$P.objdump_no_aliases
+# $READELF -a out/${P} > out/${P}.readelf
+# $OBJDUMP -a -f -h -p -r -t -d -s out/${P} > out/${P}.objdump
+$OBJDUMP -a -f -h -p -r -t -d -s -M no-aliases out/${P}.elf > out/$P.objdump_no_aliases
+
+rm out/${P}.elf
 # hexdump -C out/$P.bin > out/$P.bin_hexdump
 # -d - disassemble
 # -F - disaplay file offset of the region of data
