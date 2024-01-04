@@ -24,6 +24,21 @@ impl Imm for u64 {
     }
 }
 
+impl Imm for u32 {
+    // Overflow is ignored
+    fn add_i12(self, v: I12) -> u32 {
+        (self as i32).wrapping_add(v.0 as i32) as u32
+    }
+    // Overflow is ignored
+    fn add_i13(self, v: I13) -> u32 {
+        (self as i32).wrapping_add(v.0 as i32) as u32
+    }
+    // Overflow is ignored
+    fn add_i21(self, v: I21) -> u32 {
+        (self as i32).wrapping_add(v.0) as u32
+    }
+}
+
 /// Immidiate signed 6 bit
 #[derive(Copy, Clone)]
 pub struct I6(pub i8);
