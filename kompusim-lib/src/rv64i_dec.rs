@@ -26,6 +26,12 @@ pub enum Opcode {
         funct3: u8,
         rd: u8,
     },
+    OpImm32 {
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+    },
     Op {
         funct7: u8,
         rs2: u8,
@@ -80,17 +86,18 @@ pub enum Opcode {
 /// RV32/RV64 instruction opcodes (inst[6:0])
 #[rustfmt::skip]
 mod opc {
-pub const OPC_SYSTEM: u8 = 0b_11_100_11;
-pub const OPC_BRANCH: u8 = 0b_11_000_11;
-pub const OPC_AUIPC:  u8 = 0b_00_101_11;
-pub const OPC_OP_IMM: u8 = 0b_00_100_11;
-pub const OPC_OP:     u8 = 0b_01_100_11;
-pub const OPC_JALR:   u8 = 0b_11_001_11;
-pub const OPC_AMO:    u8 = 0b_01_011_11;
-pub const OPC_JAL:    u8 = 0b_11_011_11;
-pub const OPC_LUI:    u8 = 0b_01_101_11;
-pub const OPC_LOAD:   u8 = 0b_00_000_11;
-pub const OPC_STORE:  u8 = 0b_01_000_11;
+pub const OPC_SYSTEM: u8 =   0b_11_100_11;
+pub const OPC_BRANCH: u8 =   0b_11_000_11;
+pub const OPC_AUIPC:  u8 =   0b_00_101_11;
+pub const OPC_OP_IMM: u8 =   0b_00_100_11;
+pub const OPC_OP_IMM32: u8 = 0b_00_110_11;
+pub const OPC_OP:     u8 =   0b_01_100_11;
+pub const OPC_JALR:   u8 =   0b_11_001_11;
+pub const OPC_AMO:    u8 =   0b_01_011_11;
+pub const OPC_JAL:    u8 =   0b_11_011_11;
+pub const OPC_LUI:    u8 =   0b_01_101_11;
+pub const OPC_LOAD:   u8 =   0b_00_000_11;
+pub const OPC_STORE:  u8 =   0b_01_000_11;
 
 pub const F3_BRANCH_BEQ: u8 = 0b000;
 pub const F3_BRANCH_BNE: u8 = 0b001;
@@ -301,6 +308,13 @@ pub fn decode_instr(instr: u32) -> Opcode {
         OPC_LOAD => dec_opc_load(instr),
         OPC_STORE => dec_opc_store(instr),
         OPC_OP_IMM => dec_opc_op_imm(instr),
+        OPC_OP_IMM32 => Opcode::OpImm32 {
+            // I-type instructions
+            imm12: i_i_type_imm12(instr),
+            rs1: i_rs1(instr),
+            funct3: i_funct3(instr),
+            rd: i_rd(instr),
+        },
         OPC_OP => dec_opc_op(instr),
         OPC_SYSTEM => dec_opc_system(instr),
         OPC_AMO => Opcode::Amo {
