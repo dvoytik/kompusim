@@ -51,6 +51,11 @@ pub fn disasm_operation_name(instr: u32) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
+        Opcode::OpImm32 { funct3, .. } => match funct3 {
+            F3_OP_IMM_ADDI => "ADD Word Immediate".to_string(),
+            _ => "Unknown OP-IMM32 opcode".to_string(),
+        },
+
         Opcode::Op { funct7, funct3, .. } => match (funct7, funct3) {
             (F7_OP_ADD, F3_OP_ADD_SUB) => "Add register to register".to_string(),
             (F7_OP_SUB, F3_OP_ADD_SUB) => "Subtract register from regiser".to_string(),
@@ -152,6 +157,16 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
+        Opcode::OpImm32 {
+            imm12,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            F3_OP_IMM_ADDI => format!("x{rd}[31:0] = x{rs1}[31:0] + 0x{imm12:x}"),
+            _ => "Unknown OP-IMM32 opcode".to_string(),
+        },
+
         Opcode::Op {
             funct7,
             rs2,
@@ -206,6 +221,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         Opcode::Load { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Store { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
         Opcode::OpImm { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::OpImm32 { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Op { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::Amo { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
@@ -279,6 +295,16 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM opcode".to_string(),
+        },
+
+        Opcode::OpImm32 {
+            imm12,
+            rs1,
+            funct3,
+            rd,
+        } => match funct3 {
+            F3_OP_IMM_ADDI => format!("addiw x{rd}, x{rs1}, 0x{imm12:x}"),
+            _ => "Unknown OP-IMM32 opcode".to_string(),
         },
 
         Opcode::Op {
