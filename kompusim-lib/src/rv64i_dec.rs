@@ -106,6 +106,7 @@ pub const F3_BRANCH_BLT: u8 = 0b100;
 pub const F3_SYSTEM_CSRRS: u8 = 0b010;
 
 pub const F3_OP_IMM_ADDI: u8 = 0b000;
+pub const F3_OP_IMM_SLLI: u8 = 0b001;
 
 pub const F3_OP_ADD_SUB: u8 = 0b_000;
 

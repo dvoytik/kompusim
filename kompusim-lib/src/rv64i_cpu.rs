@@ -230,6 +230,9 @@ impl RV64ICpu {
             F3_OP_IMM_ADDI => {
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
             }
+            F3_OP_IMM_SLLI => {
+                self.regs_w64(rd, self.regs_r64(rs1) << imm12.0.bits(5, 0));
+            }
             _ => {
                 return Err(format!("OP_IMM, funct3: 0b{funct3:b}"));
             }
@@ -468,9 +471,24 @@ impl RV64ICpu {
                 self.pc_inc_rvc();
                 Ok(())
             }
+            // TODO: HINT instructions are defined as NOP
+            COpcode::Hint => {
+                self.pc_inc_rvc();
+                Ok(())
+            }
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
                 self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
+            }
+            // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
+            COpcode::CSLLI { uimm6, rd } => {
+                self.exe_opc_op_imm(
+                    I12(uimm6 as i16),
+                    rd,
+                    F3_OP_IMM_SLLI,
+                    rd,
+                    /* rvc = */ true,
+                )
             }
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to JALR x0, 0(rs1)

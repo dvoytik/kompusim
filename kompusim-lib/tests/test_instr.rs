@@ -49,6 +49,15 @@ fn test_instruction_addi() {
 }
 
 #[test]
+// addiw x6, x0, 0x1
+fn test_instruction_addiw() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[6] = 0x123;
+    cpu.execute_instr(0x_0010_031b);
+    assert!(cpu.regs.x[6] == 1);
+}
+
+#[test]
 // jal ra, 80000018
 fn test_instruction_jal() {
     let mut cpu = RV64ICpu::default();

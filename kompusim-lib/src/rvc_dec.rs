@@ -10,10 +10,12 @@ use crate::{
 pub enum COpcode {
     CNOP,
     CADDI { imm6: I6, rd: u8 },
+    CSLLI { uimm6: u8, rd: u8 },
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
+    Hint,
     Uknown,
 }
 
@@ -23,6 +25,7 @@ pub enum COpcode {
 #[rustfmt::skip]
 mod c_opcodes {
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
+pub const OPC_C_SLLI: u8 =                  0b_000_10; // shift logical left immidiate
 pub const OPC_C_LI: u8 =                    0b_010_01;
 pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
@@ -89,6 +92,14 @@ pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
                 COpcode::CNOP
             } else {
                 COpcode::CADDI { imm6, rd }
+            }
+        }
+        OPC_C_SLLI => {
+            let uimm6: u8 = (c_instr.bits(12, 12) << 5 | c_instr.bits(6, 2)) as u8;
+            if uimm6 != 0 && rd != 0 {
+                COpcode::CSLLI { uimm6, rd }
+            } else {
+                COpcode::Hint
             }
         }
         OPC_C_LI if rd != 0 => COpcode::CLI {
