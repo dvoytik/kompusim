@@ -38,11 +38,20 @@ fn test_rvc_instr_c_j() {
 
 // c.addi a0,1
 #[test]
-fn test_rvc_instr_todo() {
+fn test_rvc_instr_c_addi() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_w64(10, 0x1122_3344);
     cpu.execute_rvc_instr(0x_0505);
     assert!(cpu.regs.x[10] == 0x1122_3345);
+}
+
+// c.slli x6, 0x1f
+#[test]
+fn test_rvc_instr_slli() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs_w64(6, 0x1);
+    cpu.execute_rvc_instr(0x_037e);
+    assert!(cpu.regs.x[6] == 0x1 << 0x1f);
 }
 
 #[test]
