@@ -67,11 +67,12 @@ pub enum Opcode {
     /// Atomic Memory Operations
     Amo {
         funct5: u8,
-        // aq, rl fields are ignored for now
         rs2: u8,
         rs1: u8,
         funct3: u8,
         rd: u8,
+        aq: bool,
+        rl: bool,
     },
     Uknown,
 }
@@ -122,8 +123,10 @@ pub const F7_OP_ADD: u8 = 0b_000_0000;
 pub const F7_OP_SUB: u8 = 0b_010_0000;
 
 // func5 field of AMO instructions
-pub const F5_OP_AMO_SWAP: u8   = 0b_00001;
+pub const F5_OP_AMO_ADD: u8   = 0b_00000;
+pub const F5_OP_AMO_SWAP: u8  = 0b_00001;
 pub const F5_OP_AMO_LRW: u8   = 0b_00010;
+
 pub const F3_OP_AMO_WORD: u8  = 0b_010;
 pub const F3_OP_AMO_DWORD: u8 = 0b_011;
 }
@@ -328,6 +331,8 @@ pub fn decode_instr(instr: u32) -> Opcode {
             // consistent, meaning that it cannot be reordered with earlier or later memory
             // operations from the same hart.
             // TODO: aq, rl ingonred for now
+            aq: instr.bit(26),
+            rl: instr.bit(25),
             rs2: i_rs2(instr),
             rs1: i_rs1(instr),
             funct3: i_funct3(instr),

@@ -354,18 +354,36 @@ impl RV64ICpu {
         Ok(())
     }
 
+    // Atomic operations
+    // TODO: aq, rl are ignored for now
+    #[allow(clippy::too_many_arguments)]
     fn exe_opc_amo(
         &mut self,
         funct5: u8,
+        _aq: bool,
+        _rl: bool,
         rs2: u8,
         rs1: u8,
         funct3: u8,
         rd: u8,
     ) -> Result<(), String> {
+        // These AMO instructions atomically load a data value from the address in rs1,
+        // place the value into register rd, apply a binary operator to the loaded value and
+        // the original value in rs2, then store the result back to the address in rs1.
         // TODO: check whether rs1 value (address) is 8-byte aligned. If not aligned then generate
         // an address misalgined exception.
         match (funct5, funct3) {
-            // amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
+            // amoadd.w rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rd + rs2
+            (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => {
+                // TODO: use native atomic swap
+                let addressed_word = self.bus.read32(self.regs_r64(rs1));
+                self.regs_wi32(rd, addressed_word);
+                self.bus.write32(
+                    self.regs_r64(rs1),
+                    self.regs_r64(rs2).wrapping_add(self.regs_r64(rd)) as u32,
+                );
+            }
+            // amoswap.w rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => {
                 // TODO: use native atomic swap
                 let addressed_word = self.bus.read32(self.regs_r64(rs1));
@@ -434,11 +452,13 @@ impl RV64ICpu {
             } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd, /* rvc = */ false),
             Opcode::Amo {
                 funct5,
+                aq,
+                rl,
                 rs2,
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_amo(funct5, rs2, rs1, funct3, rd),
+            } => self.exe_opc_amo(funct5, aq, rl, rs2, rs1, funct3, rd),
             Opcode::System {
                 csr,
                 rs1,
