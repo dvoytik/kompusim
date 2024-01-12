@@ -64,6 +64,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
         Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => "Atomic swap".to_string(),
+            (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => "Atomic Add".to_string(),
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => "Load Reserve Word".to_string(),
             _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
@@ -192,6 +193,13 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => {
                 format!(
                     "x{rd} <= mem[x{rs1}]; mem[x{rs1}] <= x{rs2}{}{}",
+                    if aq { "; acquire" } else { "" },
+                    if rl { "; release" } else { "" }
+                )
+            }
+            (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => {
+                format!(
+                    "x{rd} <= mem[x{rs1}]; mem[x{rs1}] <= rd + x{rs2}{}{}",
                     if aq { "; acquire" } else { "" },
                     if rl { "; release" } else { "" }
                 )
@@ -341,6 +349,13 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => {
                 format!(
                     "amoswap.w{}{} x{rd}, x{rs2}, x{rs1}",
+                    if aq { ".aq" } else { "" },
+                    if rl { ".rl" } else { "" }
+                )
+            }
+            (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => {
+                format!(
+                    "amoadd.w{}{} x{rd}, x{rs2}, x{rs1}",
                     if aq { ".aq" } else { "" },
                     if rl { ".rl" } else { "" }
                 )
