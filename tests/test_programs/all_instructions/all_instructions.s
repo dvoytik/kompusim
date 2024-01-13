@@ -6,11 +6,14 @@
 .globl _start
 
 _start:
-    li t1, 1 # x6 <= 1
-    # store value form t0 to address a0; if succeeded t1 will contain 0;
-    # otherwise t1 will contain 1
-    amoswap.w.aq t1, t0, (a0)
+    li x4, 0xbadc0ffe
+    la x3, beef_addr # x6 <= 1
+    # amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
+    amoswap.w.aq x1, x4, (x3)
     # amoswap.w.aq  x6, x5, (x10)
+    amoswap.w.aq x2, x1, (x3)
+    # amoswap.w.aq  x6, x5, (x10)
+    amoadd.w.aq x2, x1, (x0)
 
     lr.w x1, (x0)
     # lr.w.aq x1, (x0)
@@ -56,3 +59,5 @@ print:  # "print" subroutine writes null-terminated string
 .section .rodata
 msg:
     .string "Hello, World!\n"
+beef_addr:
+    .long 0xdeadbeef

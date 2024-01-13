@@ -207,6 +207,19 @@ fn test_amoswap() {
 }
 
 #[test]
+fn test_amoadd() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.bus.write32(0x0, 0x0000_0001);
+    cpu.regs_w64(1, 0x1);
+    // amoadd.w rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rd + rs2
+    // amoadd.w.aq x2, x1, (x0)
+    cpu.execute_instr(0x_0410_212f);
+    assert_eq!(cpu.regs.x[2], 0x1);
+    assert_eq!(cpu.bus.read32(0x0), 0x0000_0002);
+}
+
+#[test]
 fn registers_writes() {
     let mut cpu = RV64ICpu::default();
     // test sign extension
