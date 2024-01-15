@@ -375,11 +375,11 @@ impl RV64ICpu {
         match (funct5, funct3) {
             // amoadd.w rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rd + rs2
             (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => {
-                // TODO: use native atomic swap
-                let addressed_word = self.bus.read32(self.regs_r64(rs1));
-                self.regs_wi32(rd, addressed_word);
+                // TODO: use native atomic operation
+                let address = self.regs_r64(rs1); // preserve address to avoid problem when rd == rs1
+                self.regs_wi32(rd, self.bus.read32(address));
                 self.bus.write32(
-                    self.regs_r64(rs1),
+                    address,
                     self.regs_r64(rs2).wrapping_add(self.regs_r64(rd)) as u32,
                 );
             }

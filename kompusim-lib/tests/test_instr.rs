@@ -207,6 +207,7 @@ fn test_amoswap() {
 }
 
 #[test]
+// amoadd.w.aq x2, x1, (x0)
 fn test_amoadd() {
     let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
@@ -217,6 +218,20 @@ fn test_amoadd() {
     cpu.execute_instr(0x_0410_212f);
     assert_eq!(cpu.regs.x[2], 0x1);
     assert_eq!(cpu.bus.read32(0x0), 0x0000_0002);
+}
+
+#[test]
+// amoadd.w x16, x17, (x16)
+fn test_amoadd_rd_equals_rs1() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.bus.write32(0x0, 0x0000_0001);
+    cpu.regs_w64(17, 0x2);
+    // amoadd.w rd,  rs2, (rs1) # rd <= mem[rs1]; mem[rs1] <= rd + rs2
+    // amoadd.w x16, x17, (x16)
+    cpu.execute_instr(0x_0118_282f);
+    assert_eq!(cpu.regs.x[16], 0x1);
+    assert_eq!(cpu.bus.read32(0x0), 0x0000_0003);
 }
 
 #[test]
