@@ -69,6 +69,8 @@ enum SimCommand {
     Disasm(u64, u64),
     // Set RAM size
     SetRamSz(u64),
+    // Add new breakpoint
+    AddBreakpoint(u64),
 }
 
 #[derive(Clone)]
@@ -206,6 +208,9 @@ impl Simulator {
                     SimCommand::SetRamSz(ram_sz) => {
                         cpu0.set_ram_sz(ram_sz);
                     }
+                    SimCommand::AddBreakpoint(breakpoint) => {
+                        cpu0.add_breakpoint(breakpoint);
+                    }
                     SimCommand::Stop => break,
                 }
                 //thread::sleep(time::Duration::from_secs(1));
@@ -229,6 +234,10 @@ impl Simulator {
 
     pub fn set_ram_sz(&mut self, ram_sz: u64) {
         self.send_cmd(SimCommand::SetRamSz(ram_sz));
+    }
+
+    pub fn add_breakpoint(&mut self, breakpoint: u64) {
+        self.send_cmd(SimCommand::AddBreakpoint(breakpoint))
     }
 
     pub fn stop(&mut self) {

@@ -67,6 +67,7 @@ impl KompusimApp {
                 load_addr,
                 bin,
                 ram,
+                breakpoint,
                 ..
             } = cmdl_cmd;
             if let Some(ref ram) = ram {
@@ -78,6 +79,11 @@ impl KompusimApp {
                         DEFAULT_MEM_SZ
                     );
                 }
+            }
+            if let Some(breakpoint) = breakpoint {
+                let breakpoint = u64::from_str_radix(breakpoint.trim_start_matches("0x"), 16)
+                    .expect("Breakpoint address is wrong format");
+                app.sim.add_breakpoint(breakpoint);
             }
             println!("Got command line: execute: execute {bin:?} @ {load_addr}, RAM: {ram:?}");
             let load_addr = u64::from_str_radix(load_addr.trim_start_matches("0x"), 16)
