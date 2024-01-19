@@ -60,4 +60,8 @@ impl Dev for Uart {
             _ => panic!("DBG: Uart: register {addr:x} write not implemented"),
         };
     }
+
+    fn write64(&mut self, _addr: u64, _val: u64) {
+        todo!();
+    }
 }

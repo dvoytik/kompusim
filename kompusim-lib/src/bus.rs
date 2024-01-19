@@ -55,6 +55,13 @@ impl BusAgent {
         }
     }
 
+    pub fn write64(&mut self, addr: u64, val: u64) {
+        match self {
+            BusAgent::Ram(ram) => ram.write64(addr, val),
+            BusAgent::Device(dev) => dev.write64(addr, val),
+        }
+    }
+
     pub fn get_ram(&self, addr: u64, size: u64) -> Option<&[u8]> {
         match self {
             BusAgent::Device(_) => None,
@@ -166,6 +173,14 @@ impl Bus {
             ar.agent.write32(addr, val)
         } else {
             panic!("DBG: write32 bus fault: 0x{addr:x}");
+        }
+    }
+
+    pub fn write64(&mut self, addr: u64, val: u64) {
+        if let Some(ar) = self.find_addr_region_mut(addr, 8) {
+            ar.agent.write64(addr, val)
+        } else {
+            panic!("DBG: write64 bus fault: 0x{addr:x}");
         }
     }
 

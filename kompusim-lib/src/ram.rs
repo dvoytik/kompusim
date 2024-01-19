@@ -75,6 +75,19 @@ impl Ram {
         self.m[offs + 3] = val.bits(31, 24) as u8;
     }
 
+    // Little Endian 64-bit write
+    pub fn write64(&mut self, addr: u64, val: u64) {
+        let offs = (addr - self.start) as usize;
+        self.m[offs] = val.bits(7, 0) as u8;
+        self.m[offs + 1] = val.bits(15, 8) as u8;
+        self.m[offs + 2] = val.bits(23, 16) as u8;
+        self.m[offs + 3] = val.bits(31, 24) as u8;
+        self.m[offs + 4] = val.bits(39, 32) as u8;
+        self.m[offs + 5] = val.bits(47, 40) as u8;
+        self.m[offs + 6] = val.bits(55, 48) as u8;
+        self.m[offs + 7] = val.bits(63, 56) as u8;
+    }
+
     pub fn load_bin_file(&mut self, addr: u64, fname: &PathBuf) -> Result<(), Box<dyn Error>> {
         // TODO: check if exists
         assert!(addr >= self.start && addr <= self.end);
