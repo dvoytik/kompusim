@@ -346,6 +346,7 @@ impl RV64ICpu {
                 todo!();
             }
             F3_OP_STORE_SW => self.bus.write32(addr, self.regs_r32(rs2)),
+            F3_OP_STORE_SD => self.bus.write64(addr, self.regs_r64(rs2)),
             _ => {
                 return Err(format!("STORE, funct3: 0b{funct3:b}"));
             }

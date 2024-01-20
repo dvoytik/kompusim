@@ -117,6 +117,7 @@ pub const F3_OP_LOAD_LW:  u8 = 0b010;
 
 pub const F3_OP_STORE_SB: u8 = 0b000;
 pub const F3_OP_STORE_SW: u8 = 0b010;
+pub const F3_OP_STORE_SD: u8 = 0b011;
 
 // funct7 field of R-type instruction
 pub const F7_OP_ADD: u8 = 0b_000_0000;
