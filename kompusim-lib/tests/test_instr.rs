@@ -2,6 +2,14 @@ use kompusim::bus::Bus;
 use kompusim::rv64i_cpu::RV64ICpu;
 
 #[test]
+fn registers_writes() {
+    let mut cpu = RV64ICpu::default();
+    // test sign extension
+    cpu.regs_wi32(1, 0x_8000_0000);
+    assert!(cpu.regs_r64(1) == 0xffff_ffff_8000_0000);
+}
+
+#[test]
 fn test_instruction_csrrs() {
     let mut cpu = RV64ICpu::default();
     // pollute x5
@@ -234,12 +242,17 @@ fn test_amoadd_rd_equals_rs1() {
     assert_eq!(cpu.bus.read32(0x0), 0x0000_0003);
 }
 
+// sd x6, 0x0(x5)
 #[test]
-fn registers_writes() {
-    let mut cpu = RV64ICpu::default();
-    // test sign extension
-    cpu.regs_wi32(1, 0x_8000_0000);
-    assert!(cpu.regs_r64(1) == 0xffff_ffff_8000_0000);
+fn test_sd() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    assert!(cpu.bus.read32(0x10) == 0);
+    cpu.regs_w64(5, 0x10); // address
+    cpu.regs_w64(6, 0x_badc_0ffe_dead_beef); // what to store
+    cpu.execute_instr(0x0062_b023);
+    assert!(cpu.bus.read32(0x10) == 0x_dead_beef);
+    assert!(cpu.bus.read32(0x14) == 0x_badc0ffe);
 }
 
 // #[test]

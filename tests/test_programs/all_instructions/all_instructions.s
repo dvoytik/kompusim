@@ -15,6 +15,8 @@ _start:
     # amoswap.w.aq  x6, x5, (x10)
     amoadd.w.aq x2, x1, (x0)
 
+    sd x6, 0x0(x5)
+
     lr.w x1, (x0)
     # lr.w.aq x1, (x0)
     c.nop
