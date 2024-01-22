@@ -43,6 +43,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         Opcode::Store { funct3, .. } => match funct3 {
             F3_OP_STORE_SB => "Store Byte".to_string(),
             F3_OP_STORE_SW => "Store Word".to_string(),
+            F3_OP_STORE_SD => "Store Double Word".to_string(),
             _ => "Unknown STORE opcode".to_string(),
         },
 
@@ -146,6 +147,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
         } => match funct3 {
             F3_OP_STORE_SB => format!("mem8[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[7:0]"),
             F3_OP_STORE_SW => format!("mem32[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[31:0]"),
+            F3_OP_STORE_SD => format!("mem64[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}"),
             _ => "Unknown STORE opcode".to_string(),
         },
 
@@ -302,6 +304,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_OP_STORE_SB => format!("sb x{rs2}, 0x{imm12:x}(x{rs1})"),
             F3_OP_STORE_SW => format!("sw x{rs2}, 0x{imm12:x}(x{rs1})"),
+            F3_OP_STORE_SD => format!("sd x{rs2}, 0x{imm12:x}(x{rs1})"),
             _ => "Unknown STORE opcode".to_string(),
         },
 
