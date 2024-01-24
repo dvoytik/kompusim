@@ -318,19 +318,14 @@ impl RV64ICpu {
     // LOAD instructions: LB, LBU, LW, ...
     fn exe_opc_load(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
+        // TODO raise fault if returns 0xffff_ffff?
         match funct3 {
-            F3_OP_LOAD_LB => {
-                self.regs_wi8(rd, self.bus.read8(addr));
-            }
+            // Load Byte
+            F3_OP_LOAD_LB => self.regs_wi8(rd, self.bus.read8(addr)),
             // Load Byte Unsigned
-            F3_OP_LOAD_LBU => {
-                self.regs_wu8(rd, self.bus.read8(addr));
-            }
+            F3_OP_LOAD_LBU => self.regs_wu8(rd, self.bus.read8(addr)),
             // Load Word
-            F3_OP_LOAD_LW => {
-                // TODO raise fault if returns 0xffff_ffff?
-                self.regs_wi32(rd, self.bus.read32(addr));
-            }
+            F3_OP_LOAD_LW => self.regs_wi32(rd, self.bus.read32(addr)),
             _ => {
                 return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
