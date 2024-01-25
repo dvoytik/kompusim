@@ -326,6 +326,8 @@ impl RV64ICpu {
             F3_OP_LOAD_LBU => self.regs_wu8(rd, self.bus.read8(addr)),
             // Load Word
             F3_OP_LOAD_LW => self.regs_wi32(rd, self.bus.read32(addr)),
+            // Load Double Word
+            // F3_OP_LOAD_LD => self.regs_w64(rd, self.bus.read64(addr)),
             _ => {
                 return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
