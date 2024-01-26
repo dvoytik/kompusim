@@ -66,6 +66,21 @@ impl Ram {
         b3 << 24 | b2 << 16 | b1 << 8 | b0
     }
 
+    // Little Endian 64-bit read
+    pub fn read64(&self, addr: u64) -> u64 {
+        let offs = (addr - self.start) as usize;
+        let b0 = self.m[offs] as u64;
+        let b1 = self.m[offs + 1] as u64;
+        let b2 = self.m[offs + 2] as u64;
+        let b3 = self.m[offs + 3] as u64;
+        let b4 = self.m[offs + 4] as u64;
+        let b5 = self.m[offs + 5] as u64;
+        let b6 = self.m[offs + 6] as u64;
+        let b7 = self.m[offs + 7] as u64;
+        // little endian
+        b7 << 56 | b6 << 48 | b5 << 40 | b4 << 32 | b3 << 24 | b2 << 16 | b1 << 8 | b0
+    }
+
     // Little Endian 32-bit write
     pub fn write32(&mut self, addr: u64, val: u32) {
         let offs = (addr - self.start) as usize;

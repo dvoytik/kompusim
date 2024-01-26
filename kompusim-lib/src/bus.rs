@@ -41,6 +41,13 @@ impl BusAgent {
         }
     }
 
+    pub fn read64(&self, addr: u64) -> u64 {
+        match self {
+            BusAgent::Ram(ram) => ram.read64(addr),
+            BusAgent::Device(dev) => dev.read64(addr),
+        }
+    }
+
     pub fn write8(&mut self, addr: u64, val: u8) {
         match self {
             BusAgent::Ram(ram) => ram.write8(addr, val),
@@ -164,6 +171,15 @@ impl Bus {
         } else {
             // TODO: is this bus fault or we return 0xffff_ffff?
             0xffff_ffff
+        }
+    }
+
+    pub fn read64(&self, addr: u64) -> u64 {
+        if let Some(ar) = self.find_addr_region(addr, 8) {
+            ar.agent.read64(addr)
+        } else {
+            // TODO: is this bus fault or we return 0xffff_ffff?
+            0xffff_ffff_ffff_ffff
         }
     }
 

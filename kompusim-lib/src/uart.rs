@@ -51,6 +51,10 @@ impl Dev for Uart {
         }
     }
 
+    fn read64(&self, _addr: u64) -> u64 {
+        todo!();
+    }
+
     fn write32(&mut self, addr: u64, val: u32) {
         match addr {
             TXDATA => {
