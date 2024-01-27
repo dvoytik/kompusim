@@ -114,6 +114,7 @@ pub const F3_OP_ADD_SUB: u8 = 0b_000;
 pub const F3_OP_LOAD_LB:  u8 = 0b000;
 pub const F3_OP_LOAD_LBU: u8 = 0b100;
 pub const F3_OP_LOAD_LW:  u8 = 0b010;
+pub const F3_OP_LOAD_LD:  u8 = 0b011;
 
 pub const F3_OP_STORE_SB: u8 = 0b000;
 pub const F3_OP_STORE_SW: u8 = 0b010;
