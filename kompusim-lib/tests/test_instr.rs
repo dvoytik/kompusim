@@ -255,6 +255,18 @@ fn test_sd() {
     assert!(cpu.bus.read32(0x14) == 0x_badc0ffe);
 }
 
+// ld x6, 0x0(x5)
+#[test]
+fn test_ld() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    assert!(cpu.bus.read32(0x10) == 0);
+    cpu.regs_w64(5, 0x10); // address
+    cpu.bus.write64(0x10, 0x_badc_0ffe_dead_beef);
+    cpu.execute_instr(0x_0002_b303);
+    assert_eq!(cpu.regs_r64(6), 0x_badc_0ffe_dead_beef);
+}
+
 // #[test]
 // fn test_intermixed_instruction {
 //     // TODO:
