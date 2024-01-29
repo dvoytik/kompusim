@@ -37,6 +37,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
             F3_OP_LOAD_LB => "Load Byte (sign extend)".to_string(),
             F3_OP_LOAD_LBU => "Load Byte Unsigned".to_string(),
             F3_OP_LOAD_LW => "Load Word (sign extend)".to_string(),
+            F3_OP_LOAD_LD => "Load Double Word".to_string(),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -136,6 +137,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                     "x{rd}[31:0] = mem32[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:32] = x{rd}[31]"
                 )
             }
+            F3_OP_LOAD_LD => format!("x{rd} = mem64[x{rs1} + sign_ext(0x{imm12})]"),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -293,6 +295,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             F3_OP_LOAD_LB => format!("lb x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LBU => format!("lbu x{rd}, 0x{imm12}(x{rs1})"),
             F3_OP_LOAD_LW => format!("lw x{rd}, 0x{imm12}(x{rs1})"),
+            F3_OP_LOAD_LD => format!("ld x{rd}, 0x{imm12}(x{rs1})"),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -520,4 +523,9 @@ fn test_u32_bin4() {
         0x0101_1234_abcd_0000
     );
     assert_eq!(hex_to_u64("__1__").unwrap(), 0x0000_0000_0000_0001);
+}
+
+#[test]
+fn test_disasm() {
+    assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0x0(x5)".to_owned());
 }
