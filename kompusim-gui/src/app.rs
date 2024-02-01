@@ -89,6 +89,8 @@ impl KompusimApp {
             let load_addr = u64::from_str_radix(load_addr.trim_start_matches("0x"), 16)
                 .expect("Load address is wrong format");
             app.sim.load_bin_file(load_addr, bin);
+            // Do not show windows that doesn't make sense to show:
+            app.load_demo.window_open = false;
         }
         app
     }

@@ -1,6 +1,6 @@
 pub struct LoadDemo {
     /// Is window open or not
-    window_open: bool,
+    pub window_open: bool,
     demos: Vec<DemoImage>,
     selected_demo: usize,
 }
