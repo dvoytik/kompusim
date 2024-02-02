@@ -61,11 +61,11 @@ impl InstrList {
         self.instr_cache
             .update_cache(instructions.1, instructions.0);
         // update view window of instructions:
-        if pc > 8 + self.instr_cache.start_address + self.instr_cache.instructions.len() as u64 {
-            self.user_start_addr = pc - 8;
+        if pc + 4 >= self.instr_cache.start_address + self.instr_cache.instructions.len() as u64 {
+            self.user_start_addr = pc - 4;
         }
         if pc < self.instr_cache.start_address {
-            self.user_start_addr = pc - 8;
+            self.user_start_addr = pc - 4;
         }
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
