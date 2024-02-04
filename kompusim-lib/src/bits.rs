@@ -65,18 +65,18 @@ impl BitOps for i16 {
     #[inline(always)]
     fn bit(self, idx: u32) -> bool {
         assert!(idx < Self::BITS);
-        self & (1 << idx) != 0
+        self as u16 & (1_u16 << idx) != 0
     }
 
     fn bits(self, end: u32, start: u32) -> Self {
         assert!(end < Self::BITS && start < Self::BITS && end >= start);
-        (self >> start) & (Self::MAX >> (15 - (end - start)))
+        ((self as u16 >> start) & (u16::MAX >> (u16::BITS - 1 - (end - start)))) as i16
     }
 
     fn xor(self, end: u32, start: u32) -> Self {
         assert!(end < Self::BITS && start < Self::BITS && end >= start);
-        let m = Self::MAX >> start << start << (Self::BITS - end - 1) >> (Self::BITS - end - 1);
-        self ^ m
+        let m: u16 = u16::MAX >> start << start << (u16::BITS - end - 1) >> (u16::BITS - end - 1);
+        (self as u16 ^ m) as i16
     }
 
     // Clean bits [end:start]
@@ -165,6 +165,13 @@ fn test_bit_ops() {
     assert!(0x0000_u16.xor(7, 7) == 0x0080);
     assert!(0x0000_u16.xor(15, 15) == 0x8000);
     assert!(0xaaaa_u16.xor(15, 0) == 0x5555);
+
+    // i16
+    assert_eq!(1_i16.bits(0, 0), 1);
+    assert_eq!(0xa5_i16.bits(7, 4), 0xa);
+    assert_eq!(0x33_i16.bits(1, 1), 1);
+    assert_eq!(0x33_i16.bits(5, 5), 1);
+    assert_eq!((-1_i16).bits(15, 0), -1);
 
     // u32
     assert!(0xffff_ff0f_u32.bits(11, 0) == 0xf0f_u32);

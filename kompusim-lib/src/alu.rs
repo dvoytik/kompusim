@@ -210,6 +210,11 @@ fn test_imm12() {
     assert!(5000_u64.add_i12(I12::from(-2048_i16)) == 5000 - 2048);
 
     assert!(500_0000_u64.add_i12(I12::from(0x7ff_u16)) == 500_0000 + 2047);
+
+    // bits
+    assert_eq!(I12::from(1_u16).0.bits(0, 0), 1);
+    assert_eq!(I12::from(0x_33_u16).0.bits(0, 0), 1);
+    assert_eq!(I12::from(0x_33_u16).0.bits(1, 1), 1);
 }
 
 #[test]
