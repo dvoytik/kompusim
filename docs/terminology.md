@@ -1,3 +1,7 @@
+RISC-V ISA terminology
+----------------------
+EEI - Execution Environment Interface (E.g., Linux ABI, RISC-V SBI)
+
 Source code terminology and abbreviations
 -----------------------------------------
 aq - acquisition

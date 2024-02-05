@@ -74,6 +74,11 @@ pub enum Opcode {
         aq: bool,
         rl: bool,
     },
+    Fence {
+        imm12: I12,
+        funct3: u8,
+        // rs1 and rd fields are reserved
+    },
     Uknown,
 }
 
@@ -94,6 +99,7 @@ pub const OPC_OP_IMM: u8 =   0b_00_100_11;
 pub const OPC_OP_IMM32: u8 = 0b_00_110_11;
 pub const OPC_OP:     u8 =   0b_01_100_11;
 pub const OPC_JALR:   u8 =   0b_11_001_11;
+pub const OPC_FENCE:  u8 =   0b_00_011_11;
 pub const OPC_AMO:    u8 =   0b_01_011_11;
 pub const OPC_JAL:    u8 =   0b_11_011_11;
 pub const OPC_LUI:    u8 =   0b_01_101_11;
@@ -131,6 +137,9 @@ pub const F5_OP_AMO_LRW: u8   = 0b_00010;
 
 pub const F3_OP_AMO_WORD: u8  = 0b_010;
 pub const F3_OP_AMO_DWORD: u8 = 0b_011;
+
+pub const F3_OP_FENCE: u8   = 0b_000;
+pub const F3_OP_FENCE_I: u8 = 0b_001;
 }
 pub use opc::*;
 
@@ -310,6 +319,10 @@ pub fn decode_instr(instr: u32) -> Opcode {
         },
         OPC_JAL => dec_opc_jal(instr),
         OPC_JALR => dec_opc_jalr(instr),
+        OPC_FENCE => Opcode::Fence {
+            imm12: i_i_type_imm12(instr),
+            funct3: i_funct3(instr),
+        },
         OPC_BRANCH => dec_opc_branch(instr),
         OPC_LOAD => dec_opc_load(instr),
         OPC_STORE => dec_opc_store(instr),
@@ -332,7 +345,7 @@ pub fn decode_instr(instr: u32) -> Opcode {
             // Setting both the aq and the rl bit on an AMO makes the sequence sequentially
             // consistent, meaning that it cannot be reordered with earlier or later memory
             // operations from the same hart.
-            // TODO: aq, rl ingonred for now
+            // TODO: aq, rl fields are ingonred for now
             aq: instr.bit(26),
             rl: instr.bit(25),
             rs2: i_rs2(instr),

@@ -416,6 +416,11 @@ impl RV64ICpu {
             } => self.exe_opc_branch(off13, rs2, rs1, funct3),
             Opcode::Jal { imm21, rd } => self.exe_opc_jal(imm21, rd),
             Opcode::Jalr { imm12, rs1, rd } => self.exe_opc_jalr(imm12, rs1, rd),
+            Opcode::Fence { .. } => {
+                // FENCE and FENCE.I are ignored for now
+                self.pc_inc();
+                Ok(())
+            }
             Opcode::Load {
                 imm12,
                 rs1,
