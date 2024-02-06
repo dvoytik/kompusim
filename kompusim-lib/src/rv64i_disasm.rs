@@ -68,7 +68,13 @@ pub fn disasm_operation_name(instr: u32) -> String {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => "Atomic swap".to_string(),
             (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => "Atomic Add".to_string(),
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => "Load Reserve Word".to_string(),
-            _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+            _ => format!("Unknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+        },
+
+        Opcode::Fence { funct3, .. } => match funct3 {
+            F3_OP_FENCE => "Fence - sync memory access order".to_string(),
+            F3_OP_FENCE_I => "Sync I-cache with D-cache".to_string(),
+            _ => format!("Unknown FENCE instruction: funct3: 0b_{funct3:b}"),
         },
 
         Opcode::System { funct3, .. } => match funct3 {
@@ -209,7 +215,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                 )
             }
             (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("x{rd} = mem[x{rs1}] ; todo"),
-            _ => format!("Uknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
+            _ => format!("Unknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
         Opcode::System {
@@ -223,6 +229,23 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                 csrn = csr_name(csr)
             ),
             _ => "Unknown SYSTEM opcode".to_string(),
+        },
+
+        Opcode::Fence { imm12, funct3 } => match funct3 {
+            F3_OP_FENCE => format!(
+                "fence: FM:0b_{:b}, PI:{}, PO:{}, PR:{}, PW:{}, SI:{}, SO:{}, SR:{}, SW:{}",
+                imm12.0.bits(11, 8),
+                imm12.0.bits(7, 7),
+                imm12.0.bits(6, 6),
+                imm12.0.bits(5, 5),
+                imm12.0.bits(4, 4),
+                imm12.0.bits(3, 3),
+                imm12.0.bits(2, 2),
+                imm12.0.bits(1, 1),
+                imm12.0.bits(0, 0)
+            ),
+            F3_OP_FENCE_I => ("fence: sync I-cache").to_string(),
+            _ => "Unknown FENCE instruction".to_string(),
         },
 
         Opcode::Uknown => "Unknown instruction".to_string(),
@@ -247,6 +270,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         Opcode::Op { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::Amo { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::Fence { .. } => (None, None, None),
         Opcode::Uknown => (None, None, None),
     }
 }
@@ -378,6 +402,30 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1:x}", csr_name(csr)),
             _ => "Unknown SYSTEM opcode".to_string(),
+        },
+
+        Opcode::Fence { imm12, funct3 } => match funct3 {
+            F3_OP_FENCE => {
+                println!("DBG  imm12: 0x{imm12:x}");
+                format!(
+                    "fence{} {}{}{}{}, {}{}{}{}",
+                    match imm12.0.bits(11, 8) {
+                        0b_0000 => "",
+                        0b_1000 => ".TSO",
+                        _ => ".UKNOWN",
+                    },
+                    if imm12.0.bit(7) { "i" } else { "" },
+                    if imm12.0.bit(6) { "o" } else { "" },
+                    if imm12.0.bit(5) { "r" } else { "" },
+                    if imm12.0.bit(4) { "w" } else { "" },
+                    if imm12.0.bit(3) { "i" } else { "" },
+                    if imm12.0.bit(2) { "o" } else { "" },
+                    if imm12.0.bit(1) { "r" } else { "" },
+                    if imm12.0.bit(0) { "w" } else { "" },
+                )
+            }
+            F3_OP_FENCE_I => format!("fence.i 0x{imm12:x}"),
+            _ => "Unknown FENCE instruction".to_string(),
         },
 
         Opcode::Uknown => "Unknown instruction".to_string(),
