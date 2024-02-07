@@ -267,6 +267,15 @@ fn test_ld() {
     assert_eq!(cpu.regs_r64(6), 0x_badc_0ffe_dead_beef);
 }
 
+// fence rw,rw
+#[test]
+fn test_fence() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.execute_instr(0x_0330_000f);
+    // no effect for now
+}
+
 // #[test]
 // fn test_intermixed_instruction {
 //     // TODO:

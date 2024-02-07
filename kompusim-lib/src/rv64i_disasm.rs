@@ -576,4 +576,5 @@ fn test_u32_bin4() {
 #[test]
 fn test_disasm() {
     assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0x0(x5)".to_owned());
+    assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw".to_owned());
 }
