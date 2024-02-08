@@ -405,25 +405,22 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         },
 
         Opcode::Fence { imm12, funct3 } => match funct3 {
-            F3_OP_FENCE => {
-                println!("DBG  imm12: 0x{imm12:x}");
-                format!(
-                    "fence{} {}{}{}{}, {}{}{}{}",
-                    match imm12.0.bits(11, 8) {
-                        0b_0000 => "",
-                        0b_1000 => ".TSO",
-                        _ => ".UKNOWN",
-                    },
-                    if imm12.0.bit(7) { "i" } else { "" },
-                    if imm12.0.bit(6) { "o" } else { "" },
-                    if imm12.0.bit(5) { "r" } else { "" },
-                    if imm12.0.bit(4) { "w" } else { "" },
-                    if imm12.0.bit(3) { "i" } else { "" },
-                    if imm12.0.bit(2) { "o" } else { "" },
-                    if imm12.0.bit(1) { "r" } else { "" },
-                    if imm12.0.bit(0) { "w" } else { "" },
-                )
-            }
+            F3_OP_FENCE => format!(
+                "fence{} {}{}{}{}, {}{}{}{}",
+                match imm12.0.bits(11, 8) {
+                    0b_0000 => "",
+                    0b_1000 => ".TSO",
+                    _ => ".UKNOWN",
+                },
+                if imm12.0.bit(7) { "i" } else { "" },
+                if imm12.0.bit(6) { "o" } else { "" },
+                if imm12.0.bit(5) { "r" } else { "" },
+                if imm12.0.bit(4) { "w" } else { "" },
+                if imm12.0.bit(3) { "i" } else { "" },
+                if imm12.0.bit(2) { "o" } else { "" },
+                if imm12.0.bit(1) { "r" } else { "" },
+                if imm12.0.bit(0) { "w" } else { "" },
+            ),
             F3_OP_FENCE_I => format!("fence.i 0x{imm12:x}"),
             _ => "Unknown FENCE instruction".to_string(),
         },
