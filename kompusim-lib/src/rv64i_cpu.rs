@@ -1,7 +1,7 @@
 use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
-use crate::csr;
+use crate::csr::Csrs;
 use crate::rv64i_dec::*;
 use crate::rvc_dec::{c_i_opcode, decode_rvc_instr, instr_is_rvc, COpcode};
 
@@ -27,6 +27,7 @@ pub struct RV64ICpu {
     pub regs: RV64IURegs,
     lr_sc_reservation: u64,
     pub bus: Bus,
+    csrs: Csrs,
     // TODO: optimize - use hashmap:
     breakpoints: Vec<u64>,
     /// Number of executed instructions
@@ -40,6 +41,7 @@ impl RV64ICpu {
             regs: RV64IURegs::default(),
             lr_sc_reservation: 0,
             breakpoints: Vec::with_capacity(2),
+            csrs: Csrs::new(),
             num_exec_instr: 0,
         }
     }
@@ -155,11 +157,13 @@ impl RV64ICpu {
 
     fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         match funct3 {
+            // csrrs rd, csr, rs1
             F3_SYSTEM_CSRRS => {
-                let mut csr_v = csr::csr_r64(csr);
+                // TODO: this must be atomic
+                let mut csr_v = self.csrs.r64(csr);
                 self.regs_w64(rd, csr_v);
                 csr_v |= self.regs_r64(rs1);
-                csr::csr_w64(csr, csr_v);
+                self.csrs.w64(csr, csr_v);
             }
             _ => {
                 return Err(format!("SYSTEM, funct3: {funct3:x}"));

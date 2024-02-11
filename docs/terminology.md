@@ -11,6 +11,7 @@ halfword - 16 bits
 word - 32 bits
 doubleword - 64 bits
 quadword - 128 bits
+WARL - Write Any Values, Read Legal Values
 
 
 Registers
