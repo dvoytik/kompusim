@@ -110,7 +110,8 @@ pub const F3_BRANCH_BEQ: u8 = 0b000;
 pub const F3_BRANCH_BNE: u8 = 0b001;
 pub const F3_BRANCH_BLT: u8 = 0b100;
 
-pub const F3_SYSTEM_CSRRS: u8 = 0b010;
+pub const F3_SYSTEM_CSRRS:  u8 = 0b010; // atomic read set bit
+pub const F3_SYSTEM_CSRRWI: u8 = 0b101; // atomic read-write immidiate
 
 pub const F3_OP_IMM_ADDI: u8 = 0b000;
 pub const F3_OP_IMM_SLLI: u8 = 0b001;
