@@ -19,6 +19,17 @@ fn test_instruction_csrrs() {
     assert!(cpu.regs.x[5] == 0);
 }
 
+// csrrwi	zero,mscratch,0
+#[test]
+fn test_csrrwi() {
+    let mut cpu = RV64ICpu::default();
+    // pollute x5
+    // cpu.regs.x[5] = 1;
+    // csrrs  x5, mhartid, zero
+    cpu.execute_instr(0x_3400_5073);
+    // assert!(cpu.regs.x[5] == 0);
+}
+
 #[test]
 fn test_instruction_bne() {
     let mut cpu = RV64ICpu::default();
