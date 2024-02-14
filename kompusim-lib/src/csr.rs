@@ -4,7 +4,7 @@ mod csr_defines {
 pub const MHARTID:  u16 = 0xf14; // Machine Hardware Thread ID
 pub const MSCRATCH: u16 = 0x340; // Machine Scratch register for machine trap handlers.
 }
-use csr_defines::*;
+pub use csr_defines::*;
 
 #[derive(Default)]
 pub struct Csrs {

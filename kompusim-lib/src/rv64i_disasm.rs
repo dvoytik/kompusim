@@ -2,7 +2,7 @@
 
 use std::num::ParseIntError;
 
-use crate::{alu::Imm, bits::BitOps, rv64i_dec::*, rvc_dec::instr_is_rvc, rvc_disasm::*};
+use crate::{alu::Imm, bits::BitOps, csr, rv64i_dec::*, rvc_dec::instr_is_rvc, rvc_disasm::*};
 
 pub fn instr_hex(instr: u32) -> String {
     if instr_is_rvc(instr) {
@@ -79,6 +79,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
         Opcode::System { funct3, .. } => match funct3 {
             F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
+            F3_SYSTEM_CSRRWI => "Control Status Register - Read, Write Immediate".to_string(),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -228,6 +229,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                 "x{rd} = {csrn}; {csrn} = {csrn} | x{rs1:b}",
                 csrn = csr_name(csr)
             ),
+            F3_SYSTEM_CSRRWI => format!("x{rd} = {csrn}; {csrn} = 0x{rs1:x}", csrn = csr_name(csr)),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -400,7 +402,8 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1:x}", csr_name(csr)),
+            F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1}", csr_name(csr)),
+            F3_SYSTEM_CSRRWI => format!("csrrwi x{rd}, {}, {rs1:x}", csr_name(csr)),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -470,7 +473,8 @@ pub fn reg_idx2abi(r: u8) -> &'static str {
 
 pub fn csr_name(csr: u16) -> &'static str {
     match csr {
-        0xf14 => "mhartid",
+        csr::MHARTID => "mhartid",
+        csr::MSCRATCH => "mscratch",
         _ => "UKNOWN",
     }
 }
