@@ -23,11 +23,7 @@ fn test_instruction_csrrs() {
 #[test]
 fn test_csrrwi() {
     let mut cpu = RV64ICpu::default();
-    // pollute x5
-    // cpu.regs.x[5] = 1;
-    // csrrs  x5, mhartid, zero
     cpu.execute_instr(0x_3400_5073);
-    // assert!(cpu.regs.x[5] == 0);
 }
 
 #[test]
