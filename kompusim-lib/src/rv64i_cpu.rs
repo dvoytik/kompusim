@@ -484,8 +484,7 @@ impl RV64ICpu {
             let opc = i_opcode(instr);
             eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:x} (0b_{instr:032b}), opcode: 0x{opc:x} (0b_{opc:07b})",
             self.get_pc());
-            // TODO: remove panic and trigger CPU exception
-            panic!();
+            // TODO: trigger CPU exception
         }
         self.num_exec_instr += 1;
     }
