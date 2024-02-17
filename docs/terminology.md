@@ -5,6 +5,7 @@ EEI - Execution Environment Interface (E.g., Linux ABI, RISC-V SBI)
 Source code terminology and abbreviations
 -----------------------------------------
 aq - acquisition
+CSR - Control and status registers
 rl - relinquishment
 rvc - RISC-V Compressed (Instruction set) - used to denote 16-bit compressed RISC-V instructions
 halfword - 16 bits
