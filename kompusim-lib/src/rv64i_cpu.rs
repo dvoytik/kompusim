@@ -157,18 +157,22 @@ impl RV64ICpu {
 
     // csrrs, csrrwi
     fn exe_opc_system(&mut self, csr: u16, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
+        // TODO: each operation is atomic
         match funct3 {
             // csrrs rd, csr, rs1
             F3_SYSTEM_CSRRS => {
-                // TODO: this must be atomic
                 let mut csr_v = self.csrs.r64(csr);
                 self.regs_w64(rd, csr_v);
                 csr_v |= self.regs_r64(rs1);
                 self.csrs.w64(csr, csr_v);
             }
+            // csrrw rd, csr, rs1
+            F3_SYSTEM_CSRRW => {
+                self.regs_w64(rd, self.csrs.r64(csr));
+                self.csrs.w64(csr, self.regs_r64(rs1));
+            }
             // csrrwi rd, csr, uimm5
             F3_SYSTEM_CSRRWI => {
-                // TODO: this must be atomic
                 self.regs_w64(rd, self.csrs.r64(csr));
                 // rs1 is uimm[4:0]
                 self.csrs.w64(csr, rs1 as u64);
