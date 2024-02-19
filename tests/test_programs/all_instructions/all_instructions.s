@@ -21,6 +21,11 @@ _start:
     lr.w x1, (x0)
     # lr.w.aq x1, (x0)
     c.nop
+
+    li x4, 0xbadc0ffe
+    csrrw x1, mtvec, x4
+    csrrw x1, mtvec, x4
+
     addi  x1, x0, 1
     add   x1, x1, x1
     sub   x1, x1, x1

@@ -26,6 +26,19 @@ fn test_csrrwi() {
     cpu.execute_instr(0x_3400_5073);
 }
 
+// csrrw x1, mtvec, x4
+#[test]
+fn test_csrrw() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs.x[4] = 0x_dead_c0de;
+    assert!(cpu.regs.x[1] == 0x0);
+    // csrrw x1, mtvec, x4
+    cpu.execute_instr(0x_3052_10f3);
+    // csrrw x1, mtvec, x4
+    cpu.execute_instr(0x_3052_10f3);
+    assert!(cpu.regs.x[1] == 0x_dead_c0de);
+}
+
 #[test]
 fn test_instruction_bne() {
     let mut cpu = RV64ICpu::default();
