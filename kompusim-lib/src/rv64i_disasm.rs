@@ -80,6 +80,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         Opcode::System { funct3, .. } => match funct3 {
             F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
             F3_SYSTEM_CSRRWI => "Control Status Register - Read, Write Immediate".to_string(),
+            F3_SYSTEM_CSRRW => "Control Status Register - Read, Write".to_string(),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -230,6 +231,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                 csrn = csr_name(csr)
             ),
             F3_SYSTEM_CSRRWI => format!("x{rd} = {csrn}; {csrn} = 0x{rs1:x}", csrn = csr_name(csr)),
+            F3_SYSTEM_CSRRW => format!("x{rd} = {csrn}; {csrn} = x{rs1}", csrn = csr_name(csr)),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -404,6 +406,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         } => match funct3 {
             F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1}", csr_name(csr)),
             F3_SYSTEM_CSRRWI => format!("csrrwi x{rd}, {}, {rs1:x}", csr_name(csr)),
+            F3_SYSTEM_CSRRW => format!("csrrw x{rd}, {}, x{rs1}", csr_name(csr)),
             _ => "Unknown SYSTEM opcode".to_string(),
         },
 
@@ -473,6 +476,7 @@ pub fn reg_idx2abi(r: u8) -> &'static str {
 
 pub fn csr_name(csr: u16) -> &'static str {
     match csr {
+        csr::MTVEC => "mtvec",
         csr::MHARTID => "mhartid",
         csr::MSCRATCH => "mscratch",
         _ => "UKNOWN",
@@ -578,5 +582,6 @@ fn test_u32_bin4() {
 fn test_disasm() {
     assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0x0(x5)".to_owned());
     assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw".to_owned());
-    assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0")
+    assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0");
+    assert_eq!(disasm(0x_3052_10f3, 0x0), "csrrw x1, mtvec, x4");
 }
