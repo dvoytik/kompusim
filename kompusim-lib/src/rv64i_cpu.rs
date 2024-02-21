@@ -540,8 +540,7 @@ impl RV64ICpu {
             let opc = c_i_opcode(c_instr);
             eprintln!("ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:x} (0b_{c_instr:016b}), opcode: 0x{opc:x} (0b_{opc:05b})",
             self.get_pc());
-            // TODO: remove panic and trigger CPU exception
-            panic!();
+            // TODO: trigger CPU exception
         }
 
         self.num_exec_instr += 1;
