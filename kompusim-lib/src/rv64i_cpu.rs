@@ -513,10 +513,12 @@ impl RV64ICpu {
                 self.pc_inc_rvc();
                 Ok(())
             }
+            COpcode::Reserved => Err(format!("Reserved instruction")),
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
                 self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
             }
+            COpcode::CLUI { imm6, rd } => self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd),
             // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
             COpcode::CSLLI { uimm6, rd } => {
                 self.exe_opc_op_imm(

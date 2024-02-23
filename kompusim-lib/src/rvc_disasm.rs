@@ -7,6 +7,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
     match decode_rvc_instr(instr) {
         COpcode::CNOP => "Compressed No Operation".to_string(),
         COpcode::CADDI { .. } => "Compressed Immediate Add".to_string(),
+        COpcode::CLUI { .. } => "todo".to_string(),
         COpcode::CSLLI { .. } => "Compressed Shift logical left Immediate".to_string(),
         COpcode::CLI { .. } => "Compressed Load Immediate".to_string(),
         COpcode::CJR { .. } => "Compressed Jump Register".to_string(),
@@ -15,6 +16,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
+        COpcode::Reserved => "Reserved RVC instruction".to_string(),
     }
 }
 
@@ -22,6 +24,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
     match decode_rvc_instr(instr) {
         COpcode::CNOP => "".to_string(),
         COpcode::CADDI { imm6, rd } => format!("x{rd} = x{rd} + {imm6:x}"),
+        COpcode::CLUI { .. } => format!("todo"),
         COpcode::CSLLI { uimm6, rd } => format!("x{rd} = x{rd} << {uimm6}"),
         COpcode::CLI { imm6, rd } => format!("x{rd} = {imm6:x}"),
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
@@ -30,6 +33,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
+        COpcode::Reserved => "Reserved RVC instruction".to_string(),
     }
 }
 
@@ -38,6 +42,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
     match decode_rvc_instr(instr) {
         COpcode::CNOP => (None, None, None),
         COpcode::CADDI { rd, .. } => (None, None, Some(rd)),
+        COpcode::CLUI { rd, .. } => (None, None, Some(rd)),
         COpcode::CSLLI { rd, .. } => (None, None, Some(rd)),
         COpcode::CLI { rd, .. } => (None, None, Some(rd)),
         COpcode::CJR { rs1 } => (Some(rs1), None, None),
@@ -46,6 +51,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
 
         COpcode::Hint => (None, None, None),
         COpcode::Uknown => (None, None, None),
+        COpcode::Reserved => (None, None, None),
     }
 }
 
@@ -53,6 +59,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
     match decode_rvc_instr(c_instr) {
         COpcode::CNOP => "nop".to_string(),
         COpcode::CADDI { imm6, rd } => format!("c.addi x{rd}, {imm6}"),
+        COpcode::CLUI { .. } => format!("todo"),
         COpcode::CSLLI { uimm6, rd } => format!("c.slli x{rd}, 0x{uimm6:x}"),
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
@@ -61,6 +68,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
+        COpcode::Reserved => "Reserved RVC instruction".to_string(),
     }
 }
 
