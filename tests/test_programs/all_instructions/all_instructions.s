@@ -37,6 +37,7 @@ _start:
     la    a0, msg       # load address of "msg" to a0 argument register
     jal   print         # jump to "print" subroutine,
                         # return address is stored in ra regster
+    c.lui x1, 31
 
 halt:
     j     halt          # enter the infinite loop
