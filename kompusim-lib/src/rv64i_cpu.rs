@@ -519,6 +519,17 @@ impl RV64ICpu {
                 self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
             }
             COpcode::CLUI { imm6, rd } => self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd),
+
+            COpcode::ADDI6SP { imm6 } => {
+                self.exe_opc_op_imm(
+                    I12::from((imm6.0 as i16) << 4),
+                    2,
+                    F3_OP_IMM_ADDI,
+                    2,
+                    /* rvc = */ true,
+                )
+            }
+
             // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
             COpcode::CSLLI { uimm6, rd } => {
                 self.exe_opc_op_imm(
