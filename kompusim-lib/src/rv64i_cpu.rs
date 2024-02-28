@@ -520,7 +520,7 @@ impl RV64ICpu {
             }
             COpcode::CLUI { imm6, rd } => self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd),
 
-            COpcode::ADDI6SP { imm6 } => {
+            COpcode::ADDI16SP { imm6 } => {
                 self.exe_opc_op_imm(
                     I12::from((imm6.0 as i16) << 4),
                     2,

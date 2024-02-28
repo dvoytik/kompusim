@@ -11,7 +11,7 @@ pub enum COpcode {
     CNOP,
     CADDI { imm6: I6, rd: u8 },
     CLUI { imm6: I6, rd: u8 },
-    ADDI6SP { imm6: I6 },
+    ADDI16SP { imm6: I6 },
     CSLLI { uimm6: u8, rd: u8 },
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
@@ -121,7 +121,7 @@ pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
                         | c_instr.bits(5, 5) << 2
                         | c_instr.bits(2, 2) << 1
                         | c_instr.bits(6, 6);
-                    COpcode::ADDI6SP { imm6: imm6.into() }
+                    COpcode::ADDI16SP { imm6: imm6.into() }
                 }
                 (_, _) => COpcode::CLUI { imm6, rd },
             }
