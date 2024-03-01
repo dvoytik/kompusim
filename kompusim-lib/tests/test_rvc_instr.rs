@@ -55,7 +55,7 @@ fn test_rvc_instr_slli() {
 }
 
 #[test]
-fn test_todo() {
+fn test_rvc_instr_c_lui() {
     let mut cpu = RV64ICpu::default();
     // c.lui	x21, 0x2
     cpu.execute_rvc_instr(0x_6a89);
@@ -63,6 +63,16 @@ fn test_todo() {
     // c.lui	x1, 0x1f
     cpu.execute_rvc_instr(0x_60fd);
     assert_eq!(cpu.regs_r64(1), 0x1f_u64 * 4096_u64);
+}
+
+// c.addi16sp sp, -144
+#[test]
+fn test_rvc_instr_c_addi16sp() {
+    let mut cpu = RV64ICpu::default();
+    // c.addi16sp x2, -144
+    cpu.execute_rvc_instr(0x_7175);
+    // -144 + 144 == 0
+    assert_eq!(cpu.regs_r64(2).wrapping_add(144), 0)
 }
 
 #[test]

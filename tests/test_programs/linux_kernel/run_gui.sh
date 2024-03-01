@@ -8,6 +8,6 @@ cargo build
   exec \
   --ram 256M \
   --load-addr 0x0000000080000000 \
-  --breakpoint 0x00000000800000ce \
+  --breakpoint 0x0000000080000120 \
   --bin tests/test_programs/linux_kernel/fw_payload.bin \
   $@
