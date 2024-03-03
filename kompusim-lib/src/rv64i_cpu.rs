@@ -220,10 +220,8 @@ impl RV64ICpu {
     }
 
     // LUI - Load Upper Immidiate
-    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
+    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
         self.regs_w64(rd, uimm20);
-        self.pc_inc();
-        Ok(())
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
@@ -233,14 +231,7 @@ impl RV64ICpu {
         Ok(())
     }
 
-    fn exe_opc_op_imm(
-        &mut self,
-        imm12: I12,
-        rs1: u8,
-        funct3: u8,
-        rd: u8,
-        rvc: bool,
-    ) -> Result<(), String> {
+    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
@@ -252,11 +243,6 @@ impl RV64ICpu {
             _ => {
                 return Err(format!("OP_IMM, funct3: 0b{funct3:b}"));
             }
-        }
-        if rvc {
-            self.pc_inc_rvc()
-        } else {
-            self.pc_inc()
         }
         Ok(())
     }
@@ -422,7 +408,11 @@ impl RV64ICpu {
 
     pub fn execute_instr(&mut self, instr: u32) {
         if let Err(e) = match decode_instr(instr) {
-            Opcode::Lui { uimm20, rd } => self.exe_opc_lui(uimm20, rd),
+            Opcode::Lui { uimm20, rd } => {
+                self.exe_opc_lui(uimm20, rd);
+                self.pc_inc();
+                Ok(())
+            }
             Opcode::Auipc { uimm20, rd } => self.exe_opc_auipc(uimm20, rd),
             Opcode::Branch {
                 off13,
@@ -454,7 +444,11 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op_imm(imm12, rs1, funct3, rd, /* rvc = */ false),
+            } => {
+                let res = self.exe_opc_op_imm(imm12, rs1, funct3, rd);
+                self.pc_inc();
+                res
+            }
             Opcode::OpImm32 {
                 imm12,
                 rs1,
@@ -516,29 +510,26 @@ impl RV64ICpu {
             COpcode::Reserved => Err(format!("Reserved instruction")),
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
-                self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, /* rvc = */ true)
+                let res = self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd);
+                self.pc_inc_rvc();
+                res
             }
-            COpcode::CLUI { imm6, rd } => self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd),
-
+            COpcode::CLUI { imm6, rd } => {
+                self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd);
+                self.pc_inc_rvc();
+                Ok(())
+            }
             COpcode::ADDI16SP { imm6 } => {
-                self.exe_opc_op_imm(
-                    I12::from((imm6.0 as i16) << 4),
-                    2,
-                    F3_OP_IMM_ADDI,
-                    2,
-                    /* rvc = */ true,
-                )
+                let res =
+                    self.exe_opc_op_imm(I12::from((imm6.0 as i16) << 4), 2, F3_OP_IMM_ADDI, 2);
+                self.pc_inc_rvc();
+                res
             }
-
             // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
             COpcode::CSLLI { uimm6, rd } => {
-                self.exe_opc_op_imm(
-                    I12(uimm6 as i16),
-                    rd,
-                    F3_OP_IMM_SLLI,
-                    rd,
-                    /* rvc = */ true,
-                )
+                let res = self.exe_opc_op_imm(I12(uimm6 as i16), rd, F3_OP_IMM_SLLI, rd);
+                self.pc_inc_rvc();
+                res
             }
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to JALR x0, 0(rs1)
