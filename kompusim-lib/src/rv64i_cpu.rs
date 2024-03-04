@@ -281,7 +281,6 @@ impl RV64ICpu {
         rs1: u8,
         funct3: u8,
         rd: u8,
-        rvc: bool,
     ) -> Result<(), String> {
         match (funct7, funct3) {
             (F7_OP_ADD, F3_OP_ADD_SUB) => {
@@ -293,11 +292,6 @@ impl RV64ICpu {
                 self.regs_w64(rd, self.regs_r64(rs1).wrapping_sub(self.regs_r64(rs2)))
             }
             (_, _) => return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}")),
-        }
-        if rvc {
-            self.pc_inc_rvc()
-        } else {
-            self.pc_inc();
         }
         Ok(())
     }
@@ -461,7 +455,11 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd, /* rvc = */ false),
+            } => {
+                let res = self.exe_opc_op(funct7, rs2, rs1, funct3, rd);
+                self.pc_inc();
+                res
+            }
             Opcode::Amo {
                 funct5,
                 aq,
@@ -535,7 +533,9 @@ impl RV64ICpu {
             // C.JR expands to JALR x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::CADD { rd, rs2 } => {
-                self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd, /* rvc = */ true)
+                let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd);
+                self.pc_inc_rvc();
+                res
             }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
