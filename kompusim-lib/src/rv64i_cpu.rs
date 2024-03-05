@@ -247,14 +247,7 @@ impl RV64ICpu {
         Ok(())
     }
 
-    fn exe_opc_op_imm32(
-        &mut self,
-        imm12: I12,
-        rs1: u8,
-        funct3: u8,
-        rd: u8,
-        rvc: bool,
-    ) -> Result<(), String> {
+    fn exe_opc_op_imm32(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
         match funct3 {
             // addiw
             // arithmetic overflow is ignored
@@ -265,11 +258,7 @@ impl RV64ICpu {
                 return Err(format!("OP_IMM32, funct3: 0b{funct3:b}"));
             }
         }
-        if rvc {
-            self.pc_inc_rvc()
-        } else {
-            self.pc_inc()
-        }
+        self.pc_inc();
         Ok(())
     }
 
@@ -448,7 +437,7 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op_imm32(imm12, rs1, funct3, rd, /* rvc = */ false),
+            } => self.exe_opc_op_imm32(imm12, rs1, funct3, rd),
             Opcode::Op {
                 funct7,
                 rs2,
