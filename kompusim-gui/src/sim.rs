@@ -109,7 +109,7 @@ impl Simulator {
             bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
 
             let mut cpu0 = RV64ICpu::new(bus);
-            cpu0.regs.pc = addr;
+            cpu0.pc_jump(addr);
 
             let mut sim_state = SimState::InitializedReady;
             send_event(SimEvent::StateChanged(

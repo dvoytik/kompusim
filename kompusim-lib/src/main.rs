@@ -97,7 +97,7 @@ fn main() {
             uart0.register_out_callback(Box::new(uart_out_to_console));
             bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
             let mut cpu0 = RV64ICpu::new(bus);
-            cpu0.regs.pc = addr;
+            cpu0.pc_jump(addr);
 
             if let Some(breakpoint) = break_point {
                 cpu0.add_breakpoint(breakpoint)

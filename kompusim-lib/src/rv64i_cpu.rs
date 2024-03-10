@@ -24,7 +24,7 @@ pub struct RV64IURegs {
 // TODO: make regs private?
 #[derive(Default)]
 pub struct RV64ICpu {
-    pub regs: RV64IURegs,
+    regs: RV64IURegs,
     lr_sc_reservation: u64,
     pub bus: Bus,
     csrs: Csrs,
@@ -143,7 +143,7 @@ impl RV64ICpu {
     }
 
     // set PC to new_addr
-    fn pc_jump(&mut self, new_addr: u64) {
+    pub fn pc_jump(&mut self, new_addr: u64) {
         self.regs.pc = new_addr;
     }
 
