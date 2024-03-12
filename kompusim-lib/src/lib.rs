@@ -4,6 +4,7 @@ pub mod bus;
 mod csr;
 pub mod device;
 pub mod ram;
+mod rv64fd;
 pub mod rv64i_cpu;
 /// RV64I decoder
 #[allow(clippy::unusual_byte_groupings)]

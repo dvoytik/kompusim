@@ -2,6 +2,7 @@ use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr::Csrs;
+use crate::rv64fd::RV64FDRegs;
 use crate::rv64i_dec::*;
 use crate::rvc_dec::{c_i_opcode, decode_rvc_instr, instr_is_rvc, COpcode};
 
@@ -25,6 +26,7 @@ pub struct RV64IURegs {
 #[derive(Default)]
 pub struct RV64ICpu {
     regs: RV64IURegs,
+    fregs: RV64FDRegs,
     lr_sc_reservation: u64,
     pub bus: Bus,
     csrs: Csrs,
@@ -39,6 +41,7 @@ impl RV64ICpu {
         RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
+            fregs: RV64FDRegs::default(),
             lr_sc_reservation: 0,
             breakpoints: Vec::with_capacity(2),
             csrs: Csrs::new(),
