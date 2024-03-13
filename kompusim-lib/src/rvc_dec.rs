@@ -85,8 +85,8 @@ pub fn c_i_rs2(c_instr: u16) -> u8 {
     c_instr.bits(6, 2) as u8
 }
 
-/// Decode a compressed (16 bit) instruction
-pub fn decode_rvc_instr(c_instr: u16) -> COpcode {
+/// Decode a compressed (16 bit) RV64 instruction
+pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
     let rd = c_i_rd(c_instr);
 
     match c_i_opcode(c_instr) {

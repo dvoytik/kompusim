@@ -2,9 +2,9 @@ use crate::alu::{Imm, I12, I13, I21, I6};
 use crate::bits::BitOps;
 use crate::bus::Bus;
 use crate::csr::Csrs;
-use crate::rv64fd::RV64FDRegs;
+// use crate::rv64fd::RV64FDRegs;
 use crate::rv64i_dec::*;
-use crate::rvc_dec::{c_i_opcode, decode_rvc_instr, instr_is_rvc, COpcode};
+use crate::rvc_dec::{c_i_opcode, instr_is_rvc, rv64c_decode_instr, COpcode};
 
 /// exec_continue() returns:
 pub enum ExecEvent {
@@ -26,7 +26,7 @@ pub struct RV64IURegs {
 #[derive(Default)]
 pub struct RV64ICpu {
     regs: RV64IURegs,
-    fregs: RV64FDRegs,
+    // fregs: RV64FDRegs,
     lr_sc_reservation: u64,
     pub bus: Bus,
     csrs: Csrs,
@@ -41,7 +41,7 @@ impl RV64ICpu {
         RV64ICpu {
             bus,
             regs: RV64IURegs::default(),
-            fregs: RV64FDRegs::default(),
+            // fregs: RV64FDRegs::default(),
             lr_sc_reservation: 0,
             breakpoints: Vec::with_capacity(2),
             csrs: Csrs::new(),
@@ -487,7 +487,7 @@ impl RV64ICpu {
 
     /// Execute a compressed instruction
     pub fn execute_rvc_instr(&mut self, c_instr: u16) {
-        if let Err(e) = match decode_rvc_instr(c_instr) {
+        if let Err(e) = match rv64c_decode_instr(c_instr) {
             COpcode::CNOP => {
                 self.pc_inc_rvc();
                 Ok(())
@@ -497,7 +497,7 @@ impl RV64ICpu {
                 self.pc_inc_rvc();
                 Ok(())
             }
-            COpcode::Reserved => Err(format!("Reserved instruction")),
+            COpcode::Reserved => Err("Reserved instruction".to_string()),
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
                 let res = self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd);

@@ -1,10 +1,10 @@
 use crate::{
     alu::Imm,
-    rvc_dec::{decode_rvc_instr, COpcode},
+    rvc_dec::{rv64c_decode_instr, COpcode},
 };
 
 pub fn disasm_rvc_operation_name(instr: u16) -> String {
-    match decode_rvc_instr(instr) {
+    match rv64c_decode_instr(instr) {
         COpcode::CNOP => "Compressed No Operation".to_string(),
         COpcode::CADDI { .. } => "Compressed Immediate Add".to_string(),
         COpcode::CLUI { .. } => "Compressed Load Upper Immediate".to_string(),
@@ -22,7 +22,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
 }
 
 pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
-    match decode_rvc_instr(instr) {
+    match rv64c_decode_instr(instr) {
         COpcode::CNOP => "".to_string(),
         COpcode::CADDI { imm6, rd } => format!("x{rd} = x{rd} + 0x{imm6:x}"),
         COpcode::CLUI { rd, imm6 } => format!("x{rd} = 0x{imm6:x} << 12"),
@@ -41,7 +41,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
 
 /// Returns used registers indexes of a 16 compressed instruction (rs1, rs2, rd)
 pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u8>) {
-    match decode_rvc_instr(instr) {
+    match rv64c_decode_instr(instr) {
         COpcode::CNOP => (None, None, None),
         COpcode::CADDI { rd, .. } => (None, None, Some(rd)),
         COpcode::CLUI { rd, .. } => (None, None, Some(rd)),
@@ -59,7 +59,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
 }
 
 pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
-    match decode_rvc_instr(c_instr) {
+    match rv64c_decode_instr(c_instr) {
         COpcode::CNOP => "nop".to_string(),
         COpcode::CADDI { imm6, rd } => format!("c.addi x{rd}, {imm6}"),
         COpcode::CLUI { rd, imm6 } => format!("c.lui x{rd}, 0x{imm6:x}"),
