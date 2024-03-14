@@ -6,8 +6,13 @@ OBJDUMP=riscv64-unknown-elf-objdump
 # --adjust-vma=0x800000
 # $OBJDUMP -b binary -a -f -h -p -r -t -d -s -D $P > $P.objdump
 # $OBJDUMP -b binary -a -f -h -p -r -t -d -s -M no-aliases -D $P > $P.objdump_no_aliases
-$OBJDUMP -m riscv -b binary -D $P > $P.objdump
-$OBJDUMP -m riscv -b binary -M no-aliases -D $P > $P.objdump_no_aliases 
+# $OBJDUMP -m riscv -b binary -D $P > $P.objdump
+$OBJDUMP \
+  -m riscv:rv64 \
+  -b binary \
+  -M no-aliases,numeric \
+  -D ${P} \
+  > ${P}.objdump_no_aliases
 # -d - disassemble
 # -F - disaplay file offset of the region of data
 # -f
@@ -17,3 +22,4 @@ $OBJDUMP -m riscv -b binary -M no-aliases -D $P > $P.objdump_no_aliases
 # -M no-aliases   - Disassemble only into canonical instructions.
 # --disassembler-color=extended-color
 # --visualize-jumps=extended-color
+# --target=elf64-little - doesn't work
