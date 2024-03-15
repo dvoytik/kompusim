@@ -336,7 +336,6 @@ impl RV64ICpu {
                 return Err(format!("STORE, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc();
         Ok(())
     }
 
@@ -424,7 +423,11 @@ impl RV64ICpu {
                 rs2,
                 rs1,
                 funct3,
-            } => self.exe_opc_store(imm12, rs2, rs1, funct3),
+            } => {
+                let res = self.exe_opc_store(imm12, rs2, rs1, funct3);
+                self.pc_inc();
+                res
+            }
             Opcode::OpImm {
                 imm12,
                 rs1,
@@ -526,6 +529,16 @@ impl RV64ICpu {
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::CADD { rd, rs2 } => {
                 let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd);
+                self.pc_inc_rvc();
+                res
+            }
+            COpcode::SDSP { uimm6, rs2 } => {
+                let res = self.exe_opc_store(
+                    ((uimm6 as u16) << 3).into(),
+                    rs2,
+                    /* SP */ 2,
+                    F3_OP_STORE_SD,
+                );
                 self.pc_inc_rvc();
                 res
             }

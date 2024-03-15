@@ -17,6 +17,7 @@ pub enum COpcode {
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
+    SDSP { uimm6: u8, rs2: u8 },
     Hint,
     Reserved,
     Uknown,
@@ -33,6 +34,7 @@ pub const OPC_C_LI: u8 =                    0b_010_01;
 pub const OPC_C_LUI_ADDI16SP: u8 =          0b_011_01;
 pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
+pub const OPC_SDSP: u8 =                    0b_111_10; // Store in memory Dword by Stack Pointer
 }
 use c_opcodes::*;
 
@@ -140,6 +142,14 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 (0, rs1, 0) if rs1 != 0 => COpcode::CJR { rs1 },
                 (1, rd, rs2) if rd != 0 && rs2 != 0 => COpcode::CADD { rd, rs2 },
                 _ => COpcode::Uknown,
+            }
+        }
+        OPC_SDSP => {
+            let uimm6 = c_instr.bits(9, 7) << 3 | c_instr.bits(12, 10);
+            let rs2 = c_i_rs2(c_instr);
+            COpcode::SDSP {
+                uimm6: uimm6 as u8,
+                rs2,
             }
         }
         _ => COpcode::Uknown,
