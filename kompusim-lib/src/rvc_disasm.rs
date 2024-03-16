@@ -14,7 +14,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::CJR { .. } => "Compressed Jump Register".to_string(),
         COpcode::CADD { .. } => "Compressed Add".to_string(),
         COpcode::CJ { .. } => "Compressed Jump".to_string(),
-        COpcode::SDSP { .. } => "todo".to_string(),
+        COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
@@ -33,7 +33,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
         COpcode::CJ { imm12 } => format!("PC = PC + {:x}", imm12),
-        COpcode::SDSP { uimm6, rs2 } => format!("todo {uimm6} {rs2}"),
+        COpcode::SDSP { uimm6, rs2 } => format!("mem64[sp {:+}] = x{rs2}", uimm6 << 3),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
@@ -72,7 +72,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
         COpcode::CJ { imm12 } => format!("c.j {:x}", instr_addr.add_i12(imm12)),
-        COpcode::SDSP { .. } => format!(""),
+        COpcode::SDSP { uimm6, rs2 } => format!("c.sdsp x{rs2}, {}(x2)", uimm6 << 3),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
