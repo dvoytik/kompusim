@@ -1,4 +1,4 @@
-use kompusim::rv64i_cpu::RV64ICpu;
+use kompusim::{bus::Bus, rv64i_cpu::RV64ICpu};
 
 #[test]
 // c.li x1, 1
@@ -73,6 +73,19 @@ fn test_rvc_instr_c_addi16sp() {
     cpu.execute_rvc_instr(0x_7175);
     // -144 + 144 == 0
     assert_eq!(cpu.regs_r64(2).wrapping_add(144), 0)
+}
+
+// c.sdsp x8, 128(x2)
+#[test]
+fn test_rv_instr_c_sdsp() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    // SP points at 0
+    assert_eq!(cpu.regs_r64(2), 0x0000_0000_0000_0000);
+    cpu.regs_w64(8, 0xdead_c0de_dead_c0de);
+    // c.sdsp x8, 128(x2)
+    cpu.execute_rvc_instr(0x_e122);
+    assert_eq!(cpu.bus.read64(128), 0xdead_c0de_dead_c0de);
 }
 
 #[test]

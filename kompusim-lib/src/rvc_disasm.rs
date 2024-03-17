@@ -92,4 +92,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_0505, 0x0), "c.addi x10, 1".to_string());
     assert_eq!(disasm_rvc(0x_60fd, 0x0), "c.lui x1, 0x1f");
     assert_eq!(disasm_rvc(0x_7175, 0x0), "c.addi16sp x2, -144");
+    assert_eq!(disasm_rvc(0x_e122, 0x0), "c.sdsp x8, 128(x2)");
 }
