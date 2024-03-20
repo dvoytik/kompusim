@@ -547,8 +547,11 @@ impl RV64ICpu {
             COpcode::Uknown => Err(String::new()),
         } {
             let opc = c_i_opcode(c_instr);
-            eprintln!("ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:x} (0b_{c_instr:016b}), opcode: 0x{opc:x} (0b_{opc:05b})",
-            self.get_pc());
+            eprint!(
+                "ERROR: Unknown RVC instruction {e}\nPC = 0x{:x}, code: 0x{c_instr:04x} ",
+                self.get_pc()
+            );
+            eprintln!("(0b_{c_instr:016b}), opcode: 0x{opc:02x} (0b_{opc:05b})");
             // TODO: trigger CPU exception
         }
 
