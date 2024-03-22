@@ -15,6 +15,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::CADD { .. } => "Compressed Add".to_string(),
         COpcode::CJ { .. } => "Compressed Jump".to_string(),
         COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
+        COpcode::ADDI4SPN { .. } => "todo".to_string(),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
@@ -34,6 +35,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
         COpcode::CJ { imm12 } => format!("PC = PC + {:x}", imm12),
         COpcode::SDSP { uimm6, rs2 } => format!("mem64[sp {:+}] = x{rs2}", uimm6 << 3),
+        COpcode::ADDI4SPN { uimm8, rd } => format!("todo {uimm8} {rd}"),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),
@@ -54,6 +56,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::CADD { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::CJ { .. } => (None, None, None),
         COpcode::SDSP { rs2, .. } => (Some(2), Some(rs2), None),
+        COpcode::ADDI4SPN { rd, .. } => (Some(2), None, Some(rd)),
 
         COpcode::Hint => (None, None, None),
         COpcode::Uknown => (None, None, None),
@@ -73,6 +76,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
         COpcode::CJ { imm12 } => format!("c.j {:x}", instr_addr.add_i12(imm12)),
         COpcode::SDSP { uimm6, rs2 } => format!("c.sdsp x{rs2}, {}(x2)", uimm6 << 3),
+        COpcode::ADDI4SPN { uimm8, rd } => format!("todo {uimm8} {rd}"),
 
         COpcode::Hint => "HINT (NOP)".to_string(),
         COpcode::Uknown => "Unknown RVC instruction".to_string(),

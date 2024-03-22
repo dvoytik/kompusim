@@ -18,6 +18,7 @@ pub enum COpcode {
     CADD { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
     SDSP { uimm6: u8, rs2: u8 },
+    ADDI4SPN { uimm8: u8, rd: u8 },
     Hint,
     Reserved,
     Uknown,
@@ -28,6 +29,7 @@ pub enum COpcode {
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
+pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immidiate x 4 to SP
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
 pub const OPC_C_SLLI: u8 =                  0b_000_10; // shift logical left immidiate
 pub const OPC_C_LI: u8 =                    0b_010_01;
@@ -75,6 +77,12 @@ pub fn c_i_imm12(c_instr: u16) -> I12 {
 #[inline(always)]
 pub fn c_i_rd(c_instr: u16) -> u8 {
     c_instr.bits(11, 7) as u8
+}
+
+#[inline(always)]
+/// rd' field
+pub fn c_i_rd_s(c_instr: u16) -> u8 {
+    c_instr.bits(4, 2) as u8 + 8
 }
 
 #[inline(always)]
@@ -150,6 +158,20 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             COpcode::SDSP {
                 uimm6: uimm6 as u8,
                 rs2,
+            }
+        }
+        OPC_C_ADDI4SPN => {
+            let nz_uimm8 = c_instr.bits(10, 7) << 4
+                | c_instr.bits(12, 11) << 2
+                | c_instr.bits(5, 5) << 1
+                | c_instr.bits(6, 6);
+            if nz_uimm8 == 0 {
+                COpcode::Reserved
+            } else {
+                COpcode::ADDI4SPN {
+                    uimm8: nz_uimm8 as u8,
+                    rd: c_i_rd_s(c_instr),
+                }
             }
         }
         _ => COpcode::Uknown,
