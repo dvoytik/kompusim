@@ -88,6 +88,15 @@ fn test_rv_instr_c_sdsp() {
     assert_eq!(cpu.bus.read64(128), 0xdead_c0de_dead_c0de);
 }
 
+// c.addi4spn
+#[test]
+fn test_rvc_instr_c_addi4spn() {
+    let mut cpu = RV64ICpu::default();
+    // c.addi4spn x8,x2,144
+    cpu.execute_rvc_instr(0x_0900);
+    assert_eq!(cpu.regs_r64(8), 144);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
@@ -95,6 +104,8 @@ fn test_all_rvc_instr_incr_pc_2() {
     let mut cpu = RV64ICpu::new(bus);
     // c.sdsp x8, 128(x2)
     cpu.execute_rvc_instr(0x_e122);
+    // c.addi4spn	x8,x2,144
+    cpu.execute_rvc_instr(0x_0900);
     // c.li x1, 1
     cpu.execute_rvc_instr(0x_4085);
     // c.add x1, x1
@@ -107,6 +118,6 @@ fn test_all_rvc_instr_incr_pc_2() {
     cpu.execute_rvc_instr(0x_60fd);
     // c.addi16sp x2, -144
     cpu.execute_rvc_instr(0x_7175);
-    assert_eq!(cpu.get_pc(), 14);
+    assert_eq!(cpu.get_pc(), 16);
     // TODO: add all instructions
 }
