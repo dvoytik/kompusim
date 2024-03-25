@@ -549,6 +549,12 @@ impl RV64ICpu {
                 self.pc_inc_rvc();
                 res
             }
+            // c.mv expands to add rd, x0, rs2
+            COpcode::MV { rd, rs2 } => {
+                let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd);
+                self.pc_inc_rvc();
+                res
+            }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
             COpcode::Uknown => Err(String::new()),

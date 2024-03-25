@@ -19,6 +19,7 @@ pub enum COpcode {
     CJ { imm12: I12 },
     SDSP { uimm6: u8, rs2: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
+    MV { rd: u8, rs2: u8 },
     Hint,
     Reserved,
     Uknown,
@@ -147,7 +148,10 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 //  C.JR (jump register) performs an unconditional control transfer to the address in
                 //  register rs1. C.JR expands to jalr x0, 0(rs1). C.JR is only valid when rs!=x0;
                 //  the code point with rs1=x0 is reserved.
-                (0, rs1, 0) if rs1 != 0 => COpcode::CJR { rs1 },
+                (0, 0, 0) => COpcode::Reserved,
+                (0, 0, _) => COpcode::Hint,
+                (0, rs1, 0) => COpcode::CJR { rs1 },
+                (0, rd, rs2) => COpcode::MV { rd, rs2 },
                 (1, rd, rs2) if rd != 0 && rs2 != 0 => COpcode::CADD { rd, rs2 },
                 _ => COpcode::Uknown,
             }
