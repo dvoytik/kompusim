@@ -104,4 +104,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_7175, 0x0), "c.addi16sp x2, -144");
     assert_eq!(disasm_rvc(0x_e122, 0x0), "c.sdsp x8, 128(x2)");
     assert_eq!(disasm_rvc(0x_0900, 0x0), "c.addi4spn x8, x2, 144");
+    assert_eq!(disasm_rvc(0x_892e, 0x0), "c.mv x18, x11");
 }
