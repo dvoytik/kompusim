@@ -14,6 +14,9 @@ pub enum ExecEvent {
     Breakpoint(u64),
 }
 
+const ILEN_32B: u8 = 4;
+const ILEN_RVC: u8 = 2;
+
 // RV64I Unprivileged Registers
 #[derive(Clone, Debug, Default)]
 pub struct RV64IURegs {
@@ -136,13 +139,8 @@ impl RV64ICpu {
     }
 
     /// common 32 bit instruction executed
-    fn pc_inc(&mut self) {
-        self.regs.pc += 4;
-    }
-
-    /// compressed 16-bit instruction executed
-    fn pc_inc_rvc(&mut self) {
-        self.regs.pc += 2;
+    fn pc_inc(&mut self, inc: u8) {
+        self.regs.pc += inc as u64;
     }
 
     // set PC to new_addr
@@ -184,19 +182,26 @@ impl RV64ICpu {
                 return Err(format!("SYSTEM, funct3: {funct3:x}"));
             }
         }
-        self.pc_inc();
+        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
     // BRANCH opcodes: BEQ, BNE, BLT, ...
-    fn exe_opc_branch(&mut self, off13: I13, rs2: u8, rs1: u8, funct3: u8) -> Result<(), String> {
+    fn exe_opc_branch(
+        &mut self,
+        off13: I13,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        ilen: u8,
+    ) -> Result<(), String> {
         match funct3 {
             // Branch Not Equal
             F3_BRANCH_BNE => {
                 if self.regs_r64(rs1) != self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc(ilen)
                 }
             }
             // Branch EQual
@@ -204,7 +209,7 @@ impl RV64ICpu {
                 if self.regs_r64(rs1) == self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc(ilen)
                 }
             }
             // Branch Less Than (signed comparison)
@@ -212,7 +217,7 @@ impl RV64ICpu {
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
-                    self.pc_inc()
+                    self.pc_inc(ilen)
                 }
             }
             _ => {
@@ -230,7 +235,7 @@ impl RV64ICpu {
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
         self.regs_w64(rd, self.regs.pc + uimm20);
-        self.pc_inc();
+        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
@@ -261,7 +266,7 @@ impl RV64ICpu {
                 return Err(format!("OP_IMM32, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc();
+        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
@@ -320,7 +325,7 @@ impl RV64ICpu {
                 return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc();
+        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
@@ -387,7 +392,7 @@ impl RV64ICpu {
                 return Err(format!("AMO, funct5: {funct5:x}, funct3: {funct3:x}"));
             }
         }
-        self.pc_inc();
+        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
@@ -395,7 +400,7 @@ impl RV64ICpu {
         if let Err(e) = match decode_instr(instr) {
             Opcode::Lui { uimm20, rd } => {
                 self.exe_opc_lui(uimm20, rd);
-                self.pc_inc();
+                self.pc_inc(ILEN_32B);
                 Ok(())
             }
             Opcode::Auipc { uimm20, rd } => self.exe_opc_auipc(uimm20, rd),
@@ -404,12 +409,12 @@ impl RV64ICpu {
                 rs2,
                 rs1,
                 funct3,
-            } => self.exe_opc_branch(off13, rs2, rs1, funct3),
+            } => self.exe_opc_branch(off13, rs2, rs1, funct3, ILEN_32B),
             Opcode::Jal { imm21, rd } => self.exe_opc_jal(imm21, rd),
             Opcode::Jalr { imm12, rs1, rd } => self.exe_opc_jalr(imm12, rs1, rd),
             Opcode::Fence { .. } => {
                 // FENCE and FENCE.I are ignored for now
-                self.pc_inc();
+                self.pc_inc(ILEN_32B);
                 Ok(())
             }
             Opcode::Load {
@@ -425,7 +430,7 @@ impl RV64ICpu {
                 funct3,
             } => {
                 let res = self.exe_opc_store(imm12, rs2, rs1, funct3);
-                self.pc_inc();
+                self.pc_inc(ILEN_32B);
                 res
             }
             Opcode::OpImm {
@@ -435,7 +440,7 @@ impl RV64ICpu {
                 rd,
             } => {
                 let res = self.exe_opc_op_imm(imm12, rs1, funct3, rd);
-                self.pc_inc();
+                self.pc_inc(ILEN_32B);
                 res
             }
             Opcode::OpImm32 {
@@ -452,7 +457,7 @@ impl RV64ICpu {
                 rd,
             } => {
                 let res = self.exe_opc_op(funct7, rs2, rs1, funct3, rd);
-                self.pc_inc();
+                self.pc_inc(ILEN_32B);
                 res
             }
             Opcode::Amo {
@@ -484,7 +489,7 @@ impl RV64ICpu {
     pub fn exe_opc_c_li(&mut self, imm6: I6, rd: u8) -> Result<(), String> {
         let imm6: i8 = imm6.into();
         self.regs_wi8(rd, imm6 as u8);
-        self.pc_inc_rvc();
+        self.pc_inc(ILEN_RVC);
         Ok(())
     }
 
@@ -492,36 +497,36 @@ impl RV64ICpu {
     pub fn execute_rvc_instr(&mut self, c_instr: u16) {
         if let Err(e) = match rv64c_decode_instr(c_instr) {
             COpcode::CNOP => {
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 Ok(())
             }
             // TODO: HINT instructions are defined as NOP
             COpcode::Hint => {
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 Ok(())
             }
             COpcode::Reserved => Err("Reserved instruction".to_string()),
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
                 let res = self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             COpcode::CLUI { imm6, rd } => {
                 self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 Ok(())
             }
             COpcode::ADDI16SP { imm6 } => {
                 let res =
                     self.exe_opc_op_imm(I12::from((imm6.0 as i16) << 4), 2, F3_OP_IMM_ADDI, 2);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
             COpcode::CSLLI { uimm6, rd } => {
                 let res = self.exe_opc_op_imm(I12(uimm6 as i16), rd, F3_OP_IMM_SLLI, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
@@ -529,7 +534,7 @@ impl RV64ICpu {
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::CADD { rd, rs2 } => {
                 let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             COpcode::SDSP { uimm6, rs2 } => {
@@ -539,20 +544,20 @@ impl RV64ICpu {
                     /* SP */ 2,
                     F3_OP_STORE_SD,
                 );
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             // c.addi4spn expands to addi rd, x2, nzuimm[9:2]
             COpcode::ADDI4SPN { uimm8, rd } => {
                 let res =
                     self.exe_opc_op_imm(I12::from((uimm8 as i16) << 2), 2, F3_OP_IMM_ADDI, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             // c.mv expands to add rd, x0, rs2
             COpcode::MV { rd, rs2 } => {
                 let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd);
-                self.pc_inc_rvc();
+                self.pc_inc(ILEN_RVC);
                 res
             }
             // C.J expands to jal x0, offset[11:1].
