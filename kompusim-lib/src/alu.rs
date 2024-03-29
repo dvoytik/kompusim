@@ -4,12 +4,17 @@ use std::fmt::{Display, LowerHex};
 use crate::bits::BitOps;
 
 pub trait Imm {
+    fn add_i9(self, v: I9) -> Self;
     fn add_i12(self, v: I12) -> Self;
     fn add_i13(self, v: I13) -> Self;
     fn add_i21(self, v: I21) -> Self;
 }
 
 impl Imm for u64 {
+    // Overflow is ignored
+    fn add_i9(self, v: I9) -> u64 {
+        (self as i64).wrapping_add(v.0 as i64) as u64
+    }
     // Overflow is ignored
     fn add_i12(self, v: I12) -> u64 {
         (self as i64).wrapping_add(v.0 as i64) as u64
@@ -25,6 +30,10 @@ impl Imm for u64 {
 }
 
 impl Imm for u32 {
+    // Overflow is ignored
+    fn add_i9(self, v: I9) -> u32 {
+        (self as i32).wrapping_add(v.0 as i32) as u32
+    }
     // Overflow is ignored
     fn add_i12(self, v: I12) -> u32 {
         (self as i32).wrapping_add(v.0 as i32) as u32
@@ -69,6 +78,20 @@ impl Display for I6 {
 impl LowerHex for I6 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// Immidiate signed 9 bit
+#[derive(Copy, Clone)]
+pub struct I9(pub i16);
+
+impl From<u16> for I9 {
+    fn from(v: u16) -> I9 {
+        if v.bit(8) {
+            I9((u16::MAX.xor(7, 0) | v.bits(7, 0)) as i16)
+        } else {
+            I9(v as i16)
+        }
     }
 }
 
@@ -128,6 +151,12 @@ impl From<u16> for I13 {
 impl From<i16> for I13 {
     fn from(v: i16) -> I13 {
         I13(v)
+    }
+}
+
+impl From<I9> for I13 {
+    fn from(v: I9) -> I13 {
+        I13(v.0)
     }
 }
 
@@ -257,4 +286,12 @@ fn test_imm6() {
     let b: I6 = a.into();
     let c: i8 = b.into();
     assert_eq!(c, -1);
+}
+
+#[test]
+fn test_imm9() {
+    assert_eq!(I9::from(u16::MAX).0, -1);
+    assert_eq!(I9::from(0x1ff).0, -1);
+    assert_eq!(I9::from(0xff).0, 255);
+    assert_eq!(I9::from(0).0, 0);
 }
