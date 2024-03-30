@@ -562,6 +562,10 @@ impl RV64ICpu {
             }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
+            // c.beqz expands to beq rs1′, x0, offset[8:1].
+            COpcode::BEQZ { imm9, rs1 } => {
+                self.exe_opc_branch(imm9.into(), 0, rs1, F3_BRANCH_BEQ, ILEN_RVC)
+            }
             COpcode::Uknown => Err(String::new()),
         } {
             let opc = c_i_opcode(c_instr);
