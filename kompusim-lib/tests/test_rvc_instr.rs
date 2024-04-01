@@ -28,12 +28,32 @@ fn test_rvc_add() {
 }
 
 #[test]
-// 8000003a:  b7ed  c.j 80000024
+// c.j offset
 fn test_rvc_instr_c_j() {
     let mut cpu = RV64ICpu::default();
     cpu.pc_jump(0x_8000_003a);
+    // c.j 80000024
     cpu.execute_rvc_instr(0x_b7ed);
     assert_eq!(cpu.get_pc(), 0x_8000_0024);
+}
+
+// c.beqz rs1, address
+#[test]
+fn test_rvc_instr_c_beqz() {
+    let mut cpu = RV64ICpu::default();
+    cpu.pc_jump(0x_8000_3700);
+    // test negative branch
+    cpu.regs_w64(15, 1);
+    // c.beqz x15, 0x3718
+    cpu.execute_rvc_instr(0x_cf81);
+    assert_eq!(cpu.get_pc(), 0x_8000_3702);
+
+    // test positive branch
+    cpu.pc_jump(0x_8000_3700);
+    cpu.regs_w64(15, 0);
+    // c.beqz x15, 0x3718
+    cpu.execute_rvc_instr(0x_cf81);
+    assert_eq!(cpu.get_pc(), 0x_8000_3718);
 }
 
 // c.addi a0,1
@@ -113,6 +133,10 @@ fn test_rvc_instr_c_mv() {
 fn test_all_rvc_instr_incr_pc_2() {
     let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
+    // make next c.beqz not to branch
+    cpu.regs_w64(15, 1);
+    // c.beqz x15, 0x3718
+    cpu.execute_rvc_instr(0x_cf81);
     // c.sdsp x8, 128(x2)
     cpu.execute_rvc_instr(0x_e122);
     // c.addi4spn	x8,x2,144
@@ -131,6 +155,7 @@ fn test_all_rvc_instr_incr_pc_2() {
     cpu.execute_rvc_instr(0x_7175);
     // c.mv x18, x11
     cpu.execute_rvc_instr(0x_892e);
-    assert_eq!(cpu.get_pc(), 18);
+    // todo
+    assert_eq!(cpu.get_pc(), 20);
     // TODO: add all instructions
 }
