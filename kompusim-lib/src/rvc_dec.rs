@@ -18,6 +18,7 @@ pub enum COpcode {
     CADD { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
     BEQZ { imm9: I9, rs1: u8 },
+    BNEZ { imm9: I9, rs1: u8 },
     SDSP { uimm6: u8, rs2: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
     MV { rd: u8, rs2: u8 },
@@ -39,6 +40,7 @@ pub const OPC_C_LUI_ADDI16SP: u8 =          0b_011_01;
 pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_BEQZ: u8 =                  0b_110_01; // Branch Equal Zero
+pub const OPC_C_BNEZ: u8 =                  0b_111_01; // Branch Not Equal Zero
 pub const OPC_SDSP: u8 =                    0b_111_10; // Store in memory Dword by Stack Pointer
 }
 use c_opcodes::*;
@@ -60,6 +62,17 @@ pub fn c_i_opcode(c_instr: u16) -> u8 {
 #[inline(always)]
 pub fn c_i_imm6(c_instr: u16) -> I6 {
     I6::from(c_instr.bits(12, 12) << 5 | c_instr.bits(6, 2))
+}
+
+// Decode immediate 9-bit field of instructions c.beqz and c.bnez
+#[inline(always)]
+fn c_i_imm9(c_instr: u16) -> I9 {
+    let imm9: u16 = c_instr.bits(12, 12) << 8
+        | c_instr.bits(6, 5) << 6
+        | c_instr.bits(2, 2) << 5
+        | c_instr.bits(11, 10) << 3
+        | c_instr.bits(4, 3) << 1;
+    imm9.into()
 }
 
 // Decode signed 12-bit immidiate from C.J and C.JAL instruction format
@@ -143,14 +156,16 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             imm12: c_i_imm12(c_instr),
         },
         OPC_C_BEQZ => {
-            let imm9: u16 = c_instr.bits(12, 12) << 8
-                | c_instr.bits(6, 5) << 6
-                | c_instr.bits(2, 2) << 5
-                | c_instr.bits(11, 10) << 3
-                | c_instr.bits(4, 3) << 1;
             let rs1 = c_instr.bits(9, 7) as u8 + 8; // rs1' field
             COpcode::BEQZ {
-                imm9: imm9.into(),
+                imm9: c_i_imm9(c_instr),
+                rs1,
+            }
+        }
+        OPC_C_BNEZ => {
+            let rs1 = c_instr.bits(9, 7) as u8 + 8; // rs1' field
+            COpcode::BNEZ {
+                imm9: c_i_imm9(c_instr),
                 rs1,
             }
         }

@@ -15,6 +15,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::CADD { .. } => "Compressed Add".to_string(),
         COpcode::CJ { .. } => "Compressed Jump".to_string(),
         COpcode::BEQZ { .. } => "Compressed Branch Equal Zero".to_string(),
+        COpcode::BNEZ { .. } => "Compressed Branch Not Equal Zero".to_string(),
         COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
         COpcode::ADDI4SPN { .. } => {
             "Compressed Add Immediate * 4 to Stack Pointer (x2)".to_string()
@@ -39,6 +40,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
         COpcode::CJ { imm12 } => format!("PC = PC + {:x}", imm12),
         COpcode::BEQZ { imm9, rs1 } => format!("if x{rs1} == 0 then PC = PC {:+}", imm9.0),
+        COpcode::BNEZ { imm9, rs1 } => format!("if x{rs1} != 0 then PC = PC {:+}", imm9.0),
         COpcode::SDSP { uimm6, rs2 } => format!("mem64[x2 {:+}] = x{rs2}", uimm6 << 3),
         COpcode::ADDI4SPN { uimm8, rd } => format!("x{rd} = x2 + {uimm8} * 4"),
         COpcode::MV { rd, rs2 } => format!("x{rd} = x{rs2}"),
@@ -62,6 +64,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::CADD { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::CJ { .. } => (None, None, None),
         COpcode::BEQZ { rs1, .. } => (Some(rs1), None, None),
+        COpcode::BNEZ { rs1, .. } => (Some(rs1), None, None),
         COpcode::SDSP { rs2, .. } => (Some(2), Some(rs2), None),
         COpcode::ADDI4SPN { rd, .. } => (Some(2), None, Some(rd)),
         COpcode::MV { rd, rs2 } => (None, Some(rs2), Some(rd)),
@@ -83,9 +86,8 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
         COpcode::CJ { imm12 } => format!("c.j {:x}", instr_addr.add_i12(imm12)),
-        COpcode::BEQZ { imm9, rs1 } => {
-            format!("c.beqz x{rs1}, 0x{:x}", instr_addr.add_i9(imm9))
-        }
+        COpcode::BEQZ { imm9, rs1 } => format!("c.beqz x{rs1}, 0x{:x}", instr_addr.add_i9(imm9)),
+        COpcode::BNEZ { imm9, rs1 } => format!("c.bnez x{rs1}, 0x{:x}", instr_addr.add_i9(imm9)),
         COpcode::SDSP { uimm6, rs2 } => format!("c.sdsp x{rs2}, {}(x2)", uimm6 << 3),
         COpcode::ADDI4SPN { uimm8, rd } => format!("c.addi4spn x{rd}, x2, {}", uimm8 << 2),
         COpcode::MV { rd, rs2 } => format!("c.mv x{rd}, x{rs2}"),

@@ -566,6 +566,10 @@ impl RV64ICpu {
             COpcode::BEQZ { imm9, rs1 } => {
                 self.exe_opc_branch(imm9.into(), 0, rs1, F3_BRANCH_BEQ, ILEN_RVC)
             }
+            // c.bnez expands to bne rs1′, x0, offset[8:1].
+            COpcode::BNEZ { imm9, rs1 } => {
+                self.exe_opc_branch(imm9.into(), 0, rs1, F3_BRANCH_BNE, ILEN_RVC)
+            }
             COpcode::Uknown => Err(String::new()),
         } {
             let opc = c_i_opcode(c_instr);
