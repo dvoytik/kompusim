@@ -114,4 +114,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_0900, 0x0), "c.addi4spn x8, x2, 144");
     assert_eq!(disasm_rvc(0x_892e, 0x0), "c.mv x18, x11");
     assert_eq!(disasm_rvc(0x_cf81, 0x_8000_3700), "c.beqz x15, 0x80003718");
+    assert_eq!(disasm_rvc(0x_fbfd, 0x_8000_3710), "c.bnez x15, 0x80003706");
 }

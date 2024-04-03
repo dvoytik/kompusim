@@ -56,6 +56,26 @@ fn test_rvc_instr_c_beqz() {
     assert_eq!(cpu.get_pc(), 0x_8000_3718);
 }
 
+// c.bnez rs1, pc_rel_address
+#[test]
+fn test_rvc_instr_c_bnez() {
+    let mut cpu = RV64ICpu::default();
+
+    // test negative branch
+    cpu.pc_jump(0x_8000_3710);
+    cpu.regs_w64(15, 0);
+    // c.bnez x15, 0x3706
+    cpu.execute_rvc_instr(0x_fbfd);
+    assert_eq!(cpu.get_pc(), 0x_8000_3712);
+
+    // test positive branch
+    cpu.pc_jump(0x_8000_3710);
+    cpu.regs_w64(15, 1);
+    // c.bnez x15, 0x3706
+    cpu.execute_rvc_instr(0x_fbfd);
+    assert_eq!(cpu.get_pc(), 0x_8000_3706);
+}
+
 // c.addi a0,1
 #[test]
 fn test_rvc_instr_c_addi() {
@@ -133,6 +153,8 @@ fn test_rvc_instr_c_mv() {
 fn test_all_rvc_instr_incr_pc_2() {
     let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
+    // c.bnez x15, 0x3706
+    cpu.execute_rvc_instr(0x_fbfd);
     // make next c.beqz not to branch
     cpu.regs_w64(15, 1);
     // c.beqz x15, 0x3718
@@ -156,6 +178,6 @@ fn test_all_rvc_instr_incr_pc_2() {
     // c.mv x18, x11
     cpu.execute_rvc_instr(0x_892e);
     // todo
-    assert_eq!(cpu.get_pc(), 20);
+    assert_eq!(cpu.get_pc(), 22);
     // TODO: add all instructions
 }
