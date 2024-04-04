@@ -41,7 +41,7 @@ pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_BEQZ: u8 =                  0b_110_01; // Branch Equal Zero
 pub const OPC_C_BNEZ: u8 =                  0b_111_01; // Branch Not Equal Zero
-pub const OPC_SDSP: u8 =                    0b_111_10; // Store in memory Dword by Stack Pointer
+pub const OPC_C_SDSP: u8 =                  0b_111_10; // Store (in memory) Dword by Stack Pointer
 }
 use c_opcodes::*;
 
@@ -185,7 +185,7 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 _ => COpcode::Uknown,
             }
         }
-        OPC_SDSP => {
+        OPC_C_SDSP => {
             let uimm6 = c_instr.bits(9, 7) << 3 | c_instr.bits(12, 10);
             let rs2 = c_i_rs2(c_instr);
             COpcode::SDSP {
