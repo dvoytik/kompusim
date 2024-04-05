@@ -20,6 +20,7 @@ pub enum COpcode {
     BEQZ { imm9: I9, rs1: u8 },
     BNEZ { imm9: I9, rs1: u8 },
     SDSP { uimm6: u8, rs2: u8 },
+    LDSP { uimm6: u8, rd: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
     MV { rd: u8, rs2: u8 },
     Hint,
@@ -42,6 +43,7 @@ pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_BEQZ: u8 =                  0b_110_01; // Branch Equal Zero
 pub const OPC_C_BNEZ: u8 =                  0b_111_01; // Branch Not Equal Zero
 pub const OPC_C_SDSP: u8 =                  0b_111_10; // Store (in memory) Dword by Stack Pointer
+pub const OPC_C_LDSP: u8 =                  0b_011_10; // Load (from memory) Dword by Stack Pointer
 }
 use c_opcodes::*;
 
@@ -191,6 +193,18 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             COpcode::SDSP {
                 uimm6: uimm6 as u8,
                 rs2,
+            }
+        }
+        OPC_C_LDSP => {
+            if rd != 0 {
+                let uimm6 =
+                    c_instr.bits(4, 2) << 3 | c_instr.bits(12, 12) << 2 | c_instr.bits(6, 5);
+                COpcode::LDSP {
+                    uimm6: uimm6 as u8,
+                    rd,
+                }
+            } else {
+                COpcode::Reserved
             }
         }
         OPC_C_ADDI4SPN => {

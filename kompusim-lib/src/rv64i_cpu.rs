@@ -325,7 +325,6 @@ impl RV64ICpu {
                 return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc(ILEN_32B);
         Ok(())
     }
 
@@ -422,7 +421,11 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_load(imm12, rs1, funct3, rd),
+            } => {
+                let res = self.exe_opc_load(imm12, rs1, funct3, rd);
+                self.pc_inc(ILEN_32B);
+                res
+            }
             Opcode::Store {
                 imm12,
                 rs2,
@@ -543,6 +546,16 @@ impl RV64ICpu {
                     rs2,
                     /* SP */ 2,
                     F3_OP_STORE_SD,
+                );
+                self.pc_inc(ILEN_RVC);
+                res
+            }
+            COpcode::LDSP { uimm6, rd } => {
+                let res = self.exe_opc_load(
+                    ((uimm6 as u16) << 3).into(),
+                    /* SP */ 2,
+                    F3_OP_LOAD_LD,
+                    rd,
                 );
                 self.pc_inc(ILEN_RVC);
                 res
