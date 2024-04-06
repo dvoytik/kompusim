@@ -128,6 +128,18 @@ fn test_rv_instr_c_sdsp() {
     assert_eq!(cpu.bus.read64(128), 0xdead_c0de_dead_c0de);
 }
 
+// c.ldsp rd, offset(x2)
+#[test]
+fn test_rvc_instr_ldsp() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    cpu.bus.write64(8, 0x_dead_beef_dead_beef);
+    // SP/x2 points at 0
+    // c.ldsp x8, 8(x2)
+    cpu.execute_rvc_instr(0x_6422);
+    assert_eq!(cpu.regs_r64(8), 0x_dead_beef_dead_beef);
+}
+
 // c.addi4spn
 #[test]
 fn test_rvc_instr_c_addi4spn() {
@@ -161,6 +173,8 @@ fn test_all_rvc_instr_incr_pc_2() {
     cpu.execute_rvc_instr(0x_cf81);
     // c.sdsp x8, 128(x2)
     cpu.execute_rvc_instr(0x_e122);
+    // c.ldsp x8, 8(x2)
+    cpu.execute_rvc_instr(0x_6422);
     // c.addi4spn	x8,x2,144
     cpu.execute_rvc_instr(0x_0900);
     // c.li x1, 1
@@ -178,6 +192,6 @@ fn test_all_rvc_instr_incr_pc_2() {
     // c.mv x18, x11
     cpu.execute_rvc_instr(0x_892e);
     // todo
-    assert_eq!(cpu.get_pc(), 22);
+    assert_eq!(cpu.get_pc(), 24);
     // TODO: add all instructions
 }
