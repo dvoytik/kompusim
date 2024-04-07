@@ -349,7 +349,7 @@ impl Simulator {
         let pc = self.regs.pc;
         if self.instr_cache.is_none()
             || pc < self.instr_cache_start
-            || pc >= self.instr_cache_start + self.instr_cache_sz
+            || pc >= self.instr_cache_start + self.instr_cache_sz - 2
         {
             // update cache if needed
             let _ = self.get_instructions(pc, 4);
