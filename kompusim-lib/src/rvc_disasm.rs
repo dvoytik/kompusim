@@ -18,6 +18,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::BNEZ { .. } => "Compressed Branch Not Equal Zero".to_string(),
         COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
         COpcode::LDSP { .. } => "Compressed Load Doubleword at Stack Pointer".to_string(),
+        COpcode::ADDIW { .. } => "todo".to_string(),
         COpcode::ADDI4SPN { .. } => {
             "Compressed Add Immediate * 4 to Stack Pointer (x2)".to_string()
         }
@@ -44,6 +45,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::BNEZ { imm9, rs1 } => format!("if x{rs1} != 0 then PC = PC {:+}", imm9.0),
         COpcode::SDSP { uimm6, rs2 } => format!("mem64[x2 {:+}] = x{rs2}", uimm6 << 3),
         COpcode::LDSP { uimm6, rd } => format!("x{rd} = mem64[x2 {:+}]", uimm6 << 3),
+        COpcode::ADDIW { rd, uimm6 } => format!("x{rd} = x{rd} + {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("x{rd} = x2 + {uimm8} * 4"),
         COpcode::MV { rd, rs2 } => format!("x{rd} = x{rs2}"),
 
@@ -69,6 +71,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::BNEZ { rs1, .. } => (Some(rs1), None, None),
         COpcode::SDSP { rs2, .. } => (Some(2), Some(rs2), None),
         COpcode::LDSP { rd, .. } => (Some(2), None, Some(rd)),
+        COpcode::ADDIW { rd, .. } => (None, None, Some(rd)),
         COpcode::ADDI4SPN { rd, .. } => (Some(2), None, Some(rd)),
         COpcode::MV { rd, rs2 } => (None, Some(rs2), Some(rd)),
 
@@ -93,6 +96,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::BNEZ { imm9, rs1 } => format!("c.bnez x{rs1}, 0x{:x}", instr_addr.add_i9(imm9)),
         COpcode::SDSP { uimm6, rs2 } => format!("c.sdsp x{rs2}, {}(x2)", uimm6 << 3),
         COpcode::LDSP { uimm6, rd } => format!("c.ldsp x{rd}, {}(x2)", uimm6 << 3),
+        COpcode::ADDIW { uimm6, rd } => format!("c.addiw x{rd}, {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("c.addi4spn x{rd}, x2, {}", uimm8 << 2),
         COpcode::MV { rd, rs2 } => format!("c.mv x{rd}, x{rs2}"),
 

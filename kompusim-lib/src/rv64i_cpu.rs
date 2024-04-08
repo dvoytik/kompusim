@@ -255,18 +255,25 @@ impl RV64ICpu {
         Ok(())
     }
 
-    fn exe_opc_op_imm32(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
+    fn exe_opc_op_imm32(
+        &mut self,
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+        ilen: u8,
+    ) -> Result<(), String> {
         match funct3 {
             // addiw
             // arithmetic overflow is ignored
-            F3_OP_IMM_ADDI => {
+            F3_OP_IMM_ADDIW => {
                 self.regs_wi32(rd, self.regs_r32(rs1).add_i12(imm12));
             }
             _ => {
                 return Err(format!("OP_IMM32, funct3: 0b{funct3:b}"));
             }
         }
-        self.pc_inc(ILEN_32B);
+        self.pc_inc(ilen);
         Ok(())
     }
 
@@ -451,7 +458,7 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => self.exe_opc_op_imm32(imm12, rs1, funct3, rd),
+            } => self.exe_opc_op_imm32(imm12, rs1, funct3, rd, ILEN_32B),
             Opcode::Op {
                 funct7,
                 rs2,
@@ -572,6 +579,10 @@ impl RV64ICpu {
                 let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd);
                 self.pc_inc(ILEN_RVC);
                 res
+            }
+            // c.addiw expands to addiw rd, rd, imm[5:0]
+            COpcode::ADDIW { rd, uimm6 } => {
+                self.exe_opc_op_imm32(uimm6.into(), rd, F3_OP_IMM_ADDIW, rd, ILEN_RVC)
             }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),

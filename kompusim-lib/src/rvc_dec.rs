@@ -23,6 +23,7 @@ pub enum COpcode {
     LDSP { uimm6: u8, rd: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
     MV { rd: u8, rs2: u8 },
+    ADDIW { rd: u8, uimm6: u8 },
     Hint,
     Reserved,
     Uknown,
@@ -33,15 +34,17 @@ pub enum COpcode {
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
+
 pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immidiate x 4 to SP
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
-pub const OPC_C_SLLI: u8 =                  0b_000_10; // shift logical left immidiate
+pub const OPC_C_ADDIW : u8 =                0b_001_01; // Add Immidiate Word
 pub const OPC_C_LI: u8 =                    0b_010_01;
 pub const OPC_C_LUI_ADDI16SP: u8 =          0b_011_01;
 pub const OPC_C_J: u8 =                     0b_101_01;
-pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_BEQZ: u8 =                  0b_110_01; // Branch Equal Zero
 pub const OPC_C_BNEZ: u8 =                  0b_111_01; // Branch Not Equal Zero
+pub const OPC_C_SLLI: u8 =                  0b_000_10; // shift logical left immidiate
+pub const OPC_C_JR_MV_EBREAK_JALR_ADD: u8 = 0b_100_10;
 pub const OPC_C_SDSP: u8 =                  0b_111_10; // Store (in memory) Dword by Stack Pointer
 pub const OPC_C_LDSP: u8 =                  0b_011_10; // Load (from memory) Dword by Stack Pointer
 }
@@ -219,6 +222,17 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                     uimm8: nz_uimm8 as u8,
                     rd: c_i_rd_s(c_instr),
                 }
+            }
+        }
+        OPC_C_ADDIW => {
+            if rd != 0 {
+                let uimm6 = c_instr.bits(12, 12) << 5 | c_instr.bits(6, 2);
+                COpcode::ADDIW {
+                    rd,
+                    uimm6: uimm6 as u8,
+                }
+            } else {
+                COpcode::Reserved
             }
         }
         _ => COpcode::Uknown,
