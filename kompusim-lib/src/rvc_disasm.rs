@@ -18,7 +18,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::BNEZ { .. } => "Compressed Branch Not Equal Zero".to_string(),
         COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
         COpcode::LDSP { .. } => "Compressed Load Doubleword at Stack Pointer".to_string(),
-        COpcode::ADDIW { .. } => "todo".to_string(),
+        COpcode::ADDIW { .. } => "Compressed Add Immediate Word".to_string(),
         COpcode::ADDI4SPN { .. } => {
             "Compressed Add Immediate * 4 to Stack Pointer (x2)".to_string()
         }
@@ -124,4 +124,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_892e, 0x0), "c.mv x18, x11");
     assert_eq!(disasm_rvc(0x_cf81, 0x_8000_3700), "c.beqz x15, 0x80003718");
     assert_eq!(disasm_rvc(0x_fbfd, 0x_8000_3710), "c.bnez x15, 0x80003706");
+    assert_eq!(disasm_rvc(0x_2781, 0x0), "c.addiw x15, 0");
 }

@@ -6,6 +6,7 @@
 .globl _start
 
 _start:
+    c.addiw	x15, 32
     li x4, 0xbadc0ffe
     la x3, beef_addr # x6 <= 1
     # amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
