@@ -7,6 +7,7 @@ fn test_rvc_instr_c_li() {
     assert_eq!(cpu.regs_r64(1), 0);
     cpu.execute_rvc_instr(0x_4085);
     assert_eq!(cpu.regs_r64(1), 1);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 #[test]
@@ -25,6 +26,7 @@ fn test_rvc_add() {
     cpu.regs_w64(1, 0x1122_3344);
     cpu.execute_rvc_instr(0x_9086);
     assert_eq!(cpu.regs_r64(1), 0x2244_6688);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 #[test]
@@ -83,6 +85,7 @@ fn test_rvc_instr_c_addi() {
     cpu.regs_w64(10, 0x_1122_3344);
     cpu.execute_rvc_instr(0x_0505);
     assert_eq!(cpu.regs_r64(10), 0x_1122_3345);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.slli x6, 0x1f
@@ -92,6 +95,7 @@ fn test_rvc_instr_slli() {
     cpu.regs_w64(6, 0x1);
     cpu.execute_rvc_instr(0x_037e);
     assert_eq!(cpu.regs_r64(6), 0x1 << 0x1f);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 #[test]
@@ -103,6 +107,7 @@ fn test_rvc_instr_c_lui() {
     // c.lui	x1, 0x1f
     cpu.execute_rvc_instr(0x_60fd);
     assert_eq!(cpu.regs_r64(1), 0x1f_u64 * 4096_u64);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // c.addi16sp sp, -144
@@ -112,7 +117,8 @@ fn test_rvc_instr_c_addi16sp() {
     // c.addi16sp x2, -144
     cpu.execute_rvc_instr(0x_7175);
     // -144 + 144 == 0
-    assert_eq!(cpu.regs_r64(2).wrapping_add(144), 0)
+    assert_eq!(cpu.regs_r64(2).wrapping_add(144), 0);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.sdsp x8, 128(x2)
@@ -126,6 +132,7 @@ fn test_rv_instr_c_sdsp() {
     // c.sdsp x8, 128(x2)
     cpu.execute_rvc_instr(0x_e122);
     assert_eq!(cpu.bus.read64(128), 0xdead_c0de_dead_c0de);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.ldsp rd, offset(x2)
@@ -138,6 +145,7 @@ fn test_rvc_instr_ldsp() {
     // c.ldsp x8, 8(x2)
     cpu.execute_rvc_instr(0x_6422);
     assert_eq!(cpu.regs_r64(8), 0x_dead_beef_dead_beef);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.addi4spn
@@ -147,6 +155,7 @@ fn test_rvc_instr_c_addi4spn() {
     // c.addi4spn x8,x2,144
     cpu.execute_rvc_instr(0x_0900);
     assert_eq!(cpu.regs_r64(8), 144);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.mv rd, rs
@@ -158,6 +167,7 @@ fn test_rvc_instr_c_mv() {
     // c.mv x18, x11
     cpu.execute_rvc_instr(0x_892e);
     assert_eq!(cpu.regs_r64(18), 0x0123_4567_89ab_cdef);
+    assert_eq!(cpu.get_pc(), 2);
 }
 
 // c.addiw rd, uimm6
