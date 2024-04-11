@@ -114,7 +114,7 @@ impl RV64ICpu {
         let mut val: u64 = val as u64;
         if val.bit(7) {
             // sign extend
-            val |= 0xfff_ffff_ffff_ff00;
+            val |= 0xffff_ffff_ffff_ff00;
         }
         self.regs_w64(reg_i, val)
     }

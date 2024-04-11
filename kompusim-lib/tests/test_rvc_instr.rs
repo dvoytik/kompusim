@@ -1,13 +1,18 @@
 use kompusim::{bus::Bus, rv64i_cpu::RV64ICpu};
 
 #[test]
-// c.li x1, 1
+// c.li rd, imm6
 fn test_rvc_instr_c_li() {
     let mut cpu = RV64ICpu::default();
     assert_eq!(cpu.regs_r64(1), 0);
+    // c.li x1, 1
     cpu.execute_rvc_instr(0x_4085);
     assert_eq!(cpu.regs_r64(1), 1);
-    assert_eq!(cpu.get_pc(), 2);
+
+    // c.li x10, -1
+    cpu.execute_rvc_instr(0x_557d);
+    assert_eq!(cpu.regs_r64(10), (-1_i64 as u64));
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
