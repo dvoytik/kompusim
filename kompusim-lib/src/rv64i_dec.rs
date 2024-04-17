@@ -117,7 +117,7 @@ pub const F3_SYSTEM_CSRRWI: u8 = 0b101; // atomic CSR read, write immidiate
 pub const F3_OP_IMM_ADDI: u8 = 0b000;
 pub const F3_OP_IMM_SLLI: u8 = 0b001;
 
-pub const F3_OP_IMM_ADDIW: u8 = 0b000;
+pub const F3_OP_IMM32_ADDIW: u8 = 0b000;
 
 pub const F3_OP_ADD_SUB: u8 = 0b_000;
 

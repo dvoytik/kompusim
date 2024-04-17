@@ -266,7 +266,7 @@ impl RV64ICpu {
         match funct3 {
             // addiw
             // arithmetic overflow is ignored
-            F3_OP_IMM_ADDIW => {
+            F3_OP_IMM32_ADDIW => {
                 self.regs_wi32(rd, self.regs_r32(rs1).add_i12(imm12));
             }
             _ => {
@@ -582,7 +582,7 @@ impl RV64ICpu {
             }
             // c.addiw expands to addiw rd, rd, imm[5:0]
             COpcode::ADDIW { rd, uimm6 } => {
-                self.exe_opc_op_imm32(uimm6.into(), rd, F3_OP_IMM_ADDIW, rd, ILEN_RVC)
+                self.exe_opc_op_imm32(uimm6.into(), rd, F3_OP_IMM32_ADDIW, rd, ILEN_RVC)
             }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
