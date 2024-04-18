@@ -54,7 +54,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         },
 
         Opcode::OpImm32 { funct3, .. } => match funct3 {
-            F3_OP_IMM_ADDI => "ADD Word Immediate".to_string(),
+            F3_OP_IMM32_ADDIW => "ADD Word Immediate".to_string(),
             _ => "Unknown OP-IMM32 opcode".to_string(),
         },
 
@@ -177,7 +177,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_IMM_ADDI => format!("x{rd}[31:0] = x{rs1}[31:0] + 0x{imm12:x}"),
+            F3_OP_IMM32_ADDIW => format!("x{rd}[31:0] = x{rs1}[31:0] + 0x{imm12:x}"),
             _ => "Unknown OP-IMM32 opcode".to_string(),
         },
 
@@ -355,7 +355,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_IMM_ADDI => format!("addiw x{rd}, x{rs1}, 0x{imm12:x}"),
+            F3_OP_IMM32_ADDIW => format!("addiw x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM32 opcode".to_string(),
         },
 
