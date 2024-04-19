@@ -26,10 +26,9 @@ pub enum Opcode {
         funct3: u8,
         rd: u8,
     },
-    OpImm32 {
+    ADDIW {
         imm12: I12,
         rs1: u8,
-        funct3: u8,
         rd: u8,
     },
     Op {
@@ -331,13 +330,21 @@ pub fn decode_instr(instr: u32) -> Opcode {
         OPC_LOAD => dec_opc_load(instr),
         OPC_STORE => dec_opc_store(instr),
         OPC_OP_IMM => dec_opc_op_imm(instr),
-        OPC_OP_IMM32 => Opcode::OpImm32 {
-            // I-type instructions
-            imm12: i_i_type_imm12(instr),
-            rs1: i_rs1(instr),
-            funct3: i_funct3(instr),
-            rd: i_rd(instr),
-        },
+        OPC_OP_IMM32 => {
+            let funct3 = i_funct3(instr);
+            if funct3 == F3_OP_IMM32_ADDIW {
+                Opcode::ADDIW {
+                    imm12: i_i_type_imm12(instr),
+                    rs1: i_rs1(instr),
+                    rd: i_rd(instr),
+                }
+            } else {
+                let bits31_25 = instr.bits(31, 25);
+                match (bits31_25, funct3) {
+                    (_, _) => Opcode::Uknown,
+                }
+            }
+        }
         OPC_OP => dec_opc_op(instr),
         OPC_SYSTEM => dec_opc_system(instr),
         OPC_AMO => Opcode::Amo {
