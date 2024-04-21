@@ -569,4 +569,5 @@ fn test_disasm() {
     assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw".to_owned());
     assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0");
     assert_eq!(disasm(0x_3052_10f3, 0x0), "csrrw x1, mtvec, x4");
+    assert_eq!(disasm(0x_0187_979b, 0x0), "slliw x15, x15, 0x18");
 }

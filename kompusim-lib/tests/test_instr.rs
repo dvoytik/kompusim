@@ -294,6 +294,22 @@ fn test_fence() {
     // no effect for now
 }
 
+// slliw rd, rs1, uimm5
+#[test]
+fn test_slliw() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(15, 1);
+    // slliw	x15, x15, 0x18
+    cpu.execute_instr(0x_0187_979b);
+    assert_eq!(cpu.regs_r64(15), 1 << 0x18);
+
+    cpu.regs_w64(15, -1_i64 as u64);
+    // slliw	x15, x15, 0x18
+    cpu.execute_instr(0x_0187_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ff00_0000); // shift left 24 bits
+}
+
 // #[test]
 // fn test_intermixed_instruction {
 //     // TODO:
