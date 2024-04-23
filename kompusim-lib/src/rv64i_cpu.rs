@@ -568,6 +568,11 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }
+            COpcode::COR { rd, rs2 } => {
+                self.regs_w64(rd, self.regs_r64(rd) | self.regs_r64(rs2));
+                self.pc_inc(ILEN_RVC);
+                Ok(())
+            }
             // C.J expands to jal x0, offset[11:1].
             COpcode::CJ { imm12 } => self.exe_opc_jal(imm12.into(), /* rd = x0 */ 0),
             // c.beqz expands to beq rs1′, x0, offset[8:1].

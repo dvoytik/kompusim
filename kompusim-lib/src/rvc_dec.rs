@@ -16,6 +16,7 @@ pub enum COpcode {
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
+    COR { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
     BEQZ { imm9: I9, rs1: u8 },
     BNEZ { imm9: I9, rs1: u8 },
@@ -34,12 +35,12 @@ pub enum COpcode {
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
-
 pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immidiate x 4 to SP
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
 pub const OPC_C_ADDIW : u8 =                0b_001_01; // Add Immidiate Word
 pub const OPC_C_LI: u8 =                    0b_010_01;
 pub const OPC_C_LUI_ADDI16SP: u8 =          0b_011_01;
+pub const OPC_C_MISC_ALU: u8 =              0b_100_01; // C.{SRLI, SRAI, ANDI, SUB, XOR, OR, ...}
 pub const OPC_C_J: u8 =                     0b_101_01;
 pub const OPC_C_BEQZ: u8 =                  0b_110_01; // Branch Equal Zero
 pub const OPC_C_BNEZ: u8 =                  0b_111_01; // Branch Not Equal Zero
@@ -235,6 +236,20 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 COpcode::Reserved
             }
         }
+        // C.SRLI, C.SRAI, C.ANDI, C.SUB, C.XOR, C.OR, C.AND, C.SUBW, C.ADDW
+        OPC_C_MISC_ALU => {
+            let bit12 = c_instr.bits(12, 12);
+            let bits11_10 = c_instr.bits(11, 10);
+            let bits6_5 = c_instr.bits(6, 5);
+            let rd = c_instr.bits(9, 7) as u8 + 8;
+            let rs2 = c_instr.bits(4, 2) as u8 + 8;
+            match (bit12, bits11_10, bits6_5) {
+                (0b_0, 0b_00, _) => COpcode::Hint,
+                (0b_0, 0b_11, 0b_10) => COpcode::COR { rd, rs2 },
+                (_, _, _) => COpcode::Uknown,
+            }
+        }
+
         _ => COpcode::Uknown,
     }
 }
