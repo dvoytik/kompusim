@@ -186,11 +186,25 @@ fn test_rvc_instr_c_addiw() {
     assert_eq!(cpu.get_pc(), 2);
 }
 
+// c.or rd, rs2
+#[test]
+fn test_rvc_instr_c_or() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs_w64(15, 0x_5555_5555_5555_5555);
+    cpu.regs_w64(14, 0x_aaaa_aaaa_aaaa_aaaa);
+    // c.or x15, x14
+    cpu.execute_rvc_instr(0x_8fd9);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_ffff);
+    assert_eq!(cpu.get_pc(), 2);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
     let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
+    // c.or x15, x14
+    cpu.execute_rvc_instr(0x_8fd9);
     // c.addiw x15, 0
     cpu.execute_rvc_instr(0x_2781);
     // c.bnez x15, 0x3706
@@ -220,6 +234,6 @@ fn test_all_rvc_instr_incr_pc_2() {
     // c.mv x18, x11
     cpu.execute_rvc_instr(0x_892e);
     // todo
-    assert_eq!(cpu.get_pc(), 26);
+    assert_eq!(cpu.get_pc(), 28);
     // TODO: add all instructions
 }

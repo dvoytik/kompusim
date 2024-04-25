@@ -129,4 +129,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_cf81, 0x_8000_3700), "c.beqz x15, 0x80003718");
     assert_eq!(disasm_rvc(0x_fbfd, 0x_8000_3710), "c.bnez x15, 0x80003706");
     assert_eq!(disasm_rvc(0x_2781, 0x0), "c.addiw x15, 0");
+    assert_eq!(disasm_rvc(0x_8fd9, 0x0), "c.or x15, x14")
 }
