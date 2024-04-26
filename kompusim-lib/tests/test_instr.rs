@@ -17,16 +17,19 @@ fn test_instruction_csrrs() {
     // csrrs  x5, mhartid, zero
     cpu.execute_instr(0xf14022f3);
     assert_eq!(cpu.regs_r64(5), 0);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
-// csrrwi	zero,mscratch,0
+// csrrwi rd, csr, uimm5
 #[test]
 fn test_csrrwi() {
     let mut cpu = RV64ICpu::default();
+    // csrrwi x0, mscratch, 0
     cpu.execute_instr(0x_3400_5073);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
-// csrrw x1, mtvec, x4
+// csrrw rd, csr, rs1
 #[test]
 fn test_csrrw() {
     let mut cpu = RV64ICpu::default();
@@ -34,18 +37,24 @@ fn test_csrrw() {
     assert_eq!(cpu.regs_r64(1), 0x0);
     // csrrw x1, mtvec, x4
     cpu.execute_instr(0x_3052_10f3);
+    assert_eq!(cpu.get_pc(), 4);
     // csrrw x1, mtvec, x4
     cpu.execute_instr(0x_3052_10f3);
     assert_eq!(cpu.regs_r64(1), 0x_dead_c0de);
+    assert_eq!(cpu.get_pc(), 8);
 }
 
 #[test]
 fn test_instruction_bne() {
     let mut cpu = RV64ICpu::default();
+    // BNE t0, x0, 0x10
+    cpu.execute_instr(0x00029863);
+    assert_eq!(cpu.get_pc(), 4);
+
     cpu.regs_w64(5, 1);
     // BNE t0, x0, 0x10
     cpu.execute_instr(0x00029863);
-    assert_eq!(cpu.get_pc(), 0x10);
+    assert_eq!(cpu.get_pc(), 4 + 0x10);
 }
 
 #[test]
@@ -53,8 +62,9 @@ fn test_instruction_lui() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_w64(5, 0x123);
     // lui x5, 0x10010
-    cpu.execute_instr(0x100102b7);
+    cpu.execute_instr(0x_1001_02b7);
     assert_eq!(cpu.regs_r64(5), 0x10010000);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -65,6 +75,7 @@ fn test_instruction_auipc() {
     // auipc x10, 0x0
     cpu.execute_instr(0x00000517);
     assert_eq!(cpu.regs_r64(10), 0x100);
+    assert_eq!(cpu.get_pc(), 0x100 + 4);
 }
 
 #[test]
@@ -74,15 +85,18 @@ fn test_instruction_addi() {
     cpu.regs_w64(10, 0x123);
     cpu.execute_instr(0x03450513);
     assert_eq!(cpu.regs_r64(10), 0x123 + 52);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
-// addiw x6, x0, 0x1
+// addiw rd, rs1, imm12
 fn test_instruction_addiw() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_w64(6, 0x123);
+    // addiw x6, x0, 0x1
     cpu.execute_instr(0x_0010_031b);
     assert_eq!(cpu.regs_r64(6), 1);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -124,6 +138,7 @@ fn test_instruction_lbu() {
     cpu.regs_w64(10, 0x0000_0000_8000_003c);
     cpu.execute_instr(0x00054303);
     assert!(cpu.regs_r64(6) == 0x48);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // TODO: lb test
@@ -136,10 +151,11 @@ fn test_instruction_lw() {
     let mut bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     bus.write32(0x0000_0000_0000_0000, 0xa5a5_a5a5);
     let mut cpu = RV64ICpu::new(bus);
-    cpu.regs_w64(7, 0xdead_beef_dead_beef);
-    cpu.execute_instr(0x0002a383);
+    cpu.regs_w64(7, 0x_dead_beef_dead_beef);
+    cpu.execute_instr(0x_0002_a383);
     // lw sign extends 32-bit word
-    assert!(cpu.regs_r64(7) == 0xffff_ffff_a5a5_a5a5);
+    assert_eq!(cpu.regs_r64(7), 0xffff_ffff_a5a5_a5a5);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -152,6 +168,7 @@ fn test_instruction_sw() {
     cpu.execute_instr(0x0062a023);
     // lw sign extends 32-bit word
     assert!(cpu.bus.read32(0x10) == 0xdead_beef);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -197,6 +214,7 @@ fn test_instruction_add() {
     cpu.regs_w64(10, 0x123);
     cpu.execute_instr(0x0005_0433);
     assert_eq!(cpu.regs_r64(8), 0x123);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -206,6 +224,7 @@ fn test_instruction_sub() {
     cpu.regs_w64(1, 0x123);
     cpu.execute_instr(0x_4010_80b3);
     assert_eq!(cpu.regs_r64(1), 0);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -216,6 +235,7 @@ fn test_instruction_lrw() {
     cpu.bus.write32(0x0, 0x0000_beef);
     cpu.execute_instr(0x_1000_20af);
     assert_eq!(cpu.regs_r64(1), 0x0000_beef);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -230,6 +250,7 @@ fn test_amoswap() {
     cpu.execute_instr(0x_0c55_232f);
     assert_eq!(cpu.regs_r64(6), 0x0000_beef);
     assert_eq!(cpu.bus.read32(0x0), 0xc0fe);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -244,6 +265,7 @@ fn test_amoadd() {
     cpu.execute_instr(0x_0410_212f);
     assert_eq!(cpu.regs_r64(2), 0x1);
     assert_eq!(cpu.bus.read32(0x0), 0x0000_0002);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 #[test]
@@ -258,6 +280,7 @@ fn test_amoadd_rd_equals_rs1() {
     cpu.execute_instr(0x_0118_282f);
     assert_eq!(cpu.regs_r64(16), 0x1);
     assert_eq!(cpu.bus.read32(0x0), 0x0000_0003);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // sd x6, 0x0(x5)
@@ -271,6 +294,7 @@ fn test_sd() {
     cpu.execute_instr(0x0062_b023);
     assert!(cpu.bus.read32(0x10) == 0x_dead_beef);
     assert!(cpu.bus.read32(0x14) == 0x_badc0ffe);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // ld x6, 0x0(x5)
@@ -283,6 +307,7 @@ fn test_ld() {
     cpu.bus.write64(0x10, 0x_badc_0ffe_dead_beef);
     cpu.execute_instr(0x_0002_b303);
     assert_eq!(cpu.regs_r64(6), 0x_badc_0ffe_dead_beef);
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // fence rw,rw
@@ -292,6 +317,7 @@ fn test_fence() {
     let mut cpu = RV64ICpu::new(bus);
     cpu.execute_instr(0x_0330_000f);
     // no effect for now
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // slliw rd, rs1, uimm5
@@ -308,6 +334,7 @@ fn test_slliw() {
     // slliw x15, x15, 0x18
     cpu.execute_instr(0x_0187_979b);
     assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ff00_0000); // shift left 24 bits
+    assert_eq!(cpu.get_pc(), 8);
 }
 
 // #[test]
