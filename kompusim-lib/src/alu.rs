@@ -68,6 +68,12 @@ impl From<I6> for i8 {
     }
 }
 
+impl From<I6> for u64 {
+    fn from(v: I6) -> u64 {
+        v.0 as u64
+    }
+}
+
 impl Display for I6 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -292,6 +298,9 @@ fn test_imm6() {
     let b: I6 = a.into();
     let c: i8 = b.into();
     assert_eq!(c, -1);
+
+    assert_eq!(u64::from(I6::from(0x_3f)), 0x_ffff_ffff_ffff_ffff_u64);
+    assert_eq!(u64::from(I6::from(0x_20)), 0x_ffff_ffff_ffff_ffe0_u64);
 }
 
 #[test]
