@@ -198,6 +198,17 @@ fn test_rvc_instr_c_or() {
     assert_eq!(cpu.get_pc(), 2);
 }
 
+// c.andi rd, imm6
+#[test]
+fn test_rvc_instr_c_andi() {
+    let mut cpu = RV64ICpu::default();
+    cpu.regs_w64(15, 0x_5555_5555_5555_5555);
+    // c.and x15, 7
+    cpu.execute_rvc_instr(0x_8b9d);
+    assert_eq!(cpu.regs_r64(15), 5);
+    assert_eq!(cpu.get_pc(), 2);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
