@@ -220,6 +220,14 @@ impl RV64ICpu {
                     self.pc_inc(ilen)
                 }
             }
+            // Branch Greater or Equal (signed comparison)
+            F3_BRANCH_BGE => {
+                if self.regs_ri64(rs1) >= self.regs_ri64(rs2) {
+                    self.pc_add_i13(off13);
+                } else {
+                    self.pc_inc(ilen)
+                }
+            }
             _ => {
                 return Err(format!("BRANCH, funct3: 0b{funct3:b}"));
             }
@@ -470,7 +478,7 @@ impl RV64ICpu {
             Opcode::Uknown => Err(String::new()),
         } {
             let opc = i_opcode(instr);
-            eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:x} (0b_{instr:032b}), opcode: 0x{opc:x} (0b_{opc:07b})",
+            eprintln!("ERROR: Uknown instruction {e}\nPC = 0x{:x}, code: 0x{instr:08x} (0b_{instr:032b}), opcode: 0x{opc:x} (0b_{opc:07b})",
             self.get_pc());
             // TODO: trigger CPU exception
         }
