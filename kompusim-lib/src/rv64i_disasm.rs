@@ -25,6 +25,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         Opcode::Branch { funct3, .. } => match funct3 {
             F3_BRANCH_BNE => "Branch Not Equal".to_string(),
             F3_BRANCH_BEQ => "Branch EQual".to_string(),
+            F3_BRANCH_BGE => "Branch Greater or Equal".to_string(),
             F3_BRANCH_BLT => "Branch Less Than (signed comparison)".to_string(),
             _ => "Unknown BRANCH opcode".to_string(),
         },
@@ -110,6 +111,8 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
                 F3_BRANCH_BEQ => format!("if x{rs1} == x{rs2} then PC = PC + 0x{off13:x}"),
                 // Branch Less Than (signed comparison)
                 F3_BRANCH_BLT => format!("if x{rs1} < x{rs2} then PC = PC + 0x{off13:x}"),
+                // Branch Greater or Equal (signed comparison)
+                F3_BRANCH_BGE => format!("if x{rs1} >= x{rs2} then PC = PC + 0x{off13:x}"),
                 _ => "Unknown BRANCH opcode".to_string(),
             }
         }
@@ -294,6 +297,8 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
                 F3_BRANCH_BEQ => format!("beq x{rs1}, x{rs2}, 0x{addr:x}"),
                 // Branch Less Than (signed comparison)
                 F3_BRANCH_BLT => format!("blt x{rs1}, x{rs2}, 0x{addr:x}"),
+                // Branch Greatera or Equal (signed comparison)
+                F3_BRANCH_BGE => format!("bge x{rs1}, x{rs2}, 0x{addr:x}"),
                 _ => "Unknown BRANCH opcode".to_string(),
             }
         }
