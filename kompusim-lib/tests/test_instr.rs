@@ -337,6 +337,23 @@ fn test_slliw() {
     assert_eq!(cpu.get_pc(), 8);
 }
 
+// bge rs1, rs2, offset12
+#[test]
+fn test_bge() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(15, -1_i64 as u64);
+    // bge x15, x0, 0x1f314
+    cpu.execute_instr(0x_0007_d563);
+    assert_eq!(cpu.get_pc(), 4);
+
+    cpu.regs_w64(15, 1);
+    // bge x15, x0, 0x1f314 # offset12 == 0xa
+    cpu.execute_instr(0x_0007_d563);
+    // pc == 4
+    assert_eq!(cpu.get_pc(), 4 + 0xa);
+}
+
 // #[test]
 // fn test_intermixed_instruction {
 //     // TODO:
