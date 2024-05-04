@@ -116,6 +116,7 @@ pub const F3_BRANCH_BNE: u8 = 0b001;
 pub const F3_BRANCH_BLT: u8 = 0b100;
 pub const F3_BRANCH_BGE: u8 = 0b101; // Branch Greater or Equal
 
+pub const F3_SYSTEM_WFI: u8    = 0b000; // Wait For Interrupt
 pub const F3_SYSTEM_CSRRW: u8  = 0b001; // atomic CSR read, write
 pub const F3_SYSTEM_CSRRS: u8  = 0b010; // atomic CSR read, set bits
 pub const F3_SYSTEM_CSRRWI: u8 = 0b101; // atomic CSR read, write immidiate
@@ -220,7 +221,7 @@ pub fn i_s_type_imm12(ins: u32) -> I12 {
     I12::from(imm11_5 << 5 | imm4_0)
 }
 
-/// Decodes Zics SYSTEM opcodes: CSRRS, ...
+/// Decodes Zics SYSTEM opcodes: CSRRS, WFI, ...
 pub fn dec_opc_system(ins: u32) -> Opcode {
     // I-type instruction
     let rd = i_rd(ins);

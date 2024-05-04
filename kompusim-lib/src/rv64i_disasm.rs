@@ -76,6 +76,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         },
 
         Opcode::System { funct3, .. } => match funct3 {
+            F3_SYSTEM_WFI => "Wait For Interrupt".to_string(),
             F3_SYSTEM_CSRRS => "Control Status Register - Read, Set bitmask".to_string(),
             F3_SYSTEM_CSRRWI => "Control Status Register - Read, Write Immediate".to_string(),
             F3_SYSTEM_CSRRW => "Control Status Register - Read, Write".to_string(),
@@ -220,6 +221,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
+            F3_SYSTEM_WFI => format!("no effect"),
             F3_SYSTEM_CSRRS => format!(
                 "x{rd} = {csrn}; {csrn} = {csrn} | x{rs1:b}",
                 csrn = csr_name(csr)
@@ -268,7 +270,15 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         Opcode::SLLIW { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         Opcode::Op { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
         Opcode::Amo { rs2, rs1, rd, .. } => (Some(rs1), Some(rs2), Some(rd)),
-        Opcode::System { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        Opcode::System {
+            rs1, rd, funct3, ..
+        } => {
+            if funct3 == F3_SYSTEM_WFI {
+                (None, None, None)
+            } else {
+                (Some(rs1), None, Some(rd))
+            }
+        }
         Opcode::Fence { .. } => (None, None, None),
         Opcode::Uknown => (None, None, None),
     }
@@ -394,6 +404,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
+            F3_SYSTEM_WFI => format!("wfi"),
             F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1}", csr_name(csr)),
             F3_SYSTEM_CSRRWI => format!("csrrwi x{rd}, {}, {rs1:x}", csr_name(csr)),
             F3_SYSTEM_CSRRW => format!("csrrw x{rd}, {}, x{rs1}", csr_name(csr)),

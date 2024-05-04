@@ -178,6 +178,9 @@ impl RV64ICpu {
                 // rs1 is uimm[4:0]
                 self.csrs.w64(csr, rs1 as u64);
             }
+            F3_SYSTEM_WFI => {
+                // TODO: hint to check interrupts
+            }
             _ => {
                 return Err(format!("SYSTEM, funct3: {funct3:x}"));
             }
