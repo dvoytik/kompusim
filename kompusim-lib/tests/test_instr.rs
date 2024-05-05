@@ -354,6 +354,17 @@ fn test_bge() {
     assert_eq!(cpu.get_pc(), 4 + 0xa);
 }
 
+// Wait For Interrupt
+// wfi
+#[test]
+fn test_wfi() {
+    let mut cpu = RV64ICpu::default();
+    // wfi
+    cpu.execute_instr(0x_1050_0073);
+    // no effect
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 // #[test]
 // fn test_intermixed_instruction {
 //     // TODO:
