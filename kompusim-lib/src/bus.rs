@@ -151,7 +151,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region(addr, 1) {
             ar.agent.read8(addr)
         } else {
-            panic!("DBG: read8 buf fault: 0x{addr:x}");
+            panic!("ERR: read8 bus fault @ 0x{addr:x}");
         }
     }
 
@@ -160,7 +160,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region_mut(addr, 1) {
             ar.agent.write8(addr, val)
         } else {
-            panic!("DBG: write8 bus fault: 0x{addr:x}");
+            panic!("ERR: write8 bus fault: 0x{addr:x}");
         }
     }
 
@@ -169,8 +169,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region(addr, 4) {
             ar.agent.read32(addr)
         } else {
-            // TODO: is this bus fault or we return 0xffff_ffff?
-            0xffff_ffff
+            panic!("ERR: read32 bus fault @ 0x{addr:x}");
         }
     }
 
@@ -178,8 +177,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region(addr, 8) {
             ar.agent.read64(addr)
         } else {
-            // TODO: is this bus fault or we return 0xffff_ffff?
-            0xffff_ffff_ffff_ffff
+            panic!("ERR: read64 bus fault @ 0x{addr:x}");
         }
     }
 
@@ -188,7 +186,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region_mut(addr, 4) {
             ar.agent.write32(addr, val)
         } else {
-            panic!("DBG: write32 bus fault: 0x{addr:x}");
+            panic!("ERR: write32 bus fault @ 0x{addr:x}");
         }
     }
 
@@ -196,7 +194,7 @@ impl Bus {
         if let Some(ar) = self.find_addr_region_mut(addr, 8) {
             ar.agent.write64(addr, val)
         } else {
-            panic!("DBG: write64 bus fault: 0x{addr:x}");
+            panic!("ERR: write64 bus fault @ 0x{addr:x}");
         }
     }
 
