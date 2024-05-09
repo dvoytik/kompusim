@@ -136,17 +136,15 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_LOAD_LB => {
-                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:8] = x{rd}[7]")
+                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext({imm12})]; x{rd}[63:8] = x{rd}[7]")
             }
             F3_OP_LOAD_LBU => {
-                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:8] = 0")
+                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext({imm12})]; x{rd}[63:8] = 0")
             }
             F3_OP_LOAD_LW => {
-                format!(
-                    "x{rd}[31:0] = mem32[x{rs1} + sign_ext(0x{imm12})]; x{rd}[63:32] = x{rd}[31]"
-                )
+                format!("x{rd}[31:0] = mem32[x{rs1} + sign_ext({imm12})]; x{rd}[63:32] = x{rd}[31]")
             }
-            F3_OP_LOAD_LD => format!("x{rd} = mem64[x{rs1} + sign_ext(0x{imm12})]"),
+            F3_OP_LOAD_LD => format!("x{rd} = mem64[x{rs1} + sign_ext({imm12})]"),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -327,10 +325,10 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_LOAD_LB => format!("lb x{rd}, 0x{imm12}(x{rs1})"),
-            F3_OP_LOAD_LBU => format!("lbu x{rd}, 0x{imm12}(x{rs1})"),
-            F3_OP_LOAD_LW => format!("lw x{rd}, 0x{imm12}(x{rs1})"),
-            F3_OP_LOAD_LD => format!("ld x{rd}, 0x{imm12}(x{rs1})"),
+            F3_OP_LOAD_LB => format!("lb x{rd}, {imm12}(x{rs1})"),
+            F3_OP_LOAD_LBU => format!("lbu x{rd}, {imm12}(x{rs1})"),
+            F3_OP_LOAD_LW => format!("lw x{rd}, {imm12}(x{rs1})"),
+            F3_OP_LOAD_LD => format!("ld x{rd}, {imm12}(x{rs1})"),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -581,8 +579,9 @@ fn test_u32_bin4() {
 
 #[test]
 fn test_disasm() {
-    assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0x0(x5)".to_owned());
-    assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw".to_owned());
+    assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0(x5)");
+    assert_eq!(disasm(0x_fd84_3783, 0x0), "ld x15, -40(x8)");
+    assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw");
     assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0");
     assert_eq!(disasm(0x_3052_10f3, 0x0), "csrrw x1, mtvec, x4");
     assert_eq!(disasm(0x_0187_979b, 0x0), "slliw x15, x15, 0x18");
