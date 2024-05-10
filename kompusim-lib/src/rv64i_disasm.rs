@@ -154,9 +154,9 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             rs1,
             funct3,
         } => match funct3 {
-            F3_OP_STORE_SB => format!("mem8[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[7:0]"),
-            F3_OP_STORE_SW => format!("mem32[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}[31:0]"),
-            F3_OP_STORE_SD => format!("mem64[x{rs1} + sign_extend(0x{imm12:x})] = x{rs2}"),
+            F3_OP_STORE_SB => format!("mem8[x{rs1} + sign_extend({imm12})] = x{rs2}[7:0]"),
+            F3_OP_STORE_SW => format!("mem32[x{rs1} + sign_extend({imm12})] = x{rs2}[31:0]"),
+            F3_OP_STORE_SD => format!("mem64[x{rs1} + sign_extend({imm12})] = x{rs2}"),
             _ => "Unknown STORE opcode".to_string(),
         },
 
@@ -338,9 +338,9 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rs1,
             funct3,
         } => match funct3 {
-            F3_OP_STORE_SB => format!("sb x{rs2}, 0x{imm12:x}(x{rs1})"),
-            F3_OP_STORE_SW => format!("sw x{rs2}, 0x{imm12:x}(x{rs1})"),
-            F3_OP_STORE_SD => format!("sd x{rs2}, 0x{imm12:x}(x{rs1})"),
+            F3_OP_STORE_SB => format!("sb x{rs2}, {imm12}(x{rs1})"),
+            F3_OP_STORE_SW => format!("sw x{rs2}, {imm12}(x{rs1})"),
+            F3_OP_STORE_SD => format!("sd x{rs2}, {imm12}(x{rs1})"),
             _ => "Unknown STORE opcode".to_string(),
         },
 
@@ -581,6 +581,7 @@ fn test_u32_bin4() {
 fn test_disasm() {
     assert_eq!(disasm(0x_0002_b303, 0x0), "ld x6, 0(x5)");
     assert_eq!(disasm(0x_fd84_3783, 0x0), "ld x15, -40(x8)");
+    assert_eq!(disasm(0x_fef4_3423, 0x0), "sd x15, -24(x8)");
     assert_eq!(disasm(0x_0330_000f, 0x0), "fence rw, rw");
     assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0");
     assert_eq!(disasm(0x_3052_10f3, 0x0), "csrrw x1, mtvec, x4");
