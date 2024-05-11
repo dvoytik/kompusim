@@ -333,8 +333,14 @@ fn test_slliw() {
     cpu.regs_w64(15, -1_i64 as u64);
     // slliw x15, x15, 0x18
     cpu.execute_instr(0x_0187_979b);
-    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ff00_0000); // shift left 24 bits
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_ff00_0000); // shift left 24 bits
     assert_eq!(cpu.get_pc(), 8);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_00d0);
+    // slliw x15, x15, 0x18
+    cpu.execute_instr(0x_0187_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_d000_0000);
+    assert_eq!(cpu.get_pc(), 12);
 }
 
 // bge rs1, rs2, offset12

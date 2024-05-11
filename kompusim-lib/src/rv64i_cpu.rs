@@ -109,6 +109,10 @@ impl RV64ICpu {
         self.regs_w64(reg_i, val_u64)
     }
 
+    pub fn regs_w32(&mut self, reg_i: u8, val_i32: u32) {
+        self.regs_w64(reg_i, val_i32 as u64)
+    }
+
     // writes i8 LSB and sign extends
     fn regs_wi8(&mut self, reg_i: u8, val: u8) {
         let mut val: u64 = val as u64;
@@ -448,7 +452,7 @@ impl RV64ICpu {
                 Ok(())
             }
             Opcode::SLLIW { shamt, rs1, rd } => {
-                self.regs_wi32(rd, self.regs_r32(rs1) << shamt);
+                self.regs_w32(rd, self.regs_r32(rs1) << shamt);
                 self.pc_inc(ILEN_32B);
                 Ok(())
             }
