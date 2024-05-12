@@ -452,7 +452,7 @@ impl RV64ICpu {
                 Ok(())
             }
             Opcode::SLLIW { shamt, rs1, rd } => {
-                self.regs_w32(rd, self.regs_r32(rs1) << shamt);
+                self.regs_wi32(rd, self.regs_r32(rs1) << shamt);
                 self.pc_inc(ILEN_32B);
                 Ok(())
             }

@@ -333,14 +333,109 @@ fn test_slliw() {
     cpu.regs_w64(15, -1_i64 as u64);
     // slliw x15, x15, 0x18
     cpu.execute_instr(0x_0187_979b);
-    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_ff00_0000); // shift left 24 bits
-    assert_eq!(cpu.get_pc(), 8);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ff00_0000); // shift left 24 bits
 
     cpu.regs_w64(15, 0x_0000_0000_0000_00d0);
     // slliw x15, x15, 0x18
     cpu.execute_instr(0x_0187_979b);
-    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_d000_0000);
-    assert_eq!(cpu.get_pc(), 12);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_d000_0000);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // slliw x15, x15, 0
+    cpu.execute_instr(0x_0007_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_0000_0001);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // slliw x15, x15, 1
+    cpu.execute_instr(0x_0017_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_0000_0002);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // slliw x15, x15, 7
+    cpu.execute_instr(0x_0077_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_0000_0080);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // slliw x15, x15, 14
+    cpu.execute_instr(0x_00e7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_0000_4000);
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // slliw x15, x15, 31
+    cpu.execute_instr(0x_01f7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_8000_0000);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    // slliw x15, x15, 0
+    cpu.execute_instr(0x_0007_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_ffff);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    // slliw x15, x15, 1
+    cpu.execute_instr(0x_0017_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_fffe);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    // slliw x15, x15, 7
+    cpu.execute_instr(0x_0077_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_ff80);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    // slliw x15, x15, 14
+    cpu.execute_instr(0x_00e7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_c000);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    // slliw x15, x15, 31
+    cpu.execute_instr(0x_01f7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_8000_0000);
+
+    cpu.regs_w64(15, 0x_0000_0000_2121_2121);
+    // slliw x15, x15, 0
+    cpu.execute_instr(0x_0007_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_2121_2121);
+
+    cpu.regs_w64(15, 0x_0000_0000_2121_2121);
+    // slliw x15, x15, 1
+    cpu.execute_instr(0x_0017_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_4242_4242);
+
+    cpu.regs_w64(15, 0x_0000_0000_2121_2121);
+    // slliw x15, x15, 7
+    cpu.execute_instr(0x_0077_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_9090_9080);
+
+    cpu.regs_w64(15, 0x_0000_0000_2121_2121);
+    // slliw x15, x15, 14
+    cpu.execute_instr(0x_00e7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_4848_4000);
+
+    cpu.regs_w64(15, 0x_0000_0000_2121_2121);
+    // slliw x15, x15, 31
+    cpu.execute_instr(0x_01f7_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_8000_0000);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_1234_5678);
+    // slliw x15, x15, 0
+    cpu.execute_instr(0x_0007_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_1234_5678);
+
+    cpu.regs_w64(15, 0x_ffff_ffff_1234_5678);
+    // slliw x15, x15, 4
+    cpu.execute_instr(0x_0047_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_2345_6780);
+
+    cpu.regs_w64(15, 0x_0000_0000_9234_5678);
+    // slliw x15, x15, 0
+    cpu.execute_instr(0x_0007_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_9234_5678);
+
+    cpu.regs_w64(15, 0x_0000_0000_9934_5678);
+    // slliw x15, x15, 4
+    cpu.execute_instr(0x_0047_979b);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_9345_6780);
+
+    assert_eq!(cpu.get_pc(), 22 * 4);
 }
 
 // bge rs1, rs2, offset12
