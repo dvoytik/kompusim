@@ -96,7 +96,80 @@ fn test_instruction_addiw() {
     // addiw x6, x0, 0x1
     cpu.execute_instr(0x_0010_031b);
     assert_eq!(cpu.regs_r64(6), 1);
-    assert_eq!(cpu.get_pc(), 4);
+
+    cpu.regs_w64(13, 0);
+    // addiw x14, x13, 0
+    cpu.execute_instr(0x_0006_871b);
+    assert_eq!(cpu.regs_r64(14), 0);
+
+    cpu.regs_w64(13, 1);
+    // addiw x14, x13, 1
+    cpu.execute_instr(0x_0016_871b);
+    assert_eq!(cpu.regs_r64(14), 2);
+
+    cpu.regs_w64(13, 3);
+    // addiw x14, x13, 7
+    cpu.execute_instr(0x_0076_871b);
+    assert_eq!(cpu.regs_r64(14), 10);
+
+    cpu.regs_w64(13, 0);
+    // addiw x14, x13, -2048
+    cpu.execute_instr(0x_8006_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_ffff_f800);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_8000_0000);
+    // addiw x14, x13, 0
+    cpu.execute_instr(0x_0006_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_8000_0000);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_8000_0000);
+    // addiw x14, x13, -2048
+    cpu.execute_instr(0x_8006_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_7fff_f800);
+
+    cpu.regs_w64(13, 0);
+    // addiw x14, x13, 2047
+    cpu.execute_instr(0x_7ff6_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_0000_07ff);
+
+    cpu.regs_w64(13, 0x_8000_0000);
+    // addiw x13, x13, -1
+    cpu.execute_instr(0x_fff6_869b);
+    // addiw x14, x13, 0
+    cpu.execute_instr(0x_0006_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_7fff_ffff);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_8000_0000);
+    // addiw x14, x13, 2047
+    cpu.execute_instr(0x_7ff6_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_8000_07ff);
+
+    cpu.regs_w64(13, 0x_0000_0000_7fff_ffff);
+    // addiw x14, x13, -2048
+    cpu.execute_instr(0x_8006_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_7fff_f7ff);
+
+    cpu.regs_w64(13, 0x_0000_0000_0000_0000);
+    // addiw x14, x13, -1
+    cpu.execute_instr(0x_fff6_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_ffff_ffff);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_ffff_ffff);
+    // addiw x14, x13, 1
+    cpu.execute_instr(0x_0016_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_0000_0000);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_ffff_ffff);
+    // addiw x14, x13, -1
+    cpu.execute_instr(0x_fff6_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_ffff_fffe);
+
+    cpu.regs_w64(13, 0x_0000_0000_7fff_ffff);
+    // addiw x14, x13, 1
+    cpu.execute_instr(0x_0016_871b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_8000_0000);
+
+    assert_eq!(cpu.get_pc(), 16 * 4);
 }
 
 #[test]

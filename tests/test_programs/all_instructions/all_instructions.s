@@ -6,7 +6,13 @@
 .globl _start
 
 _start:
-    c.addiw	x15, 32
+    slliw x15, x15, 0
+    slliw x15, x15, 1
+    slliw x15, x15, 7
+    slliw x15, x15, 14
+    slliw x15, x15, 31
+    slliw x15, x15, 4
+    c.addiw	x15, 31
     li x4, 0xbadc0ffe
     la x3, beef_addr # x6 <= 1
     # amoswap.w.aq rd, rs2, rs1 # rd <= mem[rs1]; mem[rs1] <= rs2
