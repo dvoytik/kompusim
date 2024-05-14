@@ -17,7 +17,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
         return disasm_rvc_operation_name(instr as u16);
     }
     match decode_instr(instr) {
-        Opcode::Lui { .. } => "Load Upper Immediate".to_string(),
+        Opcode::LUI { .. } => "Load Upper Immediate".to_string(),
 
         Opcode::Auipc { .. } => "Add Upper Immediate to PC".to_string(),
 
@@ -93,7 +93,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
     }
     match decode_instr(instr) {
         // TODO:
-        Opcode::Lui { uimm20, rd } => format!("x{rd} = 0x{:x} << 12", uimm20 >> 12),
+        Opcode::LUI { uimm20, rd } => format!("x{rd} = 0x{:x} << 12", uimm20 >> 12),
 
         // TODO:
         Opcode::Auipc { uimm20, rd } => format!("x{rd} = PC + 0x{uimm20:x} << 12"),
@@ -256,7 +256,7 @@ pub fn disasm_get_used_regs(instr: u32) -> (Option<u8>, Option<u8>, Option<u8>) 
         return disasm_rvc_get_used_regs(instr as u16);
     }
     match decode_instr(instr) {
-        Opcode::Lui { rd, .. } => (None, None, Some(rd)),
+        Opcode::LUI { rd, .. } => (None, None, Some(rd)),
         Opcode::Auipc { rd, .. } => (None, None, Some(rd)),
         Opcode::Branch { rs2, rs1, .. } => (Some(rs1), Some(rs2), None),
         Opcode::Jal { rd, .. } => (None, None, Some(rd)),
@@ -287,7 +287,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         return disasm_rvc(instr as u16, instr_addr);
     }
     match decode_instr(instr) {
-        Opcode::Lui { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
+        Opcode::LUI { uimm20, rd } => format!("lui x{rd}, 0x{:x}", uimm20 >> 12),
 
         Opcode::Auipc { uimm20, rd } => format!("auipc x{rd}, 0x{uimm20:x}"),
 

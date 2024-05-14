@@ -243,8 +243,9 @@ impl RV64ICpu {
     }
 
     // LUI - Load Upper Immidiate
-    fn exe_opc_lui(&mut self, uimm20: u64, rd: u8) {
-        self.regs_w64(rd, uimm20);
+    fn exe_opc_lui(&mut self, uimm20: u32, rd: u8) {
+        // sign extend
+        self.regs_wi32(rd, uimm20);
     }
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
@@ -397,7 +398,7 @@ impl RV64ICpu {
 
     pub fn execute_instr(&mut self, instr: u32) {
         if let Err(e) = match decode_instr(instr) {
-            Opcode::Lui { uimm20, rd } => {
+            Opcode::LUI { uimm20, rd } => {
                 self.exe_opc_lui(uimm20, rd);
                 self.pc_inc(ILEN_32B);
                 Ok(())
@@ -520,7 +521,7 @@ impl RV64ICpu {
                 res
             }
             COpcode::CLUI { imm6, rd } => {
-                self.exe_opc_lui(((imm6.0 as i64) << 12) as u64, rd);
+                self.exe_opc_lui(((imm6.0 as i32) << 12) as u32, rd);
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }

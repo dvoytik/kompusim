@@ -53,8 +53,8 @@ pub enum Opcode {
         rs1: u8,
         rd: u8,
     },
-    Lui {
-        uimm20: u64,
+    LUI {
+        uimm20: u32,
         rd: u8,
     },
     Load {
@@ -197,8 +197,8 @@ pub fn i_b_off13(ins: u32) -> I13 {
 
 // extract upper 20-bit for LUI, AUIPC instructions
 #[inline(always)]
-pub fn i_u_uimm20(ins: u32) -> u64 {
-    (ins & 0xffff_f000) as u64
+pub fn i_u_uimm20(ins: u32) -> u32 {
+    ins & 0xffff_f000
 }
 
 // Decode signed 12-bit immidiate from I-type instruction
@@ -321,12 +321,12 @@ pub fn dec_opc_store(instr: u32) -> Opcode {
 
 pub fn decode_instr(instr: u32) -> Opcode {
     match i_opcode(instr) {
-        OPC_LUI => Opcode::Lui {
+        OPC_LUI => Opcode::LUI {
             uimm20: i_u_uimm20(instr),
             rd: i_rd(instr),
         },
         OPC_AUIPC => Opcode::Auipc {
-            uimm20: i_u_uimm20(instr),
+            uimm20: i_u_uimm20(instr) as u64,
             rd: i_rd(instr),
         },
         OPC_JAL => dec_opc_jal(instr),
