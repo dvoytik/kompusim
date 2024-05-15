@@ -58,13 +58,31 @@ fn test_instruction_bne() {
 }
 
 #[test]
+// lui rd, imm20
 fn test_instruction_lui() {
     let mut cpu = RV64ICpu::default();
     cpu.regs_w64(5, 0x123);
     // lui x5, 0x10010
     cpu.execute_instr(0x_1001_02b7);
     assert_eq!(cpu.regs_r64(5), 0x10010000);
-    assert_eq!(cpu.get_pc(), 4);
+
+    // lui x1, 0x0
+    cpu.execute_instr(0x_0000_00b7);
+    assert_eq!(cpu.regs_r64(1), 0x_0000_0000_0000_0000);
+
+    // lui x1, 0xfffff
+    cpu.execute_instr(0x_ffff_f0b7);
+    assert_eq!(cpu.regs_r64(1), 0x_ffff_ffff_ffff_f000);
+
+    // lui x1, 0x7ffff
+    cpu.execute_instr(0x_7fff_f0b7);
+    assert_eq!(cpu.regs_r64(1), 0x_0000_0000_7fff_f000);
+
+    // lui x1, 0x80000
+    cpu.execute_instr(0x_8000_00b7);
+    assert_eq!(cpu.regs_r64(1), 0x_ffff_ffff_8000_0000);
+
+    assert_eq!(cpu.get_pc(), 5 * 4);
 }
 
 #[test]

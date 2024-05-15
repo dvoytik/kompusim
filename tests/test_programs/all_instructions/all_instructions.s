@@ -6,6 +6,7 @@
 .globl _start
 
 _start:
+    lui x1, 0xfffff
     slliw x15, x15, 0
     slliw x15, x15, 1
     slliw x15, x15, 7
