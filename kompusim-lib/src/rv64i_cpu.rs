@@ -250,7 +250,10 @@ impl RV64ICpu {
 
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
-        self.regs_w64(rd, self.regs.pc + uimm20);
+        // appends 12 low-order zero bits to the 20-bit U-immediate,
+        // sign-extends the result to 64 bits, adds it to the address of the AUIPC instruction,
+        // then places the result in register rd.
+        self.regs_w64(rd, self.regs.pc + (uimm20 as i32 as i64 as u64));
         self.pc_inc(ILEN_32B);
         Ok(())
     }

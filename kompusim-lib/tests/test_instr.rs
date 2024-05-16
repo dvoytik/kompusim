@@ -86,6 +86,7 @@ fn test_instruction_lui() {
 }
 
 #[test]
+// auipc rd, imm20
 fn test_instruction_auipc() {
     let mut cpu = RV64ICpu::default();
     cpu.pc_jump(0x100);
@@ -94,6 +95,10 @@ fn test_instruction_auipc() {
     cpu.execute_instr(0x00000517);
     assert_eq!(cpu.regs_r64(10), 0x100);
     assert_eq!(cpu.get_pc(), 0x100 + 4);
+
+    // auipc x10, 0xfffff
+    cpu.execute_instr(0x_ffff_f517);
+    assert_eq!(cpu.regs_r64(10), 0x104 + 0x_ffff_ffff_ffff_f000);
 }
 
 #[test]
