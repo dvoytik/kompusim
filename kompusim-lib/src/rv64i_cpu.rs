@@ -193,7 +193,7 @@ impl RV64ICpu {
         Ok(())
     }
 
-    // BRANCH opcodes: BEQ, BNE, BLT, ...
+    // BRANCH opcodes: BEQ, BNE, BLT, BLTU, ...
     fn exe_opc_branch(
         &mut self,
         off13: I13,
@@ -222,6 +222,14 @@ impl RV64ICpu {
             // Branch Less Than (signed comparison)
             F3_BRANCH_BLT => {
                 if self.regs_ri64(rs1) < self.regs_ri64(rs2) {
+                    self.pc_add_i13(off13);
+                } else {
+                    self.pc_inc(ilen)
+                }
+            }
+            // Branch Less Than (Unsigned comparison)
+            F3_BRANCH_BLTU => {
+                if self.regs_r64(rs1) < self.regs_r64(rs2) {
                     self.pc_add_i13(off13);
                 } else {
                     self.pc_inc(ilen)

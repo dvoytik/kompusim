@@ -111,10 +111,11 @@ pub const OPC_LUI:    u8 =   0b_01_101_11;
 pub const OPC_LOAD:   u8 =   0b_00_000_11;
 pub const OPC_STORE:  u8 =   0b_01_000_11;
 
-pub const F3_BRANCH_BEQ: u8 = 0b000;
-pub const F3_BRANCH_BNE: u8 = 0b001;
-pub const F3_BRANCH_BLT: u8 = 0b100;
-pub const F3_BRANCH_BGE: u8 = 0b101; // Branch Greater or Equal
+pub const F3_BRANCH_BEQ: u8  = 0b000; // Branch EQual
+pub const F3_BRANCH_BNE: u8  = 0b001; // Branch Not Equal
+pub const F3_BRANCH_BLT: u8  = 0b100; // Branch Less Than (Signed)
+pub const F3_BRANCH_BLTU: u8 = 0b110; // Branch Less Than Unsigned
+pub const F3_BRANCH_BGE: u8  = 0b101; // Branch Greater or Equal
 
 pub const F3_SYSTEM_WFI: u8    = 0b000; // Wait For Interrupt
 pub const F3_SYSTEM_CSRRW: u8  = 0b001; // atomic CSR read, write
