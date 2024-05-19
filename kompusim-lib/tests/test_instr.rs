@@ -534,7 +534,7 @@ fn test_slliw() {
     assert_eq!(cpu.get_pc(), 22 * 4);
 }
 
-// bge rs1, rs2, offset12
+// bge rs1, rs2, offset13
 #[test]
 fn test_bge() {
     let mut cpu = RV64ICpu::default();
@@ -545,10 +545,28 @@ fn test_bge() {
     assert_eq!(cpu.get_pc(), 4);
 
     cpu.regs_w64(15, 1);
-    // bge x15, x0, 0x1f314 # offset12 == 0xa
+    // bge x15, x0, 0x1f314 # offset13 == 0xa
     cpu.execute_instr(0x_0007_d563);
     // pc == 4
     assert_eq!(cpu.get_pc(), 4 + 0xa);
+}
+
+// Branch Less Than (Unsigned comparison)
+// bltu rs1, rs2, offset13
+#[test]
+fn test_bltu() {
+    let mut cpu = RV64ICpu::default();
+
+    // Negative case: x15 == 0, x14 == 0
+    // bltu x15, x14, 8001dd46 # offset13 = 8
+    cpu.execute_instr(0x_00e7_e463);
+    assert_eq!(cpu.get_pc(), 4);
+
+    // Positive case: x15 == 0, x14 == 1
+    cpu.regs_w64(14, 1);
+    // bltu x15, x14, 8001dd46 # offset13 = 8
+    cpu.execute_instr(0x_00e7_e463);
+    assert_eq!(cpu.get_pc(), 4 + 8); // PC + offset
 }
 
 // Wait For Interrupt
