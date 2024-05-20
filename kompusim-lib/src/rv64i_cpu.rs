@@ -243,6 +243,14 @@ impl RV64ICpu {
                     self.pc_inc(ilen)
                 }
             }
+            // Branch if Greater or Equal (Unsigned comparison)
+            F3_BRANCH_BGEU => {
+                if self.regs_r64(rs1) >= self.regs_r64(rs2) {
+                    self.pc_add_i13(off13);
+                } else {
+                    self.pc_inc(ilen)
+                }
+            }
             _ => {
                 return Err(format!("BRANCH, funct3: 0b{funct3:b}"));
             }
