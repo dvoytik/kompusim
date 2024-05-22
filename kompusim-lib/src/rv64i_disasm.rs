@@ -598,7 +598,11 @@ fn test_disasm() {
     assert_eq!(disasm(0x_0187_979b, 0x0), "slliw x15, x15, 0x18");
     assert_eq!(disasm(0x_0007_d563, 0x1f30a), "bge x15, x0, 0x1f314");
     assert_eq!(
-        disasm(0x_00e7_e463, 0x8001dd3e),
+        disasm(0x_04e7_f563, 0x_8001_dd5a),
+        "bgeu x15, x14, 0x8001dda4"
+    );
+    assert_eq!(
+        disasm(0x_00e7_e463, 0x_8001_dd3e),
         "bltu x15, x14, 0x8001dd46"
     );
     assert_eq!(disasm(0x_1050_0073, 0x0), "wfi");
