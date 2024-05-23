@@ -24,6 +24,7 @@ pub enum COpcode {
     SDSP { uimm6: u8, rs2: u8 },
     LDSP { uimm6: u8, rd: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
+    LD { uoff8: u8, rs1: u8, rd: u8 },
     MV { rd: u8, rs2: u8 },
     ADDIW { rd: u8, uimm6: u8 },
     Hint,
@@ -36,7 +37,8 @@ pub enum COpcode {
 /// RVC (compressed) 16b instructin opcodes (inst[15:13], inst[1:0])
 #[rustfmt::skip]
 mod c_opcodes {
-pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immidiate x 4 to SP
+pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immediate x 4 to SP
+pub const OPC_C_LD: u8 =                    0b_011_00; // Load Double-word
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
 pub const OPC_C_ADDIW : u8 =                0b_001_01; // Add Immidiate Word
 pub const OPC_C_LI: u8 =                    0b_010_01;
@@ -106,6 +108,12 @@ pub fn c_i_rd(c_instr: u16) -> u8 {
 /// rd' field
 pub fn c_i_rd_s(c_instr: u16) -> u8 {
     c_instr.bits(4, 2) as u8 + 8
+}
+
+#[inline(always)]
+/// rs1' field
+pub fn c_i_rs1_s(c_instr: u16) -> u8 {
+    c_instr.bits(9, 7) as u8 + 8
 }
 
 #[inline(always)]
@@ -224,6 +232,14 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                     uimm8: nz_uimm8 as u8,
                     rd: c_i_rd_s(c_instr),
                 }
+            }
+        }
+        OPC_C_LD => {
+            let uimm8 = c_instr.bits(6, 5) << 6 | c_instr.bits(12, 10) << 3;
+            COpcode::LD {
+                uoff8: uimm8 as u8,
+                rs1: c_i_rs1_s(c_instr),
+                rd: c_i_rd_s(c_instr),
             }
         }
         OPC_C_ADDIW => {

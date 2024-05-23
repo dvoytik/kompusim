@@ -584,6 +584,12 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_RVC);
                 res
             }
+            // c.ld expands to ld rd, offset[7:3](rs1).
+            COpcode::LD { uoff8, rs1, rd } => {
+                let res = self.exe_opc_load(uoff8.into(), rs1, F3_OP_LOAD_LD, rd);
+                self.pc_inc(ILEN_RVC);
+                res
+            }
             // c.addi4spn expands to addi rd, x2, nzuimm[9:2]
             COpcode::ADDI4SPN { uimm8, rd } => {
                 let res =
