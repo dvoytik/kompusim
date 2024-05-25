@@ -209,6 +209,24 @@ fn test_rvc_instr_c_andi() {
     assert_eq!(cpu.get_pc(), 2);
 }
 
+// c.ld rd, uoff8(rs1)
+#[test]
+fn test_rvc_instr_c_ld() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.bus.write64(0, 0x_dead_beef_baad_c0fe);
+    // c.ld x15, 0(x15)
+    cpu.execute_rvc_instr(0x_639c);
+    assert_eq!(cpu.regs_r64(15), 0x_dead_beef_baad_c0fe);
+
+    cpu.bus.write64(256 + 120, 0x_dead_c0de_dead_c0de);
+    cpu.regs_w64(10, 256);
+    // c.ld x15, 120(x10)
+    cpu.execute_rvc_instr(0x_7d3c);
+    assert_eq!(cpu.regs_r64(15), 0x_dead_c0de_dead_c0de);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
