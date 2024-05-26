@@ -25,6 +25,7 @@ pub enum COpcode {
     LDSP { uimm6: u8, rd: u8 },
     ADDI4SPN { uimm8: u8, rd: u8 },
     LD { uoff8: u8, rs1: u8, rd: u8 },
+    SW { uoff7: u8, rs1: u8, rs2: u8 },
     MV { rd: u8, rs2: u8 },
     ADDIW { rd: u8, uimm6: u8 },
     Hint,
@@ -39,6 +40,7 @@ pub enum COpcode {
 mod c_opcodes {
 pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immediate x 4 to SP
 pub const OPC_C_LD: u8 =                    0b_011_00; // Load Double-word
+pub const OPC_C_SW: u8 =                    0b_110_00; // Store Word
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
 pub const OPC_C_ADDIW : u8 =                0b_001_01; // Add Immidiate Word
 pub const OPC_C_LI: u8 =                    0b_010_01;
@@ -114,6 +116,12 @@ pub fn c_i_rd_s(c_instr: u16) -> u8 {
 /// rs1' field
 pub fn c_i_rs1_s(c_instr: u16) -> u8 {
     c_instr.bits(9, 7) as u8 + 8
+}
+
+#[inline(always)]
+/// rs2' field
+pub fn c_i_rs2_s(c_instr: u16) -> u8 {
+    c_instr.bits(4, 2) as u8 + 8
 }
 
 #[inline(always)]
@@ -240,6 +248,15 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 uoff8: uimm8 as u8,
                 rs1: c_i_rs1_s(c_instr),
                 rd: c_i_rd_s(c_instr),
+            }
+        }
+        OPC_C_SW => {
+            let uimm7 =
+                c_instr.bits(5, 5) << 6 | c_instr.bits(12, 10) << 3 | c_instr.bits(6, 6) << 2;
+            COpcode::SW {
+                uoff7: uimm7 as u8,
+                rs1: c_i_rs1_s(c_instr),
+                rs2: c_i_rs2_s(c_instr),
             }
         }
         OPC_C_ADDIW => {

@@ -21,6 +21,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::SDSP { .. } => "Compressed Store Doubleword at Stack Pointer".to_string(),
         COpcode::LDSP { .. } => "Compressed Load Doubleword at Stack Pointer".to_string(),
         COpcode::LD { .. } => "Compressed Load Doubleword".to_string(),
+        COpcode::SW { .. } => "todo".to_string(),
         COpcode::ADDIW { .. } => "Compressed Add Immediate Word".to_string(),
         COpcode::ADDI4SPN { .. } => {
             "Compressed Add Immediate * 4 to Stack Pointer (x2)".to_string()
@@ -51,6 +52,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::SDSP { uimm6, rs2 } => format!("mem64[x2 {:+}] = x{rs2}", uimm6 << 3),
         COpcode::LDSP { uimm6, rd } => format!("x{rd} = mem64[x2 {:+}]", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("x{rd} = mem64[x{rs1} + {uoff8}]"),
+        COpcode::SW { uoff7, rs1, rs2 } => format!("todo x{rs2}  mem64[x{rs1} + {uoff7}]"),
         COpcode::ADDIW { rd, uimm6 } => format!("x{rd} = x{rd} + {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("x{rd} = x2 + {uimm8} * 4"),
         COpcode::MV { rd, rs2 } => format!("x{rd} = x{rs2}"),
@@ -80,6 +82,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::SDSP { rs2, .. } => (Some(2), Some(rs2), None),
         COpcode::LDSP { rd, .. } => (Some(2), None, Some(rd)),
         COpcode::LD { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
+        COpcode::SW { rs1, rs2, .. } => (Some(rs1), Some(rs2), None),
         COpcode::ADDIW { rd, .. } => (None, None, Some(rd)),
         COpcode::ADDI4SPN { rd, .. } => (Some(2), None, Some(rd)),
         COpcode::MV { rd, rs2 } => (None, Some(rs2), Some(rd)),
@@ -108,6 +111,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::SDSP { uimm6, rs2 } => format!("c.sdsp x{rs2}, {}(x2)", uimm6 << 3),
         COpcode::LDSP { uimm6, rd } => format!("c.ldsp x{rd}, {}(x2)", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("c.ld x{rd}, {uoff8}(x{rs1})"),
+        COpcode::SW { uoff7, rs1, rs2 } => format!("todo c.sw x{rs2}, {uoff7}(x{rs1})"),
         COpcode::ADDIW { uimm6, rd } => format!("c.addiw x{rd}, {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("c.addi4spn x{rd}, x2, {}", uimm8 << 2),
         COpcode::MV { rd, rs2 } => format!("c.mv x{rd}, x{rs2}"),
