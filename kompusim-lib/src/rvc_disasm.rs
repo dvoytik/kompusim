@@ -143,5 +143,6 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_2781, 0x0), "c.addiw x15, 0");
     assert_eq!(disasm_rvc(0x_8fd9, 0x0), "c.or x15, x14");
     assert_eq!(disasm_rvc(0x_8b9d, 0x0), "c.andi x15, 7");
-    assert_eq!(disasm_rvc(0x_7d3c, 0x0), "c.ld x15, 120(x10)")
+    assert_eq!(disasm_rvc(0x_7d3c, 0x0), "c.ld x15, 120(x10)");
+    assert_eq!(disasm_rvc(0x_c7d8, 0x0), "c.sw x14, 12(x15)");
 }

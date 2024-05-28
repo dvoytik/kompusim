@@ -227,6 +227,25 @@ fn test_rvc_instr_c_ld() {
     assert_eq!(cpu.regs_r64(15), 0x_dead_c0de_dead_c0de);
 }
 
+// Store Word to memory
+// c.sw rs2, 0(rs1)
+#[test]
+fn test_rvc_instr_c_sw() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
+    // c.sw x14, 0(x15)
+    cpu.execute_rvc_instr(0x_c398);
+    assert_eq!(cpu.bus.read64(0), 0x_dead_beef_baad_c0fe);
+
+    cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
+    cpu.regs_w64(15, 256);
+    // c.sw x14, 12(x15)
+    cpu.execute_rvc_instr(0x_c7d8);
+    assert_eq!(cpu.bus.read64(12 + 256), 0x_dead_beef_baad_c0fe);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
