@@ -16,6 +16,7 @@ pub enum COpcode {
     CLI { imm6: I6, rd: u8 },
     CJR { rs1: u8 },
     CADD { rd: u8, rs2: u8 },
+    CADDW { rd: u8, rs2: u8 },
     CANDI { imm6: I6, rd: u8 },
     COR { rd: u8, rs2: u8 },
     CJ { imm12: I12 },
@@ -279,6 +280,7 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             let rs2 = c_instr.bits(4, 2) as u8 + 8;
             match (bit12, bits11_10, bits6_5) {
                 (0b_0, 0b_00, _) => COpcode::Hint,
+                (0b_1, 0b_11, 0b_01) => COpcode::CADDW { rd, rs2 },
                 (imm5, 0b_10, _) => COpcode::CANDI {
                     imm6: I6::from(imm5 << 5 | c_instr.bits(6, 2)),
                     rd,

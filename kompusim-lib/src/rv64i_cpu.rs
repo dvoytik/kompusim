@@ -564,6 +564,12 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_RVC);
                 res
             }
+            // C.ADDW rd, rs2
+            COpcode::CADDW { rd, rs2 } => {
+                self.regs_wi32(rd, self.regs_r32(rd).wrapping_add(self.regs_r32(rs2)));
+                self.pc_inc(ILEN_RVC);
+                Ok(())
+            }
             COpcode::SDSP { uimm6, rs2 } => {
                 let res = self.exe_opc_store(
                     ((uimm6 as u16) << 3).into(),
