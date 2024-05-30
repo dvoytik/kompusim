@@ -45,7 +45,9 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CLI { imm6, rd } => format!("x{rd} = {imm6:x}"),
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
-        COpcode::CADDW { rd, rs2 } => format!("todo x{rd} = x{rd} + x{rs2}"),
+        COpcode::CADDW { rd, rs2 } => {
+            format!("x{rd}[31:0] = x{rd}[31:0] + x{rs2}[31:0]; x{rd}[63:32] = x{rd}[31]")
+        }
         COpcode::COR { rd, rs2 } => format!("x{rd} = x{rd} | x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("x{rd} = x{rd} & 0x{imm6:x}"),
         COpcode::CJ { imm12 } => format!("PC = PC + {:x}", imm12),
@@ -106,7 +108,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
-        COpcode::CADDW { rd, rs2 } => format!("todo c.addw x{rd}, x{rs2}"),
+        COpcode::CADDW { rd, rs2 } => format!("c.addw x{rd}, x{rs2}"),
         COpcode::COR { rd, rs2 } => format!("c.or x{rd}, x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("c.andi x{rd}, {imm6}"),
         COpcode::CJ { imm12 } => format!("c.j {:x}", instr_addr.add_i12(imm12)),
@@ -132,6 +134,7 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_517d, 0x0), "c.li x2, -1".to_string());
     assert_eq!(disasm_rvc(0x_8082, 0x0), "c.jr x1".to_string());
     assert_eq!(disasm_rvc(0x_9086, 0x0), "c.add x1, x1".to_string());
+    assert_eq!(disasm_rvc(0x_9fb9, 0x0), "c.addw x15, x14".to_string());
     assert_eq!(disasm_rvc(0x_037e, 0x0), "c.slli x6, 0x1f".to_string());
     assert_eq!(disasm_rvc(0x_a001, 0x0), "c.j 0".to_string());
     assert_eq!(disasm_rvc(0x_b7ed, 0x8000003a), "c.j 80000024".to_string());
