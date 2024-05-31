@@ -244,6 +244,95 @@ fn test_rvc_instr_c_sw() {
     // c.sw x14, 12(x15)
     cpu.execute_rvc_instr(0x_c7d8);
     assert_eq!(cpu.bus.read64(12 + 256), 0x_dead_beef_baad_c0fe);
+
+    assert_eq!(cpu.get_pc(), 4);
+}
+
+// Add Word (32-bit) with sign extension
+// c.addw rd, rs2
+#[test]
+fn test_rvc_addw() {
+    let mut cpu = RV64ICpu::default();
+
+    fn test_addw(cpu: &mut RV64ICpu, res: u64, r1: u64, r2: u64) {
+        cpu.regs_w64(15, r1);
+        cpu.regs_w64(14, r2);
+        // c.addw x15, x14
+        cpu.execute_rvc_instr(0x_9fb9);
+        assert_eq!(cpu.regs_r64(15), res);
+    }
+    test_addw(&mut cpu, 2, 1, 1);
+
+    test_addw(
+        &mut cpu,
+        0xffffffffffff8000,
+        0x0000000000000000,
+        0xffffffffffff8000,
+    );
+    test_addw(&mut cpu, 0xffffffff80000000, 0xffffffff80000000, 0x00000000);
+    test_addw(
+        &mut cpu,
+        0x000000007fff8000,
+        0xffffffff80000000,
+        0xffffffffffff8000,
+    );
+    test_addw(
+        &mut cpu,
+        0x0000000000007fff,
+        0x0000000000000000,
+        0x0000000000007fff,
+    );
+    test_addw(
+        &mut cpu,
+        0x000000007fffffff,
+        0x000000007fffffff,
+        0x0000000000000000,
+    );
+    test_addw(
+        &mut cpu,
+        0xffffffff80007ffe,
+        0x000000007fffffff,
+        0x0000000000007fff,
+    );
+
+    test_addw(
+        &mut cpu,
+        0xffffffff80007fff,
+        0xffffffff80000000,
+        0x0000000000007fff,
+    );
+    test_addw(
+        &mut cpu,
+        0x000000007fff7fff,
+        0x000000007fffffff,
+        0xffffffffffff8000,
+    );
+
+    test_addw(
+        &mut cpu,
+        0xffffffffffffffff,
+        0x0000000000000000,
+        0xffffffffffffffff,
+    );
+    test_addw(
+        &mut cpu,
+        0x0000000000000000,
+        0xffffffffffffffff,
+        0x0000000000000001,
+    );
+    test_addw(
+        &mut cpu,
+        0xfffffffffffffffe,
+        0xffffffffffffffff,
+        0xffffffffffffffff,
+    );
+    test_addw(
+        &mut cpu,
+        0xffffffff80000000,
+        0x0000000000000001,
+        0x000000007fffffff,
+    );
+    assert_eq!(cpu.get_pc(), 13 * 2);
 }
 
 #[test]
