@@ -225,7 +225,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_SYSTEM_WFI => format!("no effect"),
+            F3_SYSTEM_WFI => "no effect".to_string(),
             F3_SYSTEM_CSRRS => format!(
                 "x{rd} = {csrn}; {csrn} = {csrn} | x{rs1:b}",
                 csrn = csr_name(csr)
@@ -412,7 +412,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_SYSTEM_WFI => format!("wfi"),
+            F3_SYSTEM_WFI => "wfi".to_string(),
             F3_SYSTEM_CSRRS => format!("csrrs x{rd}, {}, x{rs1}", csr_name(csr)),
             F3_SYSTEM_CSRRWI => format!("csrrwi x{rd}, {}, {rs1:x}", csr_name(csr)),
             F3_SYSTEM_CSRRW => format!("csrrw x{rd}, {}, x{rs1}", csr_name(csr)),

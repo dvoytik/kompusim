@@ -225,6 +225,8 @@ fn test_rvc_instr_c_ld() {
     // c.ld x15, 120(x10)
     cpu.execute_rvc_instr(0x_7d3c);
     assert_eq!(cpu.regs_r64(15), 0x_dead_c0de_dead_c0de);
+
+    assert_eq!(cpu.get_pc(), 4);
 }
 
 // Store Word to memory
