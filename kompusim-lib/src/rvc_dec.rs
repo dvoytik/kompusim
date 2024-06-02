@@ -9,26 +9,90 @@ use crate::{
 
 pub enum COpcode {
     CNOP,
-    CADDI { imm6: I6, rd: u8 },
-    CLUI { imm6: I6, rd: u8 },
-    ADDI16SP { imm6: I6 },
-    CSLLI { uimm6: u8, rd: u8 },
-    CLI { imm6: I6, rd: u8 },
-    CJR { rs1: u8 },
-    CADD { rd: u8, rs2: u8 },
-    CADDW { rd: u8, rs2: u8 },
-    CANDI { imm6: I6, rd: u8 },
-    COR { rd: u8, rs2: u8 },
-    CJ { imm12: I12 },
-    BEQZ { imm9: I9, rs1: u8 },
-    BNEZ { imm9: I9, rs1: u8 },
-    SDSP { uimm6: u8, rs2: u8 },
-    LDSP { uimm6: u8, rd: u8 },
-    ADDI4SPN { uimm8: u8, rd: u8 },
-    LD { uoff8: u8, rs1: u8, rd: u8 },
-    SW { uoff7: u8, rs1: u8, rs2: u8 },
-    MV { rd: u8, rs2: u8 },
-    ADDIW { rd: u8, uimm6: u8 },
+    CADDI {
+        imm6: I6,
+        rd: u8,
+    },
+    CLUI {
+        imm6: I6,
+        rd: u8,
+    },
+    ADDI16SP {
+        imm6: I6,
+    },
+    CSLLI {
+        uimm6: u8,
+        rd: u8,
+    },
+    /// Shift Right Logical Immidiate
+    CSRLI {
+        shamt6: u8,
+        rd: u8,
+    },
+    CLI {
+        imm6: I6,
+        rd: u8,
+    },
+    CJR {
+        rs1: u8,
+    },
+    CADD {
+        rd: u8,
+        rs2: u8,
+    },
+    CADDW {
+        rd: u8,
+        rs2: u8,
+    },
+    CANDI {
+        imm6: I6,
+        rd: u8,
+    },
+    COR {
+        rd: u8,
+        rs2: u8,
+    },
+    CJ {
+        imm12: I12,
+    },
+    BEQZ {
+        imm9: I9,
+        rs1: u8,
+    },
+    BNEZ {
+        imm9: I9,
+        rs1: u8,
+    },
+    SDSP {
+        uimm6: u8,
+        rs2: u8,
+    },
+    LDSP {
+        uimm6: u8,
+        rd: u8,
+    },
+    ADDI4SPN {
+        uimm8: u8,
+        rd: u8,
+    },
+    LD {
+        uoff8: u8,
+        rs1: u8,
+        rd: u8,
+    },
+    SW {
+        uoff7: u8,
+        rs1: u8,
+        rs2: u8,
+    },
+    MV {
+        rd: u8,
+        rs2: u8,
+    },
+    ADDIW {
+        rd: u8,
+        uimm6: u8,
+    },
     Hint,
     Reserved,
     Uknown,
@@ -280,6 +344,10 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             let rs2 = c_instr.bits(4, 2) as u8 + 8;
             match (bit12, bits11_10, bits6_5) {
                 (0b_0, 0b_00, _) => COpcode::Hint,
+                (bit12, 0b_00, _) => COpcode::CSRLI {
+                    shamt6: (bit12 << 5 | c_instr.bits(6, 2)) as u8,
+                    rd,
+                },
                 (0b_1, 0b_11, 0b_01) => COpcode::CADDW { rd, rs2 },
                 (imm5, 0b_10, _) => COpcode::CANDI {
                     imm6: I6::from(imm5 << 5 | c_instr.bits(6, 2)),
