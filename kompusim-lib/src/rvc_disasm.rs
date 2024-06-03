@@ -43,7 +43,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CLUI { rd, imm6 } => format!("x{rd} = 0x{imm6:x} << 12"),
         COpcode::ADDI16SP { imm6 } => format!("x2 = x2 {:+}", imm6.0 << 4),
         COpcode::CSLLI { uimm6, rd } => format!("x{rd} = x{rd} << {uimm6}"),
-        COpcode::CSRLI { shamt6, rd } => format!("todo x{rd} = x{rd} >> {shamt6}"),
+        COpcode::CSRLI { shamt6, rd } => format!("x{rd} = x{rd} >> {shamt6}"),
         COpcode::CLI { imm6, rd } => format!("x{rd} = {imm6:x}"),
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
@@ -108,7 +108,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CLUI { rd, imm6 } => format!("c.lui x{rd}, 0x{imm6:x}"),
         COpcode::ADDI16SP { imm6 } => format!("c.addi16sp x2, {:+}", (imm6.0 as i16) << 4),
         COpcode::CSLLI { uimm6, rd } => format!("c.slli x{rd}, 0x{uimm6:x}"),
-        COpcode::CSRLI { shamt6, rd } => format!("todo c.srli x{rd}, 0x{shamt6:x}"),
+        COpcode::CSRLI { shamt6, rd } => format!("c.srli x{rd}, 0x{shamt6:x}"),
         COpcode::CLI { imm6, rd } => format!("c.li x{rd}, {imm6}"),
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
@@ -140,6 +140,7 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_9086, 0x0), "c.add x1, x1".to_string());
     assert_eq!(disasm_rvc(0x_9fb9, 0x0), "c.addw x15, x14".to_string());
     assert_eq!(disasm_rvc(0x_037e, 0x0), "c.slli x6, 0x1f".to_string());
+    assert_eq!(disasm_rvc(0x_9301, 0x0), "c.srli x14, 0x20".to_string());
     assert_eq!(disasm_rvc(0x_a001, 0x0), "c.j 0".to_string());
     assert_eq!(disasm_rvc(0x_b7ed, 0x8000003a), "c.j 80000024".to_string());
     assert_eq!(disasm_rvc(0x_0505, 0x0), "c.addi x10, 1".to_string());
