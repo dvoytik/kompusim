@@ -337,6 +337,22 @@ fn test_rvc_addw() {
     assert_eq!(cpu.get_pc(), 13 * 2);
 }
 
+// Shift Right Logical Immidiate
+// c.srli rd, 0x20
+#[test]
+fn test_rvc_srli() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(14, 0x_1234_5678_9abc_def0);
+    // c.srli x14, 0x20
+    cpu.execute_rvc_instr(0x_9301);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_1234_5678);
+    // c.srli x14, 0x20
+    cpu.execute_rvc_instr(0x_9301);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_0000_0000);
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {
