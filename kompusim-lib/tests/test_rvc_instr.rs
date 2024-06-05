@@ -239,13 +239,13 @@ fn test_rvc_instr_c_sw() {
     cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
     // c.sw x14, 0(x15)
     cpu.execute_rvc_instr(0x_c398);
-    assert_eq!(cpu.bus.read64(0), 0x_dead_beef_baad_c0fe);
+    assert_eq!(cpu.bus.read64(0), 0x_0000_0000_baad_c0fe);
 
     cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
     cpu.regs_w64(15, 256);
     // c.sw x14, 12(x15)
     cpu.execute_rvc_instr(0x_c7d8);
-    assert_eq!(cpu.bus.read64(12 + 256), 0x_dead_beef_baad_c0fe);
+    assert_eq!(cpu.bus.read64(12 + 256), 0x_0000_0000_baad_c0fe);
 
     assert_eq!(cpu.get_pc(), 4);
 }

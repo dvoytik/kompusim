@@ -606,7 +606,7 @@ impl RV64ICpu {
             }
             // C.SW expands to SW rs2, offset[6:2](rs1)
             COpcode::SW { uoff7, rs1, rs2 } => {
-                let res = self.exe_opc_store(uoff7.into(), rs2, rs1, F3_OP_LOAD_LD);
+                let res = self.exe_opc_store(uoff7.into(), rs2, rs1, F3_OP_STORE_SW);
                 self.pc_inc(ILEN_RVC);
                 res
             }
