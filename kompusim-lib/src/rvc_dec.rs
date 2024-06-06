@@ -85,6 +85,11 @@ pub enum COpcode {
         rs1: u8,
         rs2: u8,
     },
+    LW {
+        uoff7: u8,
+        rs1: u8,
+        rd: u8,
+    },
     MV {
         rd: u8,
         rs2: u8,
@@ -104,6 +109,7 @@ pub enum COpcode {
 #[rustfmt::skip]
 mod c_opcodes {
 pub const OPC_C_ADDI4SPN: u8 =              0b_000_00; // add immediate x 4 to SP
+pub const OPC_C_LW: u8 =                    0b_010_00; // Load Word
 pub const OPC_C_LD: u8 =                    0b_011_00; // Load Double-word
 pub const OPC_C_SW: u8 =                    0b_110_00; // Store Word
 pub const OPC_C_NOP_ADDI: u8 =              0b_000_01;
@@ -311,6 +317,16 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             let uimm8 = c_instr.bits(6, 5) << 6 | c_instr.bits(12, 10) << 3;
             COpcode::LD {
                 uoff8: uimm8 as u8,
+                rs1: c_i_rs1_s(c_instr),
+                rd: c_i_rd_s(c_instr),
+            }
+        }
+        // Load Word
+        OPC_C_LW => {
+            let uimm7 =
+                c_instr.bits(5, 5) << 6 | c_instr.bits(12, 10) << 3 | c_instr.bits(6, 6) << 2;
+            COpcode::LW {
+                uoff7: uimm7 as u8,
                 rs1: c_i_rs1_s(c_instr),
                 rd: c_i_rd_s(c_instr),
             }
