@@ -49,7 +49,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CJR { rs1 } => format!("PC = x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("x{rd} = x{rd} + x{rs2}"),
         COpcode::CADDW { rd, rs2 } => {
-            format!("x{rd}[31:0] = x{rd}[31:0] + x{rs2}[31:0]; x{rd}[63:32] = x{rd}[31]")
+            format!("x{rd}[31:0] = x{rd}[31:0] + x{rs2}[31:0]; sign extend")
         }
         COpcode::COR { rd, rs2 } => format!("x{rd} = x{rd} | x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("x{rd} = x{rd} & 0x{imm6:x}"),
@@ -59,8 +59,10 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::SDSP { uimm6, rs2 } => format!("mem64[x2 {:+}] = x{rs2}", uimm6 << 3),
         COpcode::LDSP { uimm6, rd } => format!("x{rd} = mem64[x2 {:+}]", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("x{rd} = mem64[x{rs1} + {uoff8}]"),
-        COpcode::SW { uoff7, rs1, rs2 } => format!("mem64[x{rs1} + {uoff7}] = x{rs2}"),
-        COpcode::LW { uoff7, rs1, rd } => format!("todo mem64[x{rs1} + {uoff7}] = x{rd}"),
+        COpcode::SW { uoff7, rs1, rs2 } => format!("mem32[x{rs1} + {uoff7}] = x{rs2}"),
+        COpcode::LW { uoff7, rs1, rd } => {
+            format!("x{rd}[31:0] = mem32[x{rs1} + {uoff7}]; sign extend")
+        }
         COpcode::ADDIW { rd, uimm6 } => format!("x{rd} = x{rd} + {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("x{rd} = x2 + {uimm8} * 4"),
         COpcode::MV { rd, rs2 } => format!("x{rd} = x{rs2}"),
@@ -125,7 +127,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::LDSP { uimm6, rd } => format!("c.ldsp x{rd}, {}(x2)", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("c.ld x{rd}, {uoff8}(x{rs1})"),
         COpcode::SW { uoff7, rs1, rs2 } => format!("c.sw x{rs2}, {uoff7}(x{rs1})"),
-        COpcode::LW { uoff7, rs1, rd } => format!("todo c.lw x{rd}, {uoff7}(x{rs1})"),
+        COpcode::LW { uoff7, rs1, rd } => format!("c.lw x{rd}, {uoff7}(x{rs1})"),
         COpcode::ADDIW { uimm6, rd } => format!("c.addiw x{rd}, {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("c.addi4spn x{rd}, x2, {}", uimm8 << 2),
         COpcode::MV { rd, rs2 } => format!("c.mv x{rd}, x{rs2}"),
