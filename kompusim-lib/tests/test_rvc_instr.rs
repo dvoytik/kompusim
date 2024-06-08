@@ -250,6 +250,27 @@ fn test_rvc_instr_c_sw() {
     assert_eq!(cpu.get_pc(), 4);
 }
 
+// Load Word from memory to rd
+// c.lw    rd, offset7(rs1)
+#[test]
+fn test_rvc_lw() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.bus.write32(0, 0x_dead_beef);
+    // c.lw x15, 0(x15)
+    cpu.execute_rvc_instr(0x_439c);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_dead_beef);
+
+    cpu.regs_w64(15, 0);
+    cpu.bus.write32(92, 0x_c0de_c001);
+    // c.lw x15, 92(x15)
+    cpu.execute_rvc_instr(0x_4ffc);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_c0de_c001);
+
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 // Add Word (32-bit) with sign extension
 // c.addw rd, rs2
 #[test]

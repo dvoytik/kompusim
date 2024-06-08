@@ -163,4 +163,5 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_8b9d, 0x0), "c.andi x15, 7");
     assert_eq!(disasm_rvc(0x_7d3c, 0x0), "c.ld x15, 120(x10)");
     assert_eq!(disasm_rvc(0x_c7d8, 0x0), "c.sw x14, 12(x15)");
+    assert_eq!(disasm_rvc(0x_4ffc, 0x0), "c.lw x15, 92(x15)");
 }

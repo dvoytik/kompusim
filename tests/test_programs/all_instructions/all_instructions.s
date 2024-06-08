@@ -6,6 +6,7 @@
 .globl _start
 
 _start:
+    c.lw x15, 0x5c(x15)
     ld x15, 255(x15)
     auipc x10, 0xfffff
     auipc x10, 0
