@@ -271,6 +271,21 @@ fn test_rvc_lw() {
     assert_eq!(cpu.get_pc(), 4);
 }
 
+// Bitwise And
+// c.and rd, rs2
+#[test]
+fn test_rvc_and() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(13, 0x_5a5a_a5a5_5a5a_a5a5);
+    cpu.regs_w64(15, 0x_ffff_0000_ffff_0000);
+    // c.and x15, x13
+    cpu.execute_rvc_instr(0x_8ff5);
+    assert_eq!(cpu.regs_r64(15), 0x_5a5a_0000_5a5a_0000);
+
+    assert_eq!(cpu.get_pc(), 2);
+}
+
 // Add Word (32-bit) with sign extension
 // c.addw rd, rs2
 #[test]
