@@ -16,7 +16,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::CADD { .. } => "Compressed Add".to_string(),
         COpcode::CADDW { .. } => "Compressed Add Word".to_string(),
         COpcode::COR { .. } => "Compressed bitwise Or".to_string(),
-        COpcode::CAND { .. } => "todo Compressed bitwise Or".to_string(),
+        COpcode::CAND { .. } => "Compressed bitwise And".to_string(),
         COpcode::CANDI { .. } => "Compressed bitwise AND Immediate".to_string(),
         COpcode::CJ { .. } => "Compressed Jump".to_string(),
         COpcode::BEQZ { .. } => "Compressed Branch Equal Zero".to_string(),
@@ -53,7 +53,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
             format!("x{rd}[31:0] = x{rd}[31:0] + x{rs2}[31:0]; sign extend")
         }
         COpcode::COR { rd, rs2 } => format!("x{rd} = x{rd} | x{rs2}"),
-        COpcode::CAND { rd, rs2 } => format!("todo x{rd} = x{rd} | x{rs2}"),
+        COpcode::CAND { rd, rs2 } => format!("x{rd} = x{rd} & x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("x{rd} = x{rd} & 0x{imm6:x}"),
         COpcode::CJ { imm12 } => format!("PC = PC + {:x}", imm12),
         COpcode::BEQZ { imm9, rs1 } => format!("if x{rs1} == 0 then PC = PC {:+}", imm9.0),
@@ -122,7 +122,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
         COpcode::CADDW { rd, rs2 } => format!("c.addw x{rd}, x{rs2}"),
         COpcode::COR { rd, rs2 } => format!("c.or x{rd}, x{rs2}"),
-        COpcode::CAND { rd, rs2 } => format!("todo c.add x{rd}, x{rs2}"),
+        COpcode::CAND { rd, rs2 } => format!("c.and x{rd}, x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("c.andi x{rd}, {imm6}"),
         COpcode::CJ { imm12 } => format!("c.j {:x}", instr_addr.add_i12(imm12)),
         COpcode::BEQZ { imm9, rs1 } => format!("c.beqz x{rs1}, 0x{:x}", instr_addr.add_i9(imm9)),
