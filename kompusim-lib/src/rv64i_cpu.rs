@@ -640,6 +640,11 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }
+            COpcode::CAND { rd, rs2 } => {
+                self.regs_w64(rd, self.regs_r64(rd) & self.regs_r64(rs2));
+                self.pc_inc(ILEN_RVC);
+                Ok(())
+            }
             COpcode::CANDI { imm6, rd } => {
                 self.regs_w64(rd, self.regs_r64(rd) & u64::from(imm6));
                 self.pc_inc(ILEN_RVC);

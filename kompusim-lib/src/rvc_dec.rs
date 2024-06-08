@@ -52,6 +52,10 @@ pub enum COpcode {
         rd: u8,
         rs2: u8,
     },
+    CAND {
+        rd: u8,
+        rs2: u8,
+    },
     CJ {
         imm12: I12,
     },
@@ -364,12 +368,13 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                     shamt6: (bit12 << 5 | c_instr.bits(6, 2)) as u8,
                     rd,
                 },
-                (0b_1, 0b_11, 0b_01) => COpcode::CADDW { rd, rs2 },
                 (imm5, 0b_10, _) => COpcode::CANDI {
                     imm6: I6::from(imm5 << 5 | c_instr.bits(6, 2)),
                     rd,
                 },
                 (0b_0, 0b_11, 0b_10) => COpcode::COR { rd, rs2 },
+                (0b_0, 0b_11, 0b_11) => COpcode::CAND { rd, rs2 },
+                (0b_1, 0b_11, 0b_01) => COpcode::CADDW { rd, rs2 },
                 (_, _, _) => COpcode::Uknown,
             }
         }
