@@ -479,6 +479,11 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_32B);
                 Ok(())
             }
+            Opcode::SRLIW { shamt, rs1, rd } => {
+                self.regs_wi32(rd, self.regs_r32(rs1) >> shamt);
+                self.pc_inc(ILEN_32B);
+                Ok(())
+            }
             Opcode::Op {
                 funct7,
                 rs2,

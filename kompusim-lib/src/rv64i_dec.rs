@@ -37,6 +37,13 @@ pub enum Opcode {
         rs1: u8,
         rd: u8,
     },
+    /// Shift Right Logical Immidiate Word
+    SRLIW {
+        /// shift amount
+        shamt: u8,
+        rs1: u8,
+        rd: u8,
+    },
     Op {
         funct7: u8,
         rs2: u8,
@@ -129,6 +136,7 @@ pub const F3_OP_IMM_SRLI: u8 = 0b101;
 
 pub const F3_OP_IMM32_ADDIW: u8 = 0b000;
 pub const F3_OP_IMM32_SLLIW: u8 = 0b001; // Shift Left Logical Immediate Word
+pub const F3_OP_IMM32_SRLIW: u8 = 0b101; // Shift Right Logical Immediate Word
 
 pub const F3_OP_ADD_SUB: u8 = 0b_000;
 
@@ -356,7 +364,12 @@ pub fn decode_instr(instr: u32) -> Opcode {
                 let bits31_25 = instr.bits(31, 25);
                 match (bits31_25, funct3) {
                     (0b0000000, F3_OP_IMM32_SLLIW) => Opcode::SLLIW {
-                        shamt: i_rs2(instr),
+                        shamt: instr.bits(24, 20) as u8,
+                        rs1,
+                        rd,
+                    },
+                    (0b0000000, F3_OP_IMM32_SRLIW) => Opcode::SRLIW {
+                        shamt: instr.bits(24, 20) as u8,
                         rs1,
                         rd,
                     },
