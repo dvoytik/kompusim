@@ -588,6 +588,50 @@ fn test_bgeu() {
     assert_eq!(cpu.get_pc(), 4 + 74); // PC + offset13
 }
 
+// Shift Right Logical Immidiate Word
+// srliw   rd, rs1, shamt5
+#[test]
+fn test_srliw() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(15, 0x_ffff_ffff_0123_4567);
+    // srliw x15, x15, 0x8
+    cpu.execute_instr(0x_0087_d79b);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_0001_2345);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_8000_0000);
+    // srliw x14, x13, 0x0
+    cpu.execute_instr(0x_0006_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_8000_0000);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_8000_0000);
+    // srliw x14, x13, 0x1
+    cpu.execute_instr(0x_0016_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_4000_0000);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_ffff_ffff);
+    // srliw x14, x13, 0x1f
+    cpu.execute_instr(0x_01f6_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_0000_0001);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_1234_5678);
+    // srliw x14, x13, 0x0
+    cpu.execute_instr(0x_0006_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_1234_5678);
+
+    cpu.regs_w64(13, 0x_ffff_ffff_1234_5678);
+    // srliw x14, x13, 0x4
+    cpu.execute_instr(0x_0046_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_0000_0000_0123_4567);
+
+    cpu.regs_w64(13, 0x_0000_0000_9234_5678);
+    // srliw x14, x13, 0x0
+    cpu.execute_instr(0x_0006_d71b);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_9234_5678);
+
+    assert_eq!(cpu.get_pc(), 7 * 4);
+}
+
 // Wait For Interrupt
 // wfi
 #[test]

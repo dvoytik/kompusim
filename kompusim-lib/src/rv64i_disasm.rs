@@ -602,6 +602,7 @@ fn test_disasm() {
     assert_eq!(disasm(0x_3400_5073, 0x0), "csrrwi x0, mscratch, 0");
     assert_eq!(disasm(0x_3052_10f3, 0x0), "csrrw x1, mtvec, x4");
     assert_eq!(disasm(0x_0187_979b, 0x0), "slliw x15, x15, 0x18");
+    assert_eq!(disasm(0x_01f6_d71b, 0x0), "srliw x14, x13, 0x1f");
     assert_eq!(disasm(0x_0007_d563, 0x1f30a), "bge x15, x0, 0x1f314");
     assert_eq!(
         disasm(0x_04e7_f563, 0x_8001_dd5a),
