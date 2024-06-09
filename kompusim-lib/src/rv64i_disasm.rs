@@ -58,7 +58,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
         Opcode::ADDIW { .. } => "ADD Word Immediate".to_string(),
         Opcode::SLLIW { .. } => "Shift Left Logical Immediate Word".to_string(),
-        Opcode::SRLIW { .. } => "todo Shift Left Logical Immediate Word".to_string(),
+        Opcode::SRLIW { .. } => "Shift Right Logical Immediate Word".to_string(),
         Opcode::Op { funct7, funct3, .. } => match (funct7, funct3) {
             (F7_OP_ADD, F3_OP_ADD_SUB) => "Add register to register".to_string(),
             (F7_OP_SUB, F3_OP_ADD_SUB) => "Subtract register from regiser".to_string(),
@@ -179,10 +179,10 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
 
         Opcode::ADDIW { imm12, rs1, rd } => format!("x{rd}[31:0] = x{rs1}[31:0] + 0x{imm12:x}"),
         Opcode::SLLIW { shamt, rs1, rd } => {
-            format!("x{rd}[31:0] = x{rs1}[31:0] << {shamt}; x{rd}[63:32] = x{rd}[31]")
+            format!("x{rd}[31:0] = x{rs1}[31:0] << {shamt}; sign_extend")
         }
         Opcode::SRLIW { shamt, rs1, rd } => {
-            format!("todo x{rd}[31:0] = x{rs1}[31:0] << {shamt}; x{rd}[63:32] = x{rd}[31]")
+            format!("x{rd}[31:0] = x{rs1}[31:0] >> {shamt}; sign_extend")
         }
         Opcode::Op {
             funct7,
@@ -372,7 +372,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
         Opcode::ADDIW { imm12, rs1, rd } => format!("addiw x{rd}, x{rs1}, 0x{imm12:x}"),
 
         Opcode::SLLIW { shamt, rs1, rd } => format!("slliw x{rd}, x{rs1}, 0x{shamt:x}"),
-        Opcode::SRLIW { shamt, rs1, rd } => format!("todo lliw x{rd}, x{rs1}, 0x{shamt:x}"),
+        Opcode::SRLIW { shamt, rs1, rd } => format!("srliw x{rd}, x{rs1}, 0x{shamt:x}"),
         Opcode::Op {
             funct7,
             rs2,
