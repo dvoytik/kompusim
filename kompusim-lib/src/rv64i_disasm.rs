@@ -65,7 +65,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
-        Opcode::SUBW { .. } => "todo Word Immediate".to_string(),
+        Opcode::SUBW { .. } => "Subtract Word".to_string(),
 
         Opcode::Amo { funct5, funct3, .. } => match (funct5, funct3) {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => "Atomic swap".to_string(),
@@ -184,7 +184,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             format!("x{rd}[31:0] = x{rs1}[31:0] << {shamt}; sign_extend")
         }
         Opcode::SRLIW { shamt, rs1, rd } => {
-            format!("x{rd}[31:0] = x{rs1}[31:0] >> {shamt}; sign_extend")
+            format!("x{rd}[31:0] = x{rs1}[31:0] >> {shamt}; sign extend")
         }
         Opcode::Op {
             funct7,
@@ -198,7 +198,9 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
-        Opcode::SUBW { rs2, rs1, rd } => format!("todo x{rd}[31:0] = x{rs1}[31:0] + x{rs2}"),
+        Opcode::SUBW { rs2, rs1, rd } => {
+            format!("x{rd}[31:0] = x{rs1}[31:0] - x{rs2}[31:0]; sign extend")
+        }
 
         Opcode::Amo {
             funct5,
@@ -390,7 +392,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             _ => format!("Unknown OP instruction: funct7: {funct7:x}, funct3: {funct3:x}"),
         },
 
-        Opcode::SUBW { rs2, rs1, rd } => format!("todo: addiw x{rd}, x{rs1}, x{rs2}"),
+        Opcode::SUBW { rs2, rs1, rd } => format!("subw x{rd}, x{rs1}, x{rs2}"),
 
         Opcode::Amo {
             funct5,
