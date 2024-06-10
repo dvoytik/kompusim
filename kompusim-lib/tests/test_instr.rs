@@ -589,7 +589,7 @@ fn test_bgeu() {
 }
 
 // Shift Right Logical Immidiate Word
-// srliw   rd, rs1, shamt5
+// srliw rd, rs1, shamt5
 #[test]
 fn test_srliw() {
     let mut cpu = RV64ICpu::default();
@@ -630,6 +630,114 @@ fn test_srliw() {
     assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_9234_5678);
 
     assert_eq!(cpu.get_pc(), 7 * 4);
+}
+
+// Subtraction Word
+// subw rd, rs1, rs2
+#[test]
+fn test_subw() {
+    let mut cpu = RV64ICpu::default();
+
+    fn subw(cpu: &mut RV64ICpu, result: u64, v1: u64, v2: u64) {
+        cpu.regs_w64(14, v1);
+        cpu.regs_w64(15, v2);
+        // subw x15, x14, x15
+        cpu.execute_instr(0x_40f7_07bb);
+        assert_eq!(cpu.regs_r64(15), result);
+    }
+    subw(
+        &mut cpu,
+        0x_0000_0000_0000_5678,
+        0x_ffff_ffff_1234_5678,
+        0x_0000_0000_1234_0000,
+    );
+
+    subw(
+        &mut cpu,
+        0x0000000000000000,
+        0x0000000000000000,
+        0x0000000000000000,
+    );
+    subw(
+        &mut cpu,
+        0x0000000000000000,
+        0x0000000000000001,
+        0x0000000000000001,
+    );
+    subw(
+        &mut cpu,
+        0xfffffffffffffffc,
+        0x0000000000000003,
+        0x0000000000000007,
+    );
+    subw(
+        &mut cpu,
+        0x0000000000008000,
+        0x0000000000000000,
+        0xffffffffffff8000,
+    );
+    subw(
+        &mut cpu,
+        0xffffffff80000000,
+        0xffffffff80000000,
+        0x0000000000000000,
+    );
+    subw(
+        &mut cpu,
+        0xffffffff80008000,
+        0xffffffff80000000,
+        0xffffffffffff8000,
+    );
+    subw(
+        &mut cpu,
+        0xffffffffffff8001,
+        0x0000000000000000,
+        0x0000000000007fff,
+    );
+    subw(
+        &mut cpu,
+        0x000000007fffffff,
+        0x000000007fffffff,
+        0x0000000000000000,
+    );
+    subw(
+        &mut cpu,
+        0x000000007fff8000,
+        0x000000007fffffff,
+        0x0000000000007fff,
+    );
+    subw(
+        &mut cpu,
+        0x000000007fff8001,
+        0xffffffff80000000,
+        0x0000000000007fff,
+    );
+    subw(
+        &mut cpu,
+        0xffffffff80007fff,
+        0x000000007fffffff,
+        0xffffffffffff8000,
+    );
+    subw(
+        &mut cpu,
+        0x0000000000000001,
+        0x0000000000000000,
+        0xffffffffffffffff,
+    );
+    subw(
+        &mut cpu,
+        0xfffffffffffffffe,
+        0xffffffffffffffff,
+        0x0000000000000001,
+    );
+    subw(
+        &mut cpu,
+        0x0000000000000000,
+        0xffffffffffffffff,
+        0xffffffffffffffff,
+    );
+
+    assert_eq!(cpu.get_pc(), 15 * 4);
 }
 
 // Wait For Interrupt
