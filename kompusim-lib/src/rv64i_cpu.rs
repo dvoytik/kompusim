@@ -495,6 +495,11 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_32B);
                 res
             }
+            Opcode::SUBW { rs2, rs1, rd } => {
+                self.regs_wi32(rd, self.regs_r32(rs1).wrapping_sub(self.regs_r32(rs2)));
+                self.pc_inc(ILEN_32B);
+                Ok(())
+            }
             Opcode::Amo {
                 funct5,
                 aq,

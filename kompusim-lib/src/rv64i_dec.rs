@@ -51,6 +51,11 @@ pub enum Opcode {
         funct3: u8,
         rd: u8,
     },
+    SUBW {
+        rs2: u8,
+        rs1: u8,
+        rd: u8,
+    },
     Jal {
         imm21: I21,
         rd: u8,
@@ -117,6 +122,7 @@ pub const OPC_JAL:    u8 =   0b_11_011_11;
 pub const OPC_LUI:    u8 =   0b_01_101_11;
 pub const OPC_LOAD:   u8 =   0b_00_000_11;
 pub const OPC_STORE:  u8 =   0b_01_000_11;
+pub const OPC_OP32:   u8 =   0b_01_110_11; // ADDW, SUBW, SLLW, SRLW, SRAW
 
 pub const F3_BRANCH_BEQ: u8  = 0b000; // Branch EQual
 pub const F3_BRANCH_BNE: u8  = 0b001; // Branch Not Equal
@@ -378,6 +384,17 @@ pub fn decode_instr(instr: u32) -> Opcode {
             }
         }
         OPC_OP => dec_opc_op(instr),
+        OPC_OP32 => {
+            let bits31_25 = instr.bits(31, 25);
+            let rs2 = i_rs2(instr);
+            let rs1 = i_rs1(instr);
+            let funct3 = i_funct3(instr);
+            let rd = i_rd(instr);
+            match (bits31_25, funct3) {
+                (0b_010_0000, 0b_000) => Opcode::SUBW { rs2, rs1, rd },
+                (_, _) => Opcode::Uknown,
+            }
+        }
         OPC_SYSTEM => dec_opc_system(instr),
         OPC_AMO => Opcode::Amo {
             funct5: instr.bits(31, 27) as u8,
