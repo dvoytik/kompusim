@@ -53,6 +53,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
         Opcode::OpImm { funct3, .. } => match funct3 {
             F3_OP_IMM_ADDI => "ADD Immediate".to_string(),
+            F3_OP_IMM_SLLI => "Shift Left Logical Immediate".to_string(),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
@@ -176,6 +177,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("x{rd} = x{rs1} + 0x{imm12:x}"),
+            F3_OP_IMM_SLLI => format!("x{rd} = x{rs1} << {imm12}"),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
@@ -373,6 +375,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x}"),
+            F3_OP_IMM_SLLI => format!("slli x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
 
