@@ -625,5 +625,6 @@ fn test_disasm() {
         "bltu x15, x14, 0x8001dd46"
     );
     assert_eq!(disasm(0x_40f7_07bb, 0x0), "subw x15, x14, x15");
+    assert_eq!(disasm(0x_0027_9713, 0x0), "slli x14, x15, 0x2");
     assert_eq!(disasm(0x_1050_0073, 0x0), "wfi");
 }

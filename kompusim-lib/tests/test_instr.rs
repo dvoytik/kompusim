@@ -740,6 +740,19 @@ fn test_subw() {
     assert_eq!(cpu.get_pc(), 15 * 4);
 }
 
+// Shift Left Logical Immidiate
+// slli rd, rs1, shamt6
+#[test]
+fn test_slli() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(15, 0x_3fff_ffff_ffff_ffff);
+    // slli x14, x15, 0x2
+    cpu.execute_instr(0x_0027_9713);
+    assert_eq!(cpu.regs_r64(14), 0x_ffff_ffff_ffff_fffc);
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 // Wait For Interrupt
 // wfi
 #[test]
