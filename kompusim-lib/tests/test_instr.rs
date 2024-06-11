@@ -753,6 +753,17 @@ fn test_slli() {
     assert_eq!(cpu.get_pc(), 4);
 }
 
+// xori rd, rs1, imm12
+#[test]
+fn test_xori() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(15, 0x_0000_0000_0000_0001);
+    // xori x15, x15, -2
+    cpu.execute_instr(0x_ffe7_c793);
+    assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_ffff);
+}
+
 // Wait For Interrupt
 // wfi
 #[test]

@@ -115,6 +115,12 @@ impl From<u16> for I12 {
     }
 }
 
+impl From<I12> for u64 {
+    fn from(v: I12) -> u64 {
+        v.0 as i64 as u64
+    }
+}
+
 impl From<i16> for I12 {
     fn from(v: i16) -> I12 {
         I12(v)
