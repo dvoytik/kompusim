@@ -274,7 +274,14 @@ impl RV64ICpu {
         Ok(())
     }
 
-    fn exe_opc_op_imm(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
+    fn exe_opc_op_imm(
+        &mut self,
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+        isize: u8,
+    ) -> Result<(), String> {
         match funct3 {
             // arithmetic overflow is ignored
             F3_OP_IMM_ADDI => {
@@ -290,6 +297,7 @@ impl RV64ICpu {
                 return Err(format!("OP_IMM, funct3: 0b{funct3:b}"));
             }
         }
+        self.pc_inc(isize);
         Ok(())
     }
 
@@ -465,8 +473,7 @@ impl RV64ICpu {
                 funct3,
                 rd,
             } => {
-                let res = self.exe_opc_op_imm(imm12, rs1, funct3, rd);
-                self.pc_inc(ILEN_32B);
+                let res = self.exe_opc_op_imm(imm12, rs1, funct3, rd, ILEN_32B);
                 res
             }
             Opcode::ADDIW { imm12, rs1, rd } => {
@@ -548,31 +555,26 @@ impl RV64ICpu {
             COpcode::Reserved => Err("Reserved instruction".to_string()),
             // C.ADDI expands into addi rd, rd, nzimm[5:0]
             COpcode::CADDI { imm6, rd } => {
-                let res = self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, ILEN_RVC)
             }
             COpcode::CLUI { imm6, rd } => {
                 self.exe_opc_lui(((imm6.0 as i32) << 12) as u32, rd);
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }
-            COpcode::ADDI16SP { imm6 } => {
-                let res =
-                    self.exe_opc_op_imm(I12::from((imm6.0 as i16) << 4), 2, F3_OP_IMM_ADDI, 2);
-                self.pc_inc(ILEN_RVC);
-                res
-            }
+            COpcode::ADDI16SP { imm6 } => self.exe_opc_op_imm(
+                I12::from((imm6.0 as i16) << 4),
+                2,
+                F3_OP_IMM_ADDI,
+                2,
+                ILEN_RVC,
+            ),
             // C.SLLI rd, nzimm[5:0] expands into SLLI rd, rd, nzimm[5:0]
             COpcode::CSLLI { uimm6, rd } => {
-                let res = self.exe_opc_op_imm(I12(uimm6 as i16), rd, F3_OP_IMM_SLLI, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_op_imm(I12(uimm6 as i16), rd, F3_OP_IMM_SLLI, rd, ILEN_RVC)
             }
             COpcode::CSRLI { shamt6, rd } => {
-                let res = self.exe_opc_op_imm(I12(shamt6 as i16), rd, F3_OP_IMM_SRLI, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_op_imm(I12(shamt6 as i16), rd, F3_OP_IMM_SRLI, rd, ILEN_RVC)
             }
             COpcode::CLI { imm6, rd } => self.exe_opc_c_li(imm6, rd),
             // C.JR expands to JALR x0, 0(rs1)
@@ -627,12 +629,13 @@ impl RV64ICpu {
                 res
             }
             // c.addi4spn expands to addi rd, x2, nzuimm[9:2]
-            COpcode::ADDI4SPN { uimm8, rd } => {
-                let res =
-                    self.exe_opc_op_imm(I12::from((uimm8 as i16) << 2), 2, F3_OP_IMM_ADDI, rd);
-                self.pc_inc(ILEN_RVC);
-                res
-            }
+            COpcode::ADDI4SPN { uimm8, rd } => self.exe_opc_op_imm(
+                I12::from((uimm8 as i16) << 2),
+                2,
+                F3_OP_IMM_ADDI,
+                rd,
+                ILEN_RVC,
+            ),
             // c.mv expands to add rd, x0, rs2
             COpcode::MV { rd, rs2 } => {
                 let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd);
