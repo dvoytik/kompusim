@@ -258,12 +258,6 @@ impl RV64ICpu {
         Ok(())
     }
 
-    // LUI - Load Upper Immidiate
-    fn exe_opc_lui(&mut self, uimm20: u32, rd: u8) {
-        // sign extend
-        self.regs_wi32(rd, uimm20);
-    }
-
     // Only one instruction AUIPC - Add Upper Immidiate to PC
     fn exe_opc_auipc(&mut self, uimm20: u64, rd: u8) -> Result<(), String> {
         // appends 12 low-order zero bits to the 20-bit U-immediate,
@@ -312,6 +306,7 @@ impl RV64ICpu {
         rs1: u8,
         funct3: u8,
         rd: u8,
+        isize: u8,
     ) -> Result<(), String> {
         match (funct7, funct3) {
             (F7_OP_ADD, F3_OP_ADD_SUB) => {
@@ -324,6 +319,7 @@ impl RV64ICpu {
             }
             (_, _) => return Err(format!("OP, funct7: {funct7:x}, funct3: {funct3:x}")),
         }
+        self.pc_inc(isize);
         Ok(())
     }
 
@@ -343,7 +339,14 @@ impl RV64ICpu {
     }
 
     // LOAD instructions: LB, LBU, LW, ...
-    fn exe_opc_load(&mut self, imm12: I12, rs1: u8, funct3: u8, rd: u8) -> Result<(), String> {
+    fn exe_opc_load(
+        &mut self,
+        imm12: I12,
+        rs1: u8,
+        funct3: u8,
+        rd: u8,
+        isize: u8,
+    ) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         // TODO raise fault if returns 0xffff_ffff?
         match funct3 {
@@ -359,10 +362,18 @@ impl RV64ICpu {
                 return Err(format!("LOAD, funct3: 0b{funct3:b}"));
             }
         }
+        self.pc_inc(isize);
         Ok(())
     }
 
-    fn exe_opc_store(&mut self, imm12: I12, rs2: u8, rs1: u8, funct3: u8) -> Result<(), String> {
+    fn exe_opc_store(
+        &mut self,
+        imm12: I12,
+        rs2: u8,
+        rs1: u8,
+        funct3: u8,
+        isize: u8,
+    ) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
             F3_OP_STORE_SB => {
@@ -374,6 +385,7 @@ impl RV64ICpu {
                 return Err(format!("STORE, funct3: 0b{funct3:b}"));
             }
         }
+        self.pc_inc(isize);
         Ok(())
     }
 
@@ -432,7 +444,8 @@ impl RV64ICpu {
     pub fn execute_instr(&mut self, instr: u32) {
         if let Err(e) = match decode_instr(instr) {
             Opcode::LUI { uimm20, rd } => {
-                self.exe_opc_lui(uimm20, rd);
+                // sign extend
+                self.regs_wi32(rd, uimm20);
                 self.pc_inc(ILEN_32B);
                 Ok(())
             }
@@ -455,30 +468,19 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => {
-                let res = self.exe_opc_load(imm12, rs1, funct3, rd);
-                self.pc_inc(ILEN_32B);
-                res
-            }
+            } => self.exe_opc_load(imm12, rs1, funct3, rd, ILEN_32B),
             Opcode::Store {
                 imm12,
                 rs2,
                 rs1,
                 funct3,
-            } => {
-                let res = self.exe_opc_store(imm12, rs2, rs1, funct3);
-                self.pc_inc(ILEN_32B);
-                res
-            }
+            } => self.exe_opc_store(imm12, rs2, rs1, funct3, ILEN_32B),
             Opcode::OpImm {
                 imm12,
                 rs1,
                 funct3,
                 rd,
-            } => {
-                let res = self.exe_opc_op_imm(imm12, rs1, funct3, rd, ILEN_32B);
-                res
-            }
+            } => self.exe_opc_op_imm(imm12, rs1, funct3, rd, ILEN_32B),
             Opcode::ADDIW { imm12, rs1, rd } => {
                 self.regs_wi32(rd, self.regs_r32(rs1).add_i12(imm12));
                 self.pc_inc(ILEN_32B);
@@ -500,11 +502,7 @@ impl RV64ICpu {
                 rs1,
                 funct3,
                 rd,
-            } => {
-                let res = self.exe_opc_op(funct7, rs2, rs1, funct3, rd);
-                self.pc_inc(ILEN_32B);
-                res
-            }
+            } => self.exe_opc_op(funct7, rs2, rs1, funct3, rd, ILEN_32B),
             Opcode::SUBW { rs2, rs1, rd } => {
                 self.regs_wi32(rd, self.regs_r32(rs1).wrapping_sub(self.regs_r32(rs2)));
                 self.pc_inc(ILEN_32B);
@@ -561,7 +559,8 @@ impl RV64ICpu {
                 self.exe_opc_op_imm(imm6.into(), rd, F3_OP_IMM_ADDI, rd, ILEN_RVC)
             }
             COpcode::CLUI { imm6, rd } => {
-                self.exe_opc_lui(((imm6.0 as i32) << 12) as u32, rd);
+                // sign extend
+                self.regs_wi32(rd, ((imm6.0 as i32) << 12) as u32);
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }
@@ -583,9 +582,7 @@ impl RV64ICpu {
             // C.JR expands to JALR x0, 0(rs1)
             COpcode::CJR { rs1 } => self.exe_opc_jalr(0_u16.into(), rs1, 0),
             COpcode::CADD { rd, rs2 } => {
-                let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_op(F3_OP_ADD_SUB, rs2, rd, F7_OP_ADD, rd, ILEN_RVC)
             }
             // C.ADDW rd, rs2
             COpcode::CADDW { rd, rs2 } => {
@@ -594,42 +591,34 @@ impl RV64ICpu {
                 Ok(())
             }
             COpcode::SDSP { uimm6, rs2 } => {
-                let res = self.exe_opc_store(
+                self.exe_opc_store(
                     ((uimm6 as u16) << 3).into(),
                     rs2,
                     /* SP */ 2,
                     F3_OP_STORE_SD,
-                );
-                self.pc_inc(ILEN_RVC);
-                res
+                    ILEN_RVC,
+                )
             }
             COpcode::LDSP { uimm6, rd } => {
-                let res = self.exe_opc_load(
+                self.exe_opc_load(
                     ((uimm6 as u16) << 3).into(),
                     /* SP */ 2,
                     F3_OP_LOAD_LD,
                     rd,
-                );
-                self.pc_inc(ILEN_RVC);
-                res
+                    ILEN_RVC,
+                )
             }
             // c.ld expands to ld rd, offset[7:3](rs1).
             COpcode::LD { uoff8, rs1, rd } => {
-                let res = self.exe_opc_load(uoff8.into(), rs1, F3_OP_LOAD_LD, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_load(uoff8.into(), rs1, F3_OP_LOAD_LD, rd, ILEN_RVC)
             }
             // C.SW expands to SW rs2, offset[6:2](rs1)
             COpcode::SW { uoff7, rs1, rs2 } => {
-                let res = self.exe_opc_store(uoff7.into(), rs2, rs1, F3_OP_STORE_SW);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_store(uoff7.into(), rs2, rs1, F3_OP_STORE_SW, ILEN_RVC)
             }
             // C.LW expands to LW rd′, offset[6:2](rs1′)
             COpcode::LW { uoff7, rs1, rd } => {
-                let res = self.exe_opc_load(uoff7.into(), rs1, F3_OP_LOAD_LW, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_load(uoff7.into(), rs1, F3_OP_LOAD_LW, rd, ILEN_RVC)
             }
             // c.addi4spn expands to addi rd, x2, nzuimm[9:2]
             COpcode::ADDI4SPN { uimm8, rd } => self.exe_opc_op_imm(
@@ -641,9 +630,7 @@ impl RV64ICpu {
             ),
             // c.mv expands to add rd, x0, rs2
             COpcode::MV { rd, rs2 } => {
-                let res = self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd);
-                self.pc_inc(ILEN_RVC);
-                res
+                self.exe_opc_op(F3_OP_ADD_SUB, rs2, 0, F7_OP_ADD, rd, ILEN_RVC)
             }
             // c.addiw expands to addiw rd, rd, imm[5:0]
             COpcode::ADDIW { rd, uimm6 } => {
