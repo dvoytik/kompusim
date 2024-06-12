@@ -53,6 +53,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
 
         Opcode::OpImm { funct3, .. } => match funct3 {
             F3_OP_IMM_ADDI => "ADD Immediate".to_string(),
+            F3_OP_IMM_XORI => "XOR Immediate".to_string(),
             F3_OP_IMM_SLLI => "Shift Left Logical Immediate".to_string(),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
@@ -177,6 +178,7 @@ pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("x{rd} = x{rs1} + 0x{imm12:x}"),
+            F3_OP_IMM_XORI => format!("x{rd} = x{rs1} ^ 0x{imm12:x}"),
             F3_OP_IMM_SLLI => format!("x{rd} = x{rs1} << {imm12}"),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
@@ -375,6 +377,7 @@ pub fn disasm(instr: u32, instr_addr: u64) -> String {
             rd,
         } => match funct3 {
             F3_OP_IMM_ADDI => format!("addi x{rd}, x{rs1}, 0x{imm12:x}"),
+            F3_OP_IMM_XORI => format!("xori x{rd}, x{rs1}, {imm12}"),
             F3_OP_IMM_SLLI => format!("slli x{rd}, x{rs1}, 0x{imm12:x}"),
             _ => "Unknown OP-IMM opcode".to_string(),
         },
@@ -626,5 +629,6 @@ fn test_disasm() {
     );
     assert_eq!(disasm(0x_40f7_07bb, 0x0), "subw x15, x14, x15");
     assert_eq!(disasm(0x_0027_9713, 0x0), "slli x14, x15, 0x2");
+    assert_eq!(disasm(0x_f0f6c713, 0x0), "xori x14, x13, -241");
     assert_eq!(disasm(0x_1050_0073, 0x0), "wfi");
 }

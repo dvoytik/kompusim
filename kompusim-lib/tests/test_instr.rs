@@ -764,22 +764,22 @@ fn test_xori() {
     assert_eq!(cpu.regs_r64(15), 0x_ffff_ffff_ffff_ffff);
 
     cpu.regs_w64(13, 0x0000000000ff0f00);
-    // xori x15, x15, -241
+    // xori x14, x13, -241
     cpu.execute_instr(0x_f0f6c713);
     assert_eq!(cpu.regs_r64(14), 0xffffffffff00f00f);
 
     cpu.regs_w64(13, 0x000000000ff00ff0);
-    // xori x15, x15, 240
+    // xori x14, x13, 240
     cpu.execute_instr(0x_0f06c713);
     assert_eq!(cpu.regs_r64(14), 0x000000000ff00f00);
 
     cpu.regs_w64(13, 0x0000000000ff08ff);
-    // xori x15, x15, 240
+    // xori x14, x13, 240
     cpu.execute_instr(0x_70f6c713);
     assert_eq!(cpu.regs_r64(14), 0x0000000000ff0ff0);
 
     cpu.regs_w64(13, 0xfffffffff00ff00f);
-    // xori x15, x15, 240
+    // xori x14, x13, 240
     cpu.execute_instr(0x_0f06c713);
     assert_eq!(cpu.regs_r64(14), 0xfffffffff00ff0ff);
 
