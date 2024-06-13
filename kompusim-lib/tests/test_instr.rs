@@ -801,6 +801,41 @@ fn test_lwu() {
     assert_eq!(cpu.get_pc(), 4);
 }
 
+// Bitwise And Immediate
+// andi rd, rs1, imm12
+#[test]
+fn test_andi() {
+    let mut cpu = RV64ICpu::default();
+
+    cpu.regs_w64(13, 0x_ffff_ffff_ffff_ffff);
+    cpu.regs_w64(15, 0x_abcd_1234_5678_abcd);
+    // andi x13, x15, 255
+    cpu.execute_instr(0x_0ff7_f693);
+    assert_eq!(cpu.regs_r64(13), 0x_0000_0000_0000_00cd);
+
+    cpu.regs_w64(13, 0xff00ff00);
+    // andi x13, x15, -241
+    cpu.execute_instr(0x_f0f6f713);
+    assert_eq!(cpu.regs_r64(14), 0xff00ff00);
+
+    cpu.regs_w64(13, 0x0ff00ff0);
+    // andi x13, x15, 240
+    cpu.execute_instr(0x_f06f713);
+    assert_eq!(cpu.regs_r64(14), 0x000000f0);
+
+    cpu.regs_w64(13, 0x00ff00ff);
+    // andi x13, x15, 1807 # 0x70f
+    cpu.execute_instr(0x70f6f713);
+    assert_eq!(cpu.regs_r64(14), 0x0000000f);
+
+    cpu.regs_w64(13, 0xf00ff00f);
+    // andi x13, x15, 240 # 0x0f0
+    cpu.execute_instr(0x0f06f713);
+    assert_eq!(cpu.regs_r64(14), 0x00000000);
+
+    assert_eq!(cpu.get_pc(), 5 * 4);
+}
+
 // Wait For Interrupt
 // wfi
 #[test]

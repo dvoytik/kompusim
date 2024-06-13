@@ -285,6 +285,9 @@ impl RV64ICpu {
             F3_OP_IMM_XORI => {
                 self.regs_w64(rd, self.regs_r64(rs1) ^ u64::from(imm12));
             }
+            F3_OP_IMM_ANDI => {
+                self.regs_w64(rd, self.regs_r64(rs1) & u64::from(imm12));
+            }
             F3_OP_IMM_SLLI => {
                 self.regs_w64(rd, self.regs_r64(rs1) << imm12.0.bits(5, 0));
             }
