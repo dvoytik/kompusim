@@ -786,6 +786,21 @@ fn test_xori() {
     assert_eq!(cpu.get_pc(), 5 * 4);
 }
 
+// lwu rd, offset12(rs1)
+#[test]
+fn test_lwu() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.bus.write32(0, 0xdead_beef);
+    cpu.regs_w64(15, 0x_ffff_ffff_ffff_ffff);
+    cpu.regs_w64(8, 52);
+    // lwu x15, -52(x8)
+    cpu.execute_instr(0x_fcc4_6783);
+    assert_eq!(cpu.regs_r64(15), 0x_0000_0000_dead_beef);
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 // Wait For Interrupt
 // wfi
 #[test]

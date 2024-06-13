@@ -109,8 +109,9 @@ impl RV64ICpu {
         self.regs_w64(reg_i, val_u64)
     }
 
-    pub fn regs_w32(&mut self, reg_i: u8, val_i32: u32) {
-        self.regs_w64(reg_i, val_i32 as u64)
+    /// zero extends val32 to bits [63:32]
+    pub fn regs_w32(&mut self, reg_i: u8, val32: u32) {
+        self.regs_w64(reg_i, val32 as u64)
     }
 
     // writes i8 LSB and sign extends
@@ -356,6 +357,8 @@ impl RV64ICpu {
             F3_OP_LOAD_LBU => self.regs_wu8(rd, self.bus.read8(addr)),
             // Load Word
             F3_OP_LOAD_LW => self.regs_wi32(rd, self.bus.read32(addr)),
+            // Load Word Unsigned
+            F3_OP_LOAD_LWU => self.regs_w32(rd, self.bus.read32(addr)),
             // Load Double Word
             F3_OP_LOAD_LD => self.regs_w64(rd, self.bus.read64(addr)),
             _ => {

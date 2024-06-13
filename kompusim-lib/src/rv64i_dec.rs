@@ -120,7 +120,7 @@ pub const OPC_FENCE:  u8 =   0b_00_011_11;
 pub const OPC_AMO:    u8 =   0b_01_011_11;
 pub const OPC_JAL:    u8 =   0b_11_011_11;
 pub const OPC_LUI:    u8 =   0b_01_101_11;
-pub const OPC_LOAD:   u8 =   0b_00_000_11;
+pub const OPC_LOAD:   u8 =   0b_00_000_11; // LB, LBU, LH, LHU, LW, LWU, LD
 pub const OPC_STORE:  u8 =   0b_01_000_11;
 pub const OPC_OP32:   u8 =   0b_01_110_11; // ADDW, SUBW, SLLW, SRLW, SRAW
 
@@ -151,6 +151,7 @@ pub const F3_OP_LOAD_LB:  u8 = 0b000;
 pub const F3_OP_LOAD_LBU: u8 = 0b100;
 pub const F3_OP_LOAD_LW:  u8 = 0b010;
 pub const F3_OP_LOAD_LD:  u8 = 0b011;
+pub const F3_OP_LOAD_LWU: u8 = 0b110;
 
 pub const F3_OP_STORE_SB: u8 = 0b000;
 pub const F3_OP_STORE_SW: u8 = 0b010;
