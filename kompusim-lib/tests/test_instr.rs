@@ -814,22 +814,22 @@ fn test_andi() {
     assert_eq!(cpu.regs_r64(13), 0x_0000_0000_0000_00cd);
 
     cpu.regs_w64(13, 0xff00ff00);
-    // andi x13, x15, -241
+    // andi x14, x13, -241
     cpu.execute_instr(0x_f0f6f713);
     assert_eq!(cpu.regs_r64(14), 0xff00ff00);
 
     cpu.regs_w64(13, 0x0ff00ff0);
-    // andi x13, x15, 240
+    // andi x14, x13, 240
     cpu.execute_instr(0x_f06f713);
     assert_eq!(cpu.regs_r64(14), 0x000000f0);
 
     cpu.regs_w64(13, 0x00ff00ff);
-    // andi x13, x15, 1807 # 0x70f
+    // andi x14, x13, 1807 # 0x70f
     cpu.execute_instr(0x70f6f713);
     assert_eq!(cpu.regs_r64(14), 0x0000000f);
 
     cpu.regs_w64(13, 0xf00ff00f);
-    // andi x13, x15, 240 # 0x0f0
+    // andi x14, x13, 240 # 0x0f0
     cpu.execute_instr(0x0f06f713);
     assert_eq!(cpu.regs_r64(14), 0x00000000);
 
