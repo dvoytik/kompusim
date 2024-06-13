@@ -389,6 +389,107 @@ fn test_rvc_srli() {
     assert_eq!(cpu.get_pc(), 4);
 }
 
+// Subtract Word (32-bit) with sign extension
+// c.subw rd, rs2
+#[test]
+fn test_rvc_subw() {
+    let mut cpu = RV64ICpu::default();
+
+    fn test_subw(cpu: &mut RV64ICpu, res: u64, r1: u64, r2: u64) {
+        cpu.regs_w64(15, r1);
+        cpu.regs_w64(14, r2);
+        // c.subw x15, x14
+        cpu.execute_rvc_instr(0x_9f99);
+        assert_eq!(cpu.regs_r64(15), res);
+    }
+    test_subw(&mut cpu, 0, 1, 1);
+
+    test_subw(
+        &mut cpu,
+        0x0000000000000000,
+        0x0000000000000000,
+        0x0000000000000000,
+    );
+    test_subw(
+        &mut cpu,
+        0x0000000000000000,
+        0x0000000000000001,
+        0x0000000000000001,
+    );
+    test_subw(
+        &mut cpu,
+        0xfffffffffffffffc,
+        0x0000000000000003,
+        0x0000000000000007,
+    );
+    test_subw(
+        &mut cpu,
+        0x0000000000008000,
+        0x0000000000000000,
+        0xffffffffffff8000,
+    );
+    test_subw(
+        &mut cpu,
+        0xffffffff80000000,
+        0xffffffff80000000,
+        0x0000000000000000,
+    );
+    test_subw(
+        &mut cpu,
+        0xffffffff80008000,
+        0xffffffff80000000,
+        0xffffffffffff8000,
+    );
+    test_subw(
+        &mut cpu,
+        0xffffffffffff8001,
+        0x0000000000000000,
+        0x0000000000007fff,
+    );
+    test_subw(
+        &mut cpu,
+        0x000000007fffffff,
+        0x000000007fffffff,
+        0x0000000000000000,
+    );
+    test_subw(
+        &mut cpu,
+        0x000000007fff8000,
+        0x000000007fffffff,
+        0x0000000000007fff,
+    );
+    test_subw(
+        &mut cpu,
+        0x000000007fff8001,
+        0xffffffff80000000,
+        0x0000000000007fff,
+    );
+    test_subw(
+        &mut cpu,
+        0xffffffff80007fff,
+        0x000000007fffffff,
+        0xffffffffffff8000,
+    );
+    test_subw(
+        &mut cpu,
+        0x0000000000000001,
+        0x0000000000000000,
+        0xffffffffffffffff,
+    );
+    test_subw(
+        &mut cpu,
+        0xfffffffffffffffe,
+        0xffffffffffffffff,
+        0x0000000000000001,
+    );
+    test_subw(
+        &mut cpu,
+        0x0000000000000000,
+        0xffffffffffffffff,
+        0xffffffffffffffff,
+    );
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {

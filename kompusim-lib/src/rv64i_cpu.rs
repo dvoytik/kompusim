@@ -593,6 +593,12 @@ impl RV64ICpu {
                 self.pc_inc(ILEN_RVC);
                 Ok(())
             }
+            // C.SUBW rd, rs2
+            COpcode::CSUBW { rd, rs2 } => {
+                self.regs_wi32(rd, self.regs_r32(rd).wrapping_sub(self.regs_r32(rs2)));
+                self.pc_inc(ILEN_RVC);
+                Ok(())
+            }
             COpcode::SDSP { uimm6, rs2 } => {
                 self.exe_opc_store(
                     ((uimm6 as u16) << 3).into(),

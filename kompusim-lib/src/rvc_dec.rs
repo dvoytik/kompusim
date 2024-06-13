@@ -44,6 +44,10 @@ pub enum COpcode {
         rd: u8,
         rs2: u8,
     },
+    CSUBW {
+        rd: u8,
+        rs2: u8,
+    },
     CANDI {
         imm6: I6,
         rd: u8,
@@ -374,6 +378,7 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
                 },
                 (0b_0, 0b_11, 0b_10) => COpcode::COR { rd, rs2 },
                 (0b_0, 0b_11, 0b_11) => COpcode::CAND { rd, rs2 },
+                (0b_1, 0b_11, 0b_00) => COpcode::CSUBW { rd, rs2 },
                 (0b_1, 0b_11, 0b_01) => COpcode::CADDW { rd, rs2 },
                 (_, _, _) => COpcode::Uknown,
             }

@@ -15,6 +15,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::CJR { .. } => "Compressed Jump Register".to_string(),
         COpcode::CADD { .. } => "Compressed Add".to_string(),
         COpcode::CADDW { .. } => "Compressed Add Word".to_string(),
+        COpcode::CSUBW { .. } => "Compressed Subtract Word".to_string(),
         COpcode::COR { .. } => "Compressed bitwise Or".to_string(),
         COpcode::CAND { .. } => "Compressed bitwise And".to_string(),
         COpcode::CANDI { .. } => "Compressed bitwise AND Immediate".to_string(),
@@ -52,6 +53,9 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::CADDW { rd, rs2 } => {
             format!("x{rd}[31:0] = x{rd}[31:0] + x{rs2}[31:0]; sign extend")
         }
+        COpcode::CSUBW { rd, rs2 } => {
+            format!("x{rd}[31:0] = x{rd}[31:0] - x{rs2}[31:0]; sign extend")
+        }
         COpcode::COR { rd, rs2 } => format!("x{rd} = x{rd} | x{rs2}"),
         COpcode::CAND { rd, rs2 } => format!("x{rd} = x{rd} & x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("x{rd} = x{rd} & 0x{imm6:x}"),
@@ -88,6 +92,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::CJR { rs1 } => (Some(rs1), None, None),
         COpcode::CADD { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::CADDW { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
+        COpcode::CSUBW { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::COR { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::CAND { rd, rs2 } => (Some(rd), Some(rs2), Some(rd)),
         COpcode::CANDI { rd, .. } => (Some(rd), None, Some(rd)),
@@ -121,6 +126,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::CJR { rs1 } => format!("c.jr x{rs1}"),
         COpcode::CADD { rd, rs2 } => format!("c.add x{rd}, x{rs2}"),
         COpcode::CADDW { rd, rs2 } => format!("c.addw x{rd}, x{rs2}"),
+        COpcode::CSUBW { rd, rs2 } => format!("c.subw x{rd}, x{rs2}"),
         COpcode::COR { rd, rs2 } => format!("c.or x{rd}, x{rs2}"),
         COpcode::CAND { rd, rs2 } => format!("c.and x{rd}, x{rs2}"),
         COpcode::CANDI { imm6, rd } => format!("c.andi x{rd}, {imm6}"),
@@ -149,6 +155,7 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_8082, 0x0), "c.jr x1".to_string());
     assert_eq!(disasm_rvc(0x_9086, 0x0), "c.add x1, x1".to_string());
     assert_eq!(disasm_rvc(0x_9fb9, 0x0), "c.addw x15, x14".to_string());
+    assert_eq!(disasm_rvc(0x_9f99, 0x0), "c.subw x15, x14".to_string());
     assert_eq!(disasm_rvc(0x_037e, 0x0), "c.slli x6, 0x1f".to_string());
     assert_eq!(disasm_rvc(0x_9301, 0x0), "c.srli x14, 0x20".to_string());
     assert_eq!(disasm_rvc(0x_a001, 0x0), "c.j 0".to_string());
