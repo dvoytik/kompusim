@@ -282,6 +282,16 @@ impl RV64ICpu {
             F3_OP_IMM_ADDI => {
                 self.regs_w64(rd, self.regs_r64(rs1).add_i12(imm12));
             }
+            // Set Less Than Immediate Unsigned
+            F3_OP_IMM_SLTIU => {
+                // sign extend imm12
+                let imm12 = u64::from(imm12);
+                if self.regs_r64(rs1) < imm12 {
+                    self.regs_w64(rd, 1)
+                } else {
+                    self.regs_w64(rd, 0)
+                }
+            }
             F3_OP_IMM_XORI => {
                 self.regs_w64(rd, self.regs_r64(rs1) ^ u64::from(imm12));
             }

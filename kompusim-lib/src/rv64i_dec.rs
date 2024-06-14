@@ -136,11 +136,12 @@ pub const F3_SYSTEM_CSRRW: u8  = 0b001; // atomic CSR read, write
 pub const F3_SYSTEM_CSRRS: u8  = 0b010; // atomic CSR read, set bits
 pub const F3_SYSTEM_CSRRWI: u8 = 0b101; // atomic CSR read, write immidiate
 
-pub const F3_OP_IMM_ADDI: u8 = 0b000;
-pub const F3_OP_IMM_XORI: u8 = 0b100;
-pub const F3_OP_IMM_ANDI: u8 = 0b111;
-pub const F3_OP_IMM_SLLI: u8 = 0b001;
-pub const F3_OP_IMM_SRLI: u8 = 0b101;
+pub const F3_OP_IMM_ADDI: u8  = 0b000;
+pub const F3_OP_IMM_SLTIU: u8 = 0b011; // Set Less Than Immediate Unsigned
+pub const F3_OP_IMM_XORI: u8  = 0b100;
+pub const F3_OP_IMM_ANDI: u8  = 0b111;
+pub const F3_OP_IMM_SLLI: u8  = 0b001;
+pub const F3_OP_IMM_SRLI: u8  = 0b101;
 
 pub const F3_OP_IMM32_ADDIW: u8 = 0b000;
 pub const F3_OP_IMM32_SLLIW: u8 = 0b001; // Shift Left Logical Immediate Word
