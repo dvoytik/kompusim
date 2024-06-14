@@ -490,6 +490,27 @@ fn test_rvc_subw() {
     );
 }
 
+// Store Double-word to memory
+// c.sd rs2, uoffset8(rs1)
+#[test]
+fn test_rvc_instr_c_sd() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
+    // c.sd x14, 0(x15)
+    cpu.execute_rvc_instr(0x_e398);
+    assert_eq!(cpu.bus.read64(0), 0x_dead_beef_baad_c0fe);
+
+    cpu.regs_w64(14, 0x_dead_beef_baad_c0fe);
+    cpu.regs_w64(15, 256);
+    // c.sd x14, 248(x15)
+    cpu.execute_rvc_instr(0x_fff8);
+    assert_eq!(cpu.bus.read64(248 + 256), 0x_dead_beef_baad_c0fe);
+
+    assert_eq!(cpu.get_pc(), 4);
+}
+
 #[test]
 /// Check all non-jumping RVC instructions increment PC by 2
 fn test_all_rvc_instr_incr_pc_2() {

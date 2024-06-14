@@ -26,6 +26,7 @@ pub fn disasm_rvc_operation_name(instr: u16) -> String {
         COpcode::LDSP { .. } => "Compressed Load Doubleword at Stack Pointer".to_string(),
         COpcode::LD { .. } => "Compressed Load Doubleword from memory".to_string(),
         COpcode::SW { .. } => "Compressed Store Word to memory".to_string(),
+        COpcode::SD { .. } => "Compressed Store Double-word to memory".to_string(),
         COpcode::LW { .. } => "Compressed Load Word to memory".to_string(),
         COpcode::ADDIW { .. } => "Compressed Add Immediate Word".to_string(),
         COpcode::ADDI4SPN { .. } => {
@@ -66,6 +67,7 @@ pub fn disasm_rvc_pseudo_code(instr: u16) -> String {
         COpcode::LDSP { uimm6, rd } => format!("x{rd} = mem64[x2 {:+}]", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("x{rd} = mem64[x{rs1} + {uoff8}]"),
         COpcode::SW { uoff7, rs1, rs2 } => format!("mem32[x{rs1} + {uoff7}] = x{rs2}"),
+        COpcode::SD { uoff8, rs1, rs2 } => format!("mem64[x{rs1} + {uoff8}] = x{rs2}"),
         COpcode::LW { uoff7, rs1, rd } => {
             format!("x{rd}[31:0] = mem32[x{rs1} + {uoff7}]; sign extend")
         }
@@ -103,6 +105,7 @@ pub fn disasm_rvc_get_used_regs(instr: u16) -> (Option<u8>, Option<u8>, Option<u
         COpcode::LDSP { rd, .. } => (Some(2), None, Some(rd)),
         COpcode::LD { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         COpcode::SW { rs1, rs2, .. } => (Some(rs1), Some(rs2), None),
+        COpcode::SD { rs1, rs2, .. } => (Some(rs1), Some(rs2), None),
         COpcode::LW { rs1, rd, .. } => (Some(rs1), None, Some(rd)),
         COpcode::ADDIW { rd, .. } => (Some(rd), None, Some(rd)),
         COpcode::ADDI4SPN { rd, .. } => (Some(2), None, Some(rd)),
@@ -137,6 +140,7 @@ pub fn disasm_rvc(c_instr: u16, instr_addr: u64) -> String {
         COpcode::LDSP { uimm6, rd } => format!("c.ldsp x{rd}, {}(x2)", uimm6 << 3),
         COpcode::LD { uoff8, rs1, rd } => format!("c.ld x{rd}, {uoff8}(x{rs1})"),
         COpcode::SW { uoff7, rs1, rs2 } => format!("c.sw x{rs2}, {uoff7}(x{rs1})"),
+        COpcode::SD { uoff8, rs1, rs2 } => format!("c.sd x{rs2}, {uoff8}(x{rs1})"),
         COpcode::LW { uoff7, rs1, rd } => format!("c.lw x{rd}, {uoff7}(x{rs1})"),
         COpcode::ADDIW { uimm6, rd } => format!("c.addiw x{rd}, {uimm6}"),
         COpcode::ADDI4SPN { uimm8, rd } => format!("c.addi4spn x{rd}, x2, {}", uimm8 << 2),
@@ -175,5 +179,6 @@ fn test_disasm_rvc_cli() {
     assert_eq!(disasm_rvc(0x_8b9d, 0x0), "c.andi x15, 7");
     assert_eq!(disasm_rvc(0x_7d3c, 0x0), "c.ld x15, 120(x10)");
     assert_eq!(disasm_rvc(0x_c7d8, 0x0), "c.sw x14, 12(x15)");
+    assert_eq!(disasm_rvc(0x_fff8, 0x0), "c.sd x14, 248(x15)");
     assert_eq!(disasm_rvc(0x_4ffc, 0x0), "c.lw x15, 92(x15)");
 }

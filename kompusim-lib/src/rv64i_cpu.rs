@@ -638,6 +638,10 @@ impl RV64ICpu {
             COpcode::SW { uoff7, rs1, rs2 } => {
                 self.exe_opc_store(uoff7.into(), rs2, rs1, F3_OP_STORE_SW, ILEN_RVC)
             }
+            // C.SD expands to SD rs2, offset[7:3](rs1)
+            COpcode::SD { uoff8, rs1, rs2 } => {
+                self.exe_opc_store(uoff8.into(), rs2, rs1, F3_OP_STORE_SD, ILEN_RVC)
+            }
             // C.LW expands to LW rd′, offset[6:2](rs1′)
             COpcode::LW { uoff7, rs1, rd } => {
                 self.exe_opc_load(uoff7.into(), rs1, F3_OP_LOAD_LW, rd, ILEN_RVC)
