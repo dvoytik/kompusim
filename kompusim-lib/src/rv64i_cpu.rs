@@ -138,6 +138,11 @@ impl RV64ICpu {
         self.regs.x[reg_i as usize] as u32
     }
 
+    // reads [7:0] from register x[reg_i]
+    fn regs_r8(&self, reg_i: u8) -> u8 {
+        self.regs.x[reg_i as usize] as u8
+    }
+
     // Treat register as signed 64 bit
     fn regs_ri64(&self, reg_i: u8) -> i64 {
         self.regs.x[reg_i as usize] as i64
@@ -392,9 +397,7 @@ impl RV64ICpu {
     ) -> Result<(), String> {
         let addr = self.regs_r64(rs1).add_i12(imm12);
         match funct3 {
-            F3_OP_STORE_SB => {
-                todo!();
-            }
+            F3_OP_STORE_SB => self.bus.write8(addr, self.regs_r8(rs2)),
             F3_OP_STORE_SW => self.bus.write32(addr, self.regs_r32(rs2)),
             F3_OP_STORE_SD => self.bus.write64(addr, self.regs_r64(rs2)),
             _ => {

@@ -255,15 +255,31 @@ fn test_instruction_lw() {
 }
 
 #[test]
-// sw x6, 0x0(x5)
+// Store Word
+// sw rs2, offset12(rs1)
 fn test_instruction_sw() {
     let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
     let mut cpu = RV64ICpu::new(bus);
     cpu.regs_w64(5, 0x10); // address
     cpu.regs_w64(6, 0xdead_beef); // what to store
     cpu.execute_instr(0x0062a023);
-    // lw sign extends 32-bit word
     assert!(cpu.bus.read32(0x10) == 0xdead_beef);
+    assert_eq!(cpu.get_pc(), 4);
+}
+
+#[test]
+// Store Byte
+// sb rs2, offset12(rs1)
+fn test_instruction_sb() {
+    let bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+    // address:
+    cpu.regs_w64(20, 1982);
+    // what to store:
+    cpu.regs_w64(17, 0x_baad_c0fe_dead_beef);
+    // sb x17, -1982(x20)
+    cpu.execute_instr(0x_851a_0123);
+    assert_eq!(cpu.bus.read64(0x0), 0x_0000_0000_0000_00ef);
     assert_eq!(cpu.get_pc(), 4);
 }
 
