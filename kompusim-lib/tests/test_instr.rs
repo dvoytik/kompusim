@@ -86,6 +86,7 @@ fn test_instruction_lui() {
 }
 
 #[test]
+// Add Upper Immediate to PC
 // auipc rd, imm20
 fn test_instruction_auipc() {
     let mut cpu = RV64ICpu::default();
@@ -94,21 +95,99 @@ fn test_instruction_auipc() {
     // auipc x10, 0x0
     cpu.execute_instr(0x00000517);
     assert_eq!(cpu.regs_r64(10), 0x100);
-    assert_eq!(cpu.get_pc(), 0x100 + 4);
 
     // auipc x10, 0xfffff
     cpu.execute_instr(0x_ffff_f517);
     assert_eq!(cpu.regs_r64(10), 0x104 + 0x_ffff_ffff_ffff_f000);
+    assert_eq!(cpu.get_pc(), 0x108);
 }
 
 #[test]
-// addi x10, x10, 52
+// addi rd, rs1, imm12
 fn test_instruction_addi() {
     let mut cpu = RV64ICpu::default();
+
     cpu.regs_w64(10, 0x123);
+    // addi x10, x10, 52
     cpu.execute_instr(0x03450513);
     assert_eq!(cpu.regs_r64(10), 0x123 + 52);
-    assert_eq!(cpu.get_pc(), 4);
+
+    cpu.regs_w64(13, 0x0);
+    // mv a4, a3
+    cpu.execute_instr(0x00068713);
+    assert_eq!(cpu.regs_r64(14), 0x0);
+
+    cpu.regs_w64(13, 0x1);
+    // addi a4, a3, 1
+    cpu.execute_instr(0x00168713);
+    assert_eq!(cpu.regs_r64(14), 0x2);
+
+    cpu.regs_w64(13, 0x3);
+    // addi a4, a3, 7
+    cpu.execute_instr(0x00768713);
+    assert_eq!(cpu.regs_r64(14), 0xa);
+
+    cpu.regs_w64(13, 0x0);
+    // addi a4, a3, -2048
+    cpu.execute_instr(0x80068713);
+    assert_eq!(cpu.regs_r64(14), 0xfffffffffffff800);
+
+    cpu.regs_w64(13, 0xffffffff80000000);
+    // mv a4, a3
+    cpu.execute_instr(0x00068713);
+    assert_eq!(cpu.regs_r64(14), 0xffffffff80000000);
+
+    cpu.regs_w64(13, 0xffffffff80000000);
+    // addi a4, a3, -2048
+    cpu.execute_instr(0x80068713);
+    assert_eq!(cpu.regs_r64(14), 0xffffffff7ffff800);
+
+    cpu.regs_w64(13, 0x00000000);
+    // addi a4, a3, 2047
+    cpu.execute_instr(0x7ff68713);
+    assert_eq!(cpu.regs_r64(14), 0x00000000000007ff);
+
+    cpu.regs_w64(13, 0x7fffffff);
+    // mv a4, a3
+    cpu.execute_instr(0x00068713);
+    assert_eq!(cpu.regs_r64(14), 0x000000007fffffff);
+
+    cpu.regs_w64(13, 0x7fffffff);
+    // addi a4, a3, 2047
+    cpu.execute_instr(0x7ff68713);
+    assert_eq!(cpu.regs_r64(14), 0x00000000800007fe);
+
+    cpu.regs_w64(13, 0xffffffff80000000);
+    // addi a4, a3, 2047
+    cpu.execute_instr(0x7ff68713);
+    assert_eq!(cpu.regs_r64(14), 0xffffffff800007ff);
+
+    cpu.regs_w64(13, 0x000000007fffffff);
+    // addi a4, a3, -2048
+    cpu.execute_instr(0x80068713);
+    assert_eq!(cpu.regs_r64(14), 0x000000007ffff7ff);
+
+    cpu.regs_w64(13, 0x0000000000000000);
+    // addi a4, a3, -1
+    cpu.execute_instr(0xfff68713);
+    assert_eq!(cpu.regs_r64(14), 0xffffffffffffffff);
+
+    cpu.regs_w64(13, 0xffffffffffffffff);
+    // addi a4, a3, 1
+    cpu.execute_instr(0x00168713);
+    assert_eq!(cpu.regs_r64(14), 0x0000000000000000);
+
+    cpu.regs_w64(13, 0xffffffffffffffff);
+    // addi a4, a3, -1
+    cpu.execute_instr(0xfff68713);
+    assert_eq!(cpu.regs_r64(14), 0xfffffffffffffffe);
+
+    cpu.regs_w64(13, 0x7fffffff);
+    // addi a4, a3, 1
+    cpu.execute_instr(0x00168713);
+    assert_eq!(cpu.regs_r64(14), 0x0000000080000000);
+
+    assert_eq!(cpu.get_pc(), 16 * 4);
 }
 
 #[test]
