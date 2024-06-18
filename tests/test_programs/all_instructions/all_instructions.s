@@ -6,6 +6,8 @@
 .globl _start
 
 _start:
+    lb x6, 2047(x10)
+    lb x6, -1(x10)
     c.sd x14, 248(x15)
     c.lw x15, 0x5c(x15)
     ld x15, 255(x15)

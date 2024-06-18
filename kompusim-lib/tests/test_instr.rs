@@ -303,22 +303,44 @@ fn test_instruction_jalr() {
 }
 
 #[test]
-// lbu x6, 0x0(x10)
+// Load Byte Unsigned (zero extend rd)
+// lbu rd, offset12(rs1)
 fn test_instruction_lbu() {
-    let mut bus = Bus::new_with_ram(0x0000_0000_8000_0000, 4 * 1024);
-    bus.write8(0x0000_0000_8000_003c, 0x48);
+    let mut bus = Bus::new_with_ram(0x0000_0000_0000_0000, 4 * 1024);
+    bus.write64(0x0000_0000_0000_003c, 0x_abcd_ef01_2345_6789);
     let mut cpu = RV64ICpu::new(bus);
 
     cpu.regs_w64(6, 0xa5a5_a5a5_a5a5_a5a5);
-    cpu.regs_w64(10, 0x0000_0000_8000_003c);
+    cpu.regs_w64(10, 0x0000_0000_0000_003c);
+    // lbu x6, 0x0(x10)
     cpu.execute_instr(0x00054303);
-    assert!(cpu.regs_r64(6) == 0x48);
+    assert_eq!(cpu.regs_r64(6), 0x_0000_0000_0000_0089);
     assert_eq!(cpu.get_pc(), 4);
 }
 
-// TODO: lb test
+// Loab Byte (Sign extend)
+// lb rd, offset12(rs1)
 #[test]
-fn test_instruction_lb() {}
+fn test_instruction_lb() {
+    let bus = Bus::new_with_ram(0x0, 4 * 1024);
+    let mut cpu = RV64ICpu::new(bus);
+
+    cpu.bus.write8(0x3c - 1, 0x_89);
+    cpu.bus.write8(0x3c + 2047, 0x_79);
+
+    cpu.regs_w64(6, 0xa5a5_a5a5_a5a5_a5a5);
+    cpu.regs_w64(10, 0x0000_0000_0000_003c);
+
+    // lb x6, -1(x10)
+    cpu.execute_instr(0xfff50303);
+    assert_eq!(cpu.regs_r64(6), 0x_ffff_ffff_ffff_ff89);
+
+    // lb x6, 2047(x10)
+    cpu.execute_instr(0x7ff50303);
+    assert_eq!(cpu.regs_r64(6), 0x_0000_0000_0000_0079);
+
+    assert_eq!(cpu.get_pc(), 8);
+}
 
 #[test]
 // lw x7, 0x0(x5)
