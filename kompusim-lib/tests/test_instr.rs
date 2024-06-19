@@ -953,9 +953,6 @@ fn test_andi() {
     assert_eq!(cpu.get_pc(), 5 * 4);
 }
 
-// PC = 0x8002051e, code: 0x0017b793 (0b_00000000000101111011011110010011), opcode: 0x13 (0b_0010011)
-// 60248:    8002051e:     0017b793                sltiu   x15,x15,1
-//
 // Set Less Than Immediate Unsigned
 // If rs1 < sign_extned(imm12) then rd = 1 else rd = 0
 // sltiu rd, rs1, imm12

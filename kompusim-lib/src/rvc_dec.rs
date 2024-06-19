@@ -228,6 +228,8 @@ pub fn rv64c_decode_instr(c_instr: u16) -> COpcode {
             let imm6 = c_i_imm6(c_instr);
             if rd == 0 {
                 COpcode::CNOP
+            } else if imm6.0 == 0 {
+                COpcode::Hint
             } else {
                 COpcode::CADDI { imm6, rd }
             }

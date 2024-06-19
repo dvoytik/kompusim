@@ -83,14 +83,30 @@ fn test_rvc_instr_c_bnez() {
     assert_eq!(cpu.get_pc(), 0x_8000_3706);
 }
 
-// c.addi a0,1
+// c.addi rd, imm6
 #[test]
 fn test_rvc_instr_c_addi() {
     let mut cpu = RV64ICpu::default();
-    cpu.regs_w64(10, 0x_1122_3344);
+    // x10 = -1
+    cpu.regs_w64(10, 0x_ffff_ffff_ffff_ffff);
+
+    // c.addi x10, 1
     cpu.execute_rvc_instr(0x_0505);
-    assert_eq!(cpu.regs_r64(10), 0x_1122_3345);
-    assert_eq!(cpu.get_pc(), 2);
+    assert_eq!(cpu.regs_r64(10), 0x_0000_0000_0000_0000);
+
+    // c.addi x10, -1
+    cpu.execute_rvc_instr(0x_157d);
+    assert_eq!(cpu.regs_r64(10), 0x_ffff_ffff_ffff_ffff);
+
+    // c.addi a0, 31
+    cpu.execute_rvc_instr(0x_057d);
+    assert_eq!(cpu.regs_r64(10), 30);
+
+    // c.addi a0, -31
+    cpu.execute_rvc_instr(0x_1505);
+    assert_eq!(cpu.regs_r64(10), 0x_ffff_ffff_ffff_ffff);
+
+    assert_eq!(cpu.get_pc(), 4 * 2);
 }
 
 // c.slli x6, 0x1f
