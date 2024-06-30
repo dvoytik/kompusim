@@ -1,3 +1,6 @@
+use core::time;
+use std::thread;
+
 use eframe::{self, glow::Context};
 use egui::Modifiers;
 
@@ -31,6 +34,8 @@ pub struct KompusimApp {
     load_demo: LoadDemo,
     #[serde(skip)]
     sim: Simulator,
+    #[serde(skip)]
+    gui_update_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl Default for KompusimApp {
@@ -45,6 +50,7 @@ impl Default for KompusimApp {
             load_demo: LoadDemo::default(),
             console: Console::default(),
             sim: Simulator::new(),
+            gui_update_thread: None,
         }
     }
 }
@@ -61,6 +67,13 @@ impl KompusimApp {
         } else {
             Default::default()
         };
+
+        let egui_ctx = cc.egui_ctx.clone();
+        app.gui_update_thread = Some(thread::spawn(move || loop {
+            // TODO: make the frequency a setting
+            thread::sleep(time::Duration::from_secs(1));
+            egui_ctx.request_repaint();
+        }));
 
         if let Some(cmdl_cmd) = cmdl_args {
             let CmdLCommand::Exec {
@@ -120,6 +133,7 @@ impl eframe::App for KompusimApp {
             load_demo,
             console,
             sim,
+            gui_update_thread: _,
         } = self;
 
         // The top panel is for the menu bar:

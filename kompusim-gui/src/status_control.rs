@@ -40,9 +40,14 @@ impl StatusControl {
             .default_width(500.0)
             .show(ui_ctx, |ui| {
                 ui.horizontal(|ui| {
-                    let step_button_enabled =
-                        sim_state == SimState::Stopped || sim_state == SimState::StoppedBreakpoint;
-                    ui.add_enabled_ui(step_button_enabled, |ui| {
+                    let (run_btn_en, step_btn_en) = match sim_state {
+                        SimState::Initializing => (false, false),
+                        SimState::InitializedReady => (true, true),
+                        SimState::Running => (false, true),
+                        SimState::Stopped => (true, true),
+                        SimState::StoppedBreakpoint => (true, true),
+                    };
+                    ui.add_enabled_ui(run_btn_en, |ui| {
                         if ui.button("Run").clicked() {
                             command = Some(StatusControlCmd::Run);
                         }
@@ -53,7 +58,7 @@ impl StatusControl {
                             // TODO:
                         }
                     });
-                    ui.add_enabled_ui(step_button_enabled, |ui| {
+                    ui.add_enabled_ui(step_btn_en, |ui| {
                         if ui.button("Step").clicked() {
                             command = Some(StatusControlCmd::Step);
                         }

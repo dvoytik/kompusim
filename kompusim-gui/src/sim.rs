@@ -126,10 +126,15 @@ impl Simulator {
                     match cmd_rx.try_recv() {
                         Err(TryRecvError::Empty) => {
                             // TODO: state machine
-                            println!(
-                                "executed {EXE_INSTRUCTIONS_THEN_POLL} instructions. \
-                                Polling new commands. Tip: set a breakpoint to stop simulator."
-                            );
+                            // println!(
+                            //     "executed {EXE_INSTRUCTIONS_THEN_POLL} instructions. \
+                            //     Polling new commands. Tip: set a breakpoint to stop simulator."
+                            // );
+                            send_event(SimEvent::StateChanged(
+                                SimState::Running,
+                                Box::new(cpu0.get_regs().clone()),
+                                cpu0.get_num_exec_instr(),
+                            ));
                             SimCommand::NoCmd
                         }
                         Err(TryRecvError::Disconnected) => {
