@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
-pub use app::KompusimApp;
+// pub use app::KompusimApp;
 mod base_uregs;
 pub mod cmdline;
 mod console;

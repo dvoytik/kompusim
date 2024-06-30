@@ -1,3 +1,4 @@
+/*
 use std::{
     path::PathBuf,
     sync::mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError},
@@ -405,3 +406,4 @@ impl Simulator {
         }
     }
 }
+*/

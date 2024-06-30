@@ -1,3 +1,4 @@
+/*
 pub struct LoadDemo {
     /// Is window open or not
     pub window_open: bool,
@@ -96,3 +97,4 @@ impl LoadDemo {
         }
     }
 }
+*/

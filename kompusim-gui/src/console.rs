@@ -1,3 +1,4 @@
+/*
 #[derive(serde::Deserialize, serde::Serialize, Default)]
 #[serde(default)]
 pub struct Console {
@@ -38,3 +39,4 @@ impl Console {
         self.open = open;
     }
 }
+*/

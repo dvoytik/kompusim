@@ -1,3 +1,4 @@
+/*
 use std::iter::zip;
 
 use egui::Color32;
@@ -240,3 +241,4 @@ impl<'a> InstrCacheIterator<'a> {
         !instr_is_rvc(self.instr_bytes[self.curr_byte] as u32)
     }
 }
+*/

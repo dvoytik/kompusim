@@ -1,3 +1,4 @@
+/*
 use kompusim::rv64i_disasm::{
     disasm, disasm_operation_name, disasm_pseudo_code, hex_to_u32, hex_to_u64, instr_bin4,
     instr_hex, u64_hex4,
@@ -121,3 +122,4 @@ impl InstrDecoder {
             });
     }
 }
+*/

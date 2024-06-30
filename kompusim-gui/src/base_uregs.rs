@@ -1,3 +1,4 @@
+/*
 use kompusim::{
     rv64i_cpu::RV64IURegs,
     rv64i_disasm::{reg_hex, reg_idx2abi},
@@ -105,3 +106,4 @@ fn grid_row_reg(ui: &mut egui::Ui, regs: &RV64IURegs, ri: u8, hi_color: Option<e
     }
     ui.end_row();
 }
+*/

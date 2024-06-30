@@ -1,3 +1,4 @@
+/*
 use crate::sim::SimState;
 
 pub enum StatusControlCmd {
@@ -79,3 +80,4 @@ impl StatusControl {
         command
     }
 }
+*/
