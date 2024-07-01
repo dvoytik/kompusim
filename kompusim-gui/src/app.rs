@@ -243,12 +243,8 @@ impl eframe::App for KompusimApp {
         match status_control.show_if_opened(ui_ctx, sim.get_state(), sim.get_num_exec_instr()) {
             None => {}
             Some(StatusControlCmd::Run) => sim.carry_on(),
-            Some(StatusControlCmd::Stop) => {
-                todo!()
-            }
-            Some(StatusControlCmd::Step) => {
-                sim.step();
-            }
+            Some(StatusControlCmd::Stop) => sim.step(),
+            Some(StatusControlCmd::Step) => sim.step(),
         }
         let cur_instr = sim.get_cur_instr();
         base_uregs.show_if_opened(ui_ctx, sim.get_regs(), cur_instr);
