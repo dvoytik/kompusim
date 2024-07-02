@@ -2,7 +2,7 @@ use core::time;
 use std::thread;
 
 use eframe::{self, glow::Context};
-use egui::Modifiers;
+use egui::{Button, Modifiers};
 
 use crate::{
     base_uregs::BaseURegs,
@@ -144,6 +144,10 @@ impl eframe::App for KompusimApp {
             if ui.input_mut(|i| i.consume_shortcut(&organize_windows_shortcut)) {
                 ui_ctx.memory_mut(|mem| mem.reset_areas());
             }
+            let sim_run_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::R);
+            if ui.input_mut(|i| i.consume_shortcut(&sim_run_shortcut)) {
+                sim.carry_on();
+            }
 
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -172,7 +176,13 @@ impl eframe::App for KompusimApp {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
                     ui.add_enabled_ui(true, |ui| {
-                        if ui.button("Run/Continue").clicked() {
+                        if ui
+                            .add(
+                                Button::new("Run/Continue")
+                                    .shortcut_text(ui.ctx().format_shortcut(&sim_run_shortcut)),
+                            )
+                            .clicked()
+                        {
                             sim.carry_on();
                             ui.close_menu();
                         }
