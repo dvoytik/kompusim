@@ -100,6 +100,15 @@ pub fn parse_size_with_suffix(input: &str) -> Option<u64> {
     None
 }
 
+/// parses string "0x8001f234,0x8001f348,0x8001f376" to Vec<u64>
+pub fn parse_breakpoints(str: &str) -> Vec<u64> {
+    let v: Vec<u64> = str
+        .splitn(256, ',')
+        .map(|s| u64::from_str_radix(s.trim_start_matches("0x"), 16).unwrap_or_default())
+        .collect();
+    v
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,4 +145,12 @@ mod tests {
         // Overflow is handled
         assert!(parse_size_with_suffix("100000000000000GB").is_none())
     }
+}
+
+#[test]
+fn test_parse_breakpoints() {
+    assert_eq!(
+        parse_breakpoints("0x8001f234,0x8001f348,0x8001f376"),
+        vec![0x8001f234, 0x8001f348, 0x8001f376]
+    );
 }
