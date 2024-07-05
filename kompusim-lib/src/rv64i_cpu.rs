@@ -707,9 +707,8 @@ impl RV64ICpu {
     }
 
     fn check_break_points(&self, addr: u64) -> bool {
-        // TODO: check all breakpoints
-        // TODO: optimize to use hashmap
-        !self.breakpoints.is_empty() && self.breakpoints[0] == addr
+        // TODO: optimize to use hashmap or binary search
+        self.breakpoints.iter().find(|&&a| addr == a).is_some()
     }
 
     /// Returns PC (i.e. where stopped)

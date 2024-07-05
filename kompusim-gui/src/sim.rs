@@ -64,7 +64,7 @@ enum SimCommand {
     Continue,
     Step,
     Stop,
-    LoadImage((u64, LoadImageType, u64)),
+    LoadImage((u64, LoadImageType)),
     /// Disasm(starting_address, number_of_bytes)
     Disasm(u64, u64),
     // Set RAM size
@@ -186,7 +186,7 @@ impl Simulator {
                     //     println!("Simulator: reset command")
                     // }
                     // SimCommand::Init => {}
-                    SimCommand::LoadImage((load_addr, image, breakpoint)) => {
+                    SimCommand::LoadImage((load_addr, image)) => {
                         match image {
                             LoadImageType::File(file_path) => {
                                 cpu0.bus.load_file(load_addr, &file_path).unwrap();
@@ -195,7 +195,6 @@ impl Simulator {
                                 cpu0.bus.load_image(load_addr, mem_buf).unwrap();
                             }
                         }
-                        cpu0.add_breakpoint(breakpoint);
                         sim_state = SimState::Stopped;
                         send_event(SimEvent::StateChanged(
                             sim_state,
@@ -263,18 +262,14 @@ impl Simulator {
         self.send_cmd(SimCommand::LoadImage((
             addr,
             LoadImageType::StaticMem(image),
-            breakpoint,
         )));
+        self.send_cmd(SimCommand::AddBreakpoint(breakpoint));
         // clear disassembler cache - force loading instructions
         self.instr_cache.take();
     }
 
     pub fn load_bin_file(&mut self, addr: u64, image: PathBuf) {
-        self.send_cmd(SimCommand::LoadImage((
-            addr,
-            LoadImageType::File(image),
-            0x0,
-        )));
+        self.send_cmd(SimCommand::LoadImage((addr, LoadImageType::File(image))));
         // clear disassembler cache - force loading instructions
         self.instr_cache.take();
     }

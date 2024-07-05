@@ -6,7 +6,7 @@ use egui::{Button, Modifiers};
 
 use crate::{
     base_uregs::BaseURegs,
-    cmdline::{parse_size_with_suffix, CmdLCommand},
+    cmdline::{parse_breakpoints, parse_size_with_suffix, CmdLCommand},
     console::Console,
     instr_decoder::InstrDecoder,
     instr_list::InstrList,
@@ -80,7 +80,7 @@ impl KompusimApp {
                 load_addr,
                 bin,
                 ram,
-                breakpoint,
+                breakpoints,
                 ..
             } = cmdl_cmd;
             if let Some(ref ram) = ram {
@@ -93,10 +93,10 @@ impl KompusimApp {
                     );
                 }
             }
-            if let Some(breakpoint) = breakpoint {
-                let breakpoint = u64::from_str_radix(breakpoint.trim_start_matches("0x"), 16)
-                    .expect("Breakpoint address is wrong format");
-                app.sim.add_breakpoint(breakpoint);
+            if let Some(breakpoints) = breakpoints {
+                for b in parse_breakpoints(&breakpoints) {
+                    app.sim.add_breakpoint(b);
+                }
             }
             println!("Got command line: execute: execute {bin:?} @ {load_addr}, RAM: {ram:?}");
             let load_addr = u64::from_str_radix(load_addr.trim_start_matches("0x"), 16)

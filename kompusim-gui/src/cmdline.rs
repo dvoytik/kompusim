@@ -39,9 +39,9 @@ pub enum CmdLCommand {
         #[arg(long)]
         ram: Option<String>,
 
-        /// Breakpont - "auto" or address in hex (e.g. 0x0000000080000014)
+        /// Breakpoints - list of addresses in hex (e.g. 0x80000014, 0x80000218)
         #[arg(short, long)]
-        breakpoint: Option<String>,
+        breakpoints: Option<String>,
 
         /// Maximum number of instruction before stop
         #[arg(long)]
@@ -149,6 +149,10 @@ mod tests {
 
 #[test]
 fn test_parse_breakpoints() {
+    assert_eq!(
+        parse_breakpoints("0x8001f234,0x8001f462"),
+        vec![0x8001f234, 0x8001f462]
+    );
     assert_eq!(
         parse_breakpoints("0x8001f234, 0x8001f348,0x8001f376 "),
         vec![0x8001f234, 0x8001f348, 0x8001f376]
