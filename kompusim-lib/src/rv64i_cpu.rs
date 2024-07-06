@@ -91,7 +91,14 @@ impl RV64ICpu {
     }
 
     pub fn add_breakpoint(&mut self, breakpoint: u64) {
-        self.breakpoints.push(breakpoint)
+        // Adding a new breakpoint: O(log(N)) + O(N)
+        // Searching: O(log(N))
+        match self.breakpoints.binary_search(&breakpoint) {
+            Ok(_) => {
+                eprint!("WARN: breakpoint 0x{breakpoint:x} already exists")
+            }
+            Err(pos) => self.breakpoints.insert(pos, breakpoint),
+        }
     }
 
     // reg_i - register index (0 - 31)
@@ -707,8 +714,8 @@ impl RV64ICpu {
     }
 
     fn check_break_points(&self, addr: u64) -> bool {
-        // TODO: optimize to use hashmap or binary search
-        self.breakpoints.iter().find(|&&a| addr == a).is_some()
+        // Search: O(log(N))
+        self.breakpoints.binary_search(&addr).is_ok()
     }
 
     /// Returns PC (i.e. where stopped)
@@ -738,4 +745,17 @@ fn test_instr_decode_immidiates() {
 
     let imm12 = i_i_type_imm12(0x0fff_ffff);
     assert!(imm12.0 == 255);
+}
+
+#[test]
+fn test_breakpoints() {
+    let mut cpu = RV64ICpu::default();
+    cpu.add_breakpoint(100);
+    cpu.add_breakpoint(1000);
+    cpu.add_breakpoint(0);
+    assert_eq!(cpu.check_break_points(0), true);
+    assert_eq!(cpu.check_break_points(1), false);
+    assert_eq!(cpu.check_break_points(1000), true);
+    assert_eq!(cpu.check_break_points(100), true);
+    assert_eq!(cpu.check_break_points(10000), false);
 }
