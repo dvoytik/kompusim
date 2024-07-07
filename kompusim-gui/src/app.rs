@@ -148,6 +148,10 @@ impl eframe::App for KompusimApp {
             if ui.input_mut(|i| i.consume_shortcut(&sim_run_shortcut)) {
                 sim.carry_on();
             }
+            let sim_step_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::S);
+            if ui.input_mut(|i| i.consume_shortcut(&sim_step_shortcut)) {
+                sim.step();
+            }
 
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -187,8 +191,15 @@ impl eframe::App for KompusimApp {
                             ui.close_menu();
                         }
                     });
-                    ui.add_enabled_ui(false, |ui| {
-                        if ui.button("Step (unimplemented)").clicked() {
+                    ui.add_enabled_ui(true, |ui| {
+                        if ui
+                            .add(
+                                Button::new("Step")
+                                    .shortcut_text(ui.ctx().format_shortcut(&sim_step_shortcut)),
+                            )
+                            .clicked()
+                        {
+                            sim.step();
                             ui.close_menu();
                         }
                     });
