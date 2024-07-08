@@ -66,7 +66,7 @@ impl InstrDecoder {
         self.cached_instr_disasm = disasm(instruction, address);
         self.cached_instr_binary = instr_bin4(instruction);
         self.cached_operation_name = disasm_operation_name(instruction);
-        self.cached_pseudo_code = disasm_pseudo_code(instruction, address);
+        self.cached_pseudo_code = disasm_pseudo_code(instruction);
     }
 
     fn show_window_content(&mut self, ui: &mut egui::Ui, address: u64, instruction: u32) {

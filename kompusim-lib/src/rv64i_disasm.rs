@@ -97,7 +97,7 @@ pub fn disasm_operation_name(instr: u32) -> String {
     }
 }
 
-pub fn disasm_pseudo_code(instr: u32, _instr_addr: u64) -> String {
+pub fn disasm_pseudo_code(instr: u32) -> String {
     if instr_is_rvc(instr) {
         return disasm_rvc_pseudo_code(instr as u16);
     }
