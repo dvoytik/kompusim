@@ -114,33 +114,32 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
             rs1,
             funct3,
         } => {
-            // let addr = instr_addr.add_i13(off13);
             match funct3 {
                 // Branch Not Equal
-                F3_BRANCH_BNE => format!("if x{rs1} != x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BNE => format!("if x{rs1} != x{rs2} then PC = PC {:+}", off13.0),
                 // Branch EQual
-                F3_BRANCH_BEQ => format!("if x{rs1} == x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BEQ => format!("if x{rs1} == x{rs2} then PC = PC {:+}", off13.0),
                 // Branch Less Than (signed comparison)
-                F3_BRANCH_BLT => format!("if x{rs1} < x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BLT => format!("if x{rs1} < x{rs2} then PC = PC {:+}", off13.0),
                 // Branch Less Than (Unsigned comparison)
-                F3_BRANCH_BLTU => format!("if x{rs1} < x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BLTU => format!("if x{rs1} < x{rs2} then PC = PC {:+}", off13.0),
                 // Branch if Greater or Equal (signed comparison)
-                F3_BRANCH_BGE => format!("if x{rs1} >= x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BGE => format!("if x{rs1} >= x{rs2} then PC = PC {:+}", off13.0),
                 // Branch if Greater or Equal (Unsigned comparison)
-                F3_BRANCH_BGEU => format!("if x{rs1} >= x{rs2} then PC = PC + 0x{off13:x}"),
+                F3_BRANCH_BGEU => format!("if x{rs1} >= x{rs2} then PC = PC {:+}", off13.0),
                 _ => "Unknown BRANCH opcode".to_string(),
             }
         }
 
         Opcode::Jal { imm21, rd } => {
             format!(
-                "x{rd} = PC + 4; PC = PC + 0x{imm21:x}",
-                // instr_addr.add_i21(imm21)
+                "x{rd} = PC + 4; PC = PC {:+}",
+                imm21.0 // instr_addr.add_i21(imm21)
             )
         }
 
         Opcode::Jalr { imm12, rs1, rd } => {
-            format!("x{rd} = PC + 4; PC = x{rs1} + 0x{imm12:x}; PC[0] = 0")
+            format!("x{rd} = PC + 4; PC = x{rs1} {:+}; PC[0] = 0", imm12.0)
         }
 
         Opcode::Load {
@@ -150,18 +149,18 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
             rd,
         } => match funct3 {
             F3_OP_LOAD_LB => {
-                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext({imm12})]; x{rd}[63:8] = x{rd}[7]")
+                format!("x{rd}[7:0] = m8[x{rs1} {:+}]; s-ext", imm12.0)
             }
             F3_OP_LOAD_LBU => {
-                format!("x{rd}[7:0] = mem8[x{rs1} + sign_ext({imm12})]; x{rd}[63:8] = 0")
+                format!("x{rd}[7:0] = m8[x{rs1} {:+})]; z-ext", imm12.0)
             }
             F3_OP_LOAD_LW => {
-                format!("x{rd}[31:0] = mem32[x{rs1} {imm12:+}]; sign extend")
+                format!("x{rd}[31:0] = m32[x{rs1} {:+}]; s-ext", imm12.0)
             }
             F3_OP_LOAD_LWU => {
-                format!("x{rd}[31:0] = mem32[x{rs1} {imm12:+}]; zero extend")
+                format!("x{rd}[31:0] = m32[x{rs1} {:+}]; z-ext", imm12.0)
             }
-            F3_OP_LOAD_LD => format!("x{rd} = mem64[x{rs1} + sign_ext({imm12})]"),
+            F3_OP_LOAD_LD => format!("x{rd} = m64[x{rs1} {:+}]", imm12.0),
             _ => "Unknown LOAD opcode".to_string(),
         },
 
@@ -171,9 +170,9 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
             rs1,
             funct3,
         } => match funct3 {
-            F3_OP_STORE_SB => format!("mem8[x{rs1} + sign_extend({imm12})] = x{rs2}[7:0]"),
-            F3_OP_STORE_SW => format!("mem32[x{rs1} + sign_extend({imm12})] = x{rs2}[31:0]"),
-            F3_OP_STORE_SD => format!("mem64[x{rs1} + sign_extend({imm12})] = x{rs2}"),
+            F3_OP_STORE_SB => format!("m8[x{rs1} {:+}] = x{rs2}[7:0]", imm12.0),
+            F3_OP_STORE_SW => format!("m32[x{rs1} {:+}] = x{rs2}[31:0]", imm12.0),
+            F3_OP_STORE_SD => format!("m64[x{rs1} {:+}] = x{rs2}", imm12.0),
             _ => "Unknown STORE opcode".to_string(),
         },
 
@@ -183,10 +182,8 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
             funct3,
             rd,
         } => match funct3 {
-            F3_OP_IMM_ADDI => format!("x{rd} = x{rs1} + 0x{imm12:x}"),
-            F3_OP_IMM_SLTIU => {
-                format!("If x{rs1} < sign_extned(0x{imm12:x}) then x{rd} = 1 else x{rd} = 0")
-            }
+            F3_OP_IMM_ADDI => format!("x{rd} = x{rs1} {:+}", imm12.0),
+            F3_OP_IMM_SLTIU => format!("If x{rs1} < {:+} then x{rd} = 1 else x{rd} = 0", imm12.0),
             F3_OP_IMM_XORI => format!("x{rd} = x{rs1} ^ 0x{imm12:x}"),
             F3_OP_IMM_ANDI => format!("x{rd} = x{rs1} & 0x{imm12:x}"),
             F3_OP_IMM_SLLI => format!("x{rd} = x{rs1} << {imm12}"),
@@ -195,7 +192,7 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
 
         Opcode::ADDIW { imm12, rs1, rd } => format!("x{rd}[31:0] = x{rs1}[31:0] + 0x{imm12:x}"),
         Opcode::SLLIW { shamt, rs1, rd } => {
-            format!("x{rd}[31:0] = x{rs1}[31:0] << {shamt}; sign_extend")
+            format!("x{rd}[31:0] = x{rs1}[31:0] << {shamt}; s-ext")
         }
         Opcode::SRLIW { shamt, rs1, rd } => {
             format!("x{rd}[31:0] = x{rs1}[31:0] >> {shamt}; sign extend")
@@ -213,7 +210,7 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
         },
 
         Opcode::SUBW { rs2, rs1, rd } => {
-            format!("x{rd}[31:0] = x{rs1}[31:0] - x{rs2}[31:0]; sign extend")
+            format!("x{rd}[31:0] = x{rs1}[31:0] - x{rs2}[31:0]; s-ext")
         }
 
         Opcode::Amo {
@@ -227,19 +224,19 @@ pub fn disasm_pseudo_code(instr: u32) -> String {
         } => match (funct5, funct3) {
             (F5_OP_AMO_SWAP, F3_OP_AMO_WORD) => {
                 format!(
-                    "x{rd} <= mem[x{rs1}]; mem[x{rs1}] <= x{rs2}{}{}",
+                    "x{rd} <= m32[x{rs1}]; m32[x{rs1}] <= x{rs2}{}{}",
                     if aq { "; acquire" } else { "" },
                     if rl { "; release" } else { "" }
                 )
             }
             (F5_OP_AMO_ADD, F3_OP_AMO_WORD) => {
                 format!(
-                    "x{rd} <= mem[x{rs1}]; mem[x{rs1}] <= rd + x{rs2}{}{}",
+                    "x{rd} <= m32[x{rs1}]; m32[x{rs1}] <= rd + x{rs2}{}{}",
                     if aq { "; acquire" } else { "" },
                     if rl { "; release" } else { "" }
                 )
             }
-            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("x{rd} = mem[x{rs1}] ; todo"),
+            (F5_OP_AMO_LRW, F3_OP_AMO_WORD) => format!("x{rd} = m32[x{rs1}] ; todo"),
             _ => format!("Unknown AMO instruction: funct5: {funct5:x}, funct3: {funct3:x}"),
         },
 
